@@ -83,13 +83,15 @@ void main(){
   float tw = 1.0 - uTwinkle * 0.5 * (1.0 + sin(uTime * (1.5 + aPhase * 2.0) * uSpeed + aPhase * 40.0));
   vColor = aColor; vAlpha = tw * uBright;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  gl_PointSize = aSize * uScale * (0.9 + 0.3 * tw) * (120.0 / max(0.05, -mv.z));
+  // fiber tips are ~1.5 mm: a few pixels at arm's length, never a blob when the camera is right under the roof
+  float px = aSize * uScale * (0.9 + 0.3 * tw) * (3.2 / max(0.25, -mv.z));
+  gl_PointSize = clamp(px, 1.5, 9.0);
   gl_Position = projectionMatrix * mv;
 }`;
 const frag = `
 varying vec3 vColor; varying float vAlpha;
 void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c); if (d > 0.5) discard; float a = smoothstep(0.5, 0.0, d); a = pow(a, 1.6);
-  gl_FragColor = vec4(vColor * (1.0 + 1.5 * (1.0 - d * 2.0)), a * vAlpha); }`;
+  gl_FragColor = vec4(vColor * (1.0 + 0.8 * (1.0 - d * 2.0)), a * vAlpha); }`;
 
 export function Starlight({ registry }: { registry: MeshRegistry }) {
   const doc = useStore(selectRenderDoc);
