@@ -61,6 +61,13 @@ knee bolster / glovebox split line on the passenger lower dash.
 | Stack still read as plates on a curved body, not one flat angled panel | Stack face is now a single plane from the top vents to the climate row (waterfall only at the foot), yawed 18 degrees toward the driver over its full height; screen bezel, media and climate panels sit flush in that plane with only knobs and buttons standing proud; screen enlarged to 232 x 138 mm |
 | Live site could keep showing the old model after a deploy | Model files are requested with a build id (`?v=`) so a normal reload fetches new geometry; GitHub Pages caches the fixed-name files for ten minutes otherwise |
 
+## Seventh pass (owner: stack angle and grab bar)
+| Owner finding | Change made |
+|---------------|-------------|
+| Stack slanted about 65 degrees, should be about 80 | Face is now about 79 degrees from horizontal from the top vents to the climate row; the curve into the console happens only at the foot. The dash pad region behind the stack was pushed back to suit, and the console plate and body extended forward to meet the foot |
+| The bar on the passenger side stands off the centre piece with a gap behind it | The aluminium bar is a real grab handle: 28 x 8 mm section, attached at the dash top and at the console edge, standing up to 38 mm off the stack edge in between so there is an open gap behind it |
+| Stack was turned toward the passenger | Yaw sign fixed; the face turns 18 degrees toward the driver |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

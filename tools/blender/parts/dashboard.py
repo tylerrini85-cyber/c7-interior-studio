@@ -8,7 +8,7 @@ import layout as L
 # profile templates: 13 control points (y, z) from cowl to under-dash bottom edge
 T_DRIVER_OUTER = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.64, 0.86), (0.60, 0.83), (0.60, 0.78), (0.63, 0.72), (0.66, 0.66), (0.69, 0.60), (0.72, 0.54), (0.76, 0.46), (0.82, 0.41)]
 T_HOOD = [(1.08, 0.82), (0.96, 0.855), (0.84, 0.895), (0.72, 0.915), (0.63, 0.915), (0.585, 0.895), (0.60, 0.86), (0.73, 0.85), (0.82, 0.76), (0.80, 0.66), (0.72, 0.56), (0.75, 0.46), (0.82, 0.41)]
-T_STACK = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.68, 0.862), (0.655, 0.856), (0.645, 0.838), (0.62, 0.77), (0.58, 0.71), (0.55, 0.65), (0.52, 0.61), (0.49, 0.57), (0.45, 0.51)]
+T_STACK = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.68, 0.862), (0.66, 0.856), (0.655, 0.838), (0.65, 0.77), (0.645, 0.71), (0.64, 0.65), (0.63, 0.61), (0.60, 0.57), (0.55, 0.51)]
 T_PASS = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.64, 0.86), (0.615, 0.835), (0.61, 0.79), (0.625, 0.73), (0.64, 0.68), (0.66, 0.60), (0.69, 0.52), (0.74, 0.45), (0.82, 0.41)]
 
 STACK_X0, STACK_X1 = -0.165, 0.19
@@ -137,7 +137,7 @@ def build_column():
 STACK_CX = 0.01
 # (z, y) of the occupant-facing stack surface at the stack centreline, bottom (waterfall into the console) to top
 # waterfall at the foot, then one straight plane (slope 0.69) from z 0.60 up to the dash lip (IMG: flat angled stack face)
-STACK_FACE = [(0.545, 0.395), (0.555, 0.415), (0.575, 0.44), (0.60, 0.47), (0.64, 0.4976), (0.70, 0.539), (0.76, 0.5804), (0.81, 0.6149), (0.845, 0.639), (0.852, 0.652)]
+STACK_FACE = [(0.545, 0.44), (0.552, 0.47), (0.562, 0.51), (0.578, 0.55), (0.60, 0.585), (0.64, 0.594), (0.70, 0.606), (0.76, 0.618), (0.81, 0.628), (0.845, 0.636), (0.852, 0.648)]  # ~80 deg face, waterfall only at the foot
 STACK_HALF_W = [(0.545, 0.152), (0.60, 0.156), (0.68, 0.161), (0.76, 0.165), (0.862, 0.168)]
 
 
@@ -333,15 +333,15 @@ def build_grab_handle():
     pts, nrms = [], []
     zs = [0.850, 0.835, 0.81, 0.77, 0.73, 0.69, 0.65, 0.615, 0.585, 0.565, 0.552]
     for z in zs:
-        x = cx + stack_half_w(z) - 0.020
+        x = cx + stack_half_w(z) + 0.002
         o, u, v, n = stack_frame(x, z)
         s = (z - 0.552) / (0.850 - 0.552)
-        proud = 0.003 + 0.006 * math.sin(math.pi * s) ** 1.5
+        proud = 0.004 + 0.034 * math.sin(math.pi * s) ** 1.2   # open gap behind the bar: it is a handle
         pts.append(o + n * proud); nrms.append(n)
     # then rearward along the passenger edge of the console plate (plate edge x = 0.118)
-    for (x, y, z) in ((0.140, 0.40, 0.566), (0.125, 0.355, 0.569), (0.118, 0.28, 0.569), (0.118, 0.05, 0.569), (0.118, -0.08, 0.569)):
+    for (x, y, z) in ((0.150, 0.46, 0.567), (0.132, 0.40, 0.569), (0.120, 0.30, 0.569), (0.118, 0.05, 0.569), (0.118, -0.08, 0.569)):
         pts.append(Vector((x, y, z))); nrms.append(Vector((0, 0, 1)))
-    blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.024, 0.006, material='metal_brushed', uv_scale=2.0)
+    blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.028, 0.008, material='metal_brushed', uv_scale=2.0, bevel=0.002)
     lib.tag(blade, 'dash.grab_trim', 'dashboard')
 
 
