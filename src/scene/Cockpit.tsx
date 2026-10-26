@@ -107,7 +107,7 @@ function MaterialSync({ doc }: { doc: ProjectDoc }) {
         }
         let decal: THREE.Mesh | undefined;
         if (entry.component === 'steering.emblem') decal = makeEmblemDecal(mesh, 'hub');
-        else if (entry.component?.endsWith('.headrest') && (!cfg.text || cfg.text.trim() === '' || cfg.text.trim() === 'C7')) decal = makeEmblemDecal(mesh, 'headrest');
+        else if (entry.nodeName.endsWith('.headrest') && (!cfg.text || cfg.text.trim() === '' || cfg.text.trim() === 'C7')) decal = makeEmblemDecal(mesh, 'headrest');
         else if (cfg.text && cfg.text.trim() && entry.component) decal = makeTextDecal(mesh, entry.component, cfg.text, cfg.textColor ?? '#c0c0c4');
         applied.current.set(mesh, { key, overlay, decal });
       }
@@ -151,15 +151,18 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mes
   const mat = new THREE.MeshStandardMaterial({ map: emblemTexture(), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.35, metalness: 0.4, alphaTest: 0.05 });
   let plane: THREE.Mesh;
   if (where === 'hub') {
-    // badge plate lies in the tilted wheel plane; its normal is the largest extent's cross axis -> use the bounding box
-    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.044, 0.022), mat);
+    // the badge plate lies in the tilted wheel plane; its outward normal points up and toward the driver (+z)
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.044, 0.023), mat);
     const tilt = (24 * Math.PI) / 180;
-    plane.position.set(c.x, c.y + Math.sin(tilt) * 0.0012, c.z + Math.cos(tilt) * 0.0012);
-    plane.rotation.set(tilt, 0, 0);
+    const nrm = new THREE.Vector3(0, Math.sin(tilt), Math.cos(tilt));
+    plane.position.copy(c).addScaledVector(nrm, 0.0015);
+    plane.lookAt(plane.position.clone().add(nrm));
   } else {
-    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.025), mat);
-    plane.position.set(c.x, c.y - 0.012, bb.min.z - 0.002);
-    plane.rotation.set(-SEATBACK_RECLINE, Math.PI, 0);
+    // headrest front face leans back with the seat and faces forward (-z)
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.026), mat);
+    const nrm = new THREE.Vector3(0, Math.sin(SEATBACK_RECLINE), -Math.cos(SEATBACK_RECLINE));
+    plane.position.set(c.x, c.y - 0.012, bb.min.z).addScaledVector(nrm, 0.002);
+    plane.lookAt(plane.position.clone().add(nrm));
   }
   plane.name = '__decal';
   plane.raycast = () => {};

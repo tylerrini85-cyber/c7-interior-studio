@@ -81,7 +81,7 @@ def build_spokes_and_hub(variant, c, u, v, n):
         pad = lib.extrude_profile(cid + '.paddle', lib.rounded_rect2d(0.080, 0.046, 0.012), c + u * (side * 0.125) + n * 0.034, u, v, 0.004, material='metal_satin_dark', bevel=0.002)
         lib.tag(pad, 'steering.paddle.left' if side < 0 else 'steering.paddle.right', 'steering', selectable=False)
     # ---- lower insert (badge plate) on the stem, and the flat-bottom trim on the rim
-    ins = lib.extrude_profile('steering.spoke.lower.insert', lib.rounded_rect2d(0.030, 0.034, 0.005), c + v * (bottom + 0.045) - n * 0.0125, u, v, -0.002, material='plastic_black_gloss')
+    ins = lib.extrude_profile('steering.spoke.lower.insert', lib.rounded_rect2d(0.030, 0.034, 0.005), c + v * (bottom + 0.045) - n * 0.0045, u, v, 0.002, material='plastic_black_gloss')
     lib.tag(ins, 'steering.spoke.lower.insert', 'steering', selectable=False)
     flat_trim = lib.extrude_profile('steering.rim.flat_trim', lib.rounded_rect2d(0.11, 0.016, 0.005), c + v * (bottom - 0.004) - n * (L.RIM_RADIUS - 0.004), u, v, -0.004, material=frame_mat)
     lib.tag(flat_trim, 'steering.rim.flat_trim', 'steering', selectable=False)
@@ -102,7 +102,7 @@ def build_spokes_and_hub(variant, c, u, v, n):
     hub = lib.loft_object('steering.hub', rings, close_u=True, cap_start=True, cap_end=True, material='plastic_soft')
     lib.tag(hub, 'steering.hub', 'steering')
     # emblem carrier: a flat badge the runtime textures with the crossed-flags image supplied by the owner
-    badge = lib.extrude_profile('steering.emblem', lib.rounded_rect2d(0.046, 0.024, 0.003), c + v * 0.004 - n * 0.0355, u, v, -0.001, material='chrome')
+    badge = lib.extrude_profile('steering.emblem', lib.rounded_rect2d(0.046, 0.024, 0.003), c + v * 0.004 + n * 0.0352, u, v, 0.0015, material='chrome')
     lib.tag(badge, 'steering.emblem', 'steering')
     if thin:
         top = rim_centerline(variant, math.pi / 2).y
