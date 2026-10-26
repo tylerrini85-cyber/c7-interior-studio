@@ -137,7 +137,7 @@ def build_column():
 STACK_CX = 0.01
 # (z, y) of the occupant-facing stack surface at the stack centreline, bottom (waterfall into the console) to top
 # waterfall at the foot, then one straight plane (slope 0.69) from z 0.60 up to the dash lip (IMG: flat angled stack face)
-STACK_FACE = [(0.545, 0.46), (0.552, 0.51), (0.56, 0.555), (0.572, 0.578), (0.60, 0.585), (0.64, 0.594), (0.70, 0.606), (0.76, 0.618), (0.81, 0.628), (0.845, 0.636), (0.852, 0.648)]  # ~80 deg face, waterfall only at the foot
+STACK_FACE = [(0.545, 0.46), (0.552, 0.51), (0.558, 0.55), (0.566, 0.578), (0.60, 0.585), (0.64, 0.594), (0.70, 0.606), (0.76, 0.618), (0.81, 0.628), (0.845, 0.636), (0.852, 0.648)]  # ~80 deg face, waterfall only at the foot
 STACK_HALF_W = [(0.545, 0.152), (0.60, 0.156), (0.68, 0.161), (0.76, 0.165), (0.862, 0.168)]
 
 
@@ -212,7 +212,7 @@ def build_center_stack():
     body = lib.loft_object('console.stack', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.0)
     lib.tag(body, 'console.stack', 'console')
     # ---- top strip: two slim centre vents with the hazard / passenger-airbag pod between (IMG_4506, 4493)
-    zt = 0.835
+    zt = 0.838
     for k, dx in enumerate((-0.088, 0.088)):
         side = 'left' if k == 0 else 'right'
         floor = _panel(f'dash.vent_center_{k}_floor', 0.092, 0.030, cx + dx, zt, 0.001, 0.004, 'plastic_black', 'dashboard', selectable=False, r=0.004)
@@ -234,37 +234,44 @@ def build_center_stack():
     ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.016, 0.009, 0.002), o + n * 0.0025 - u * 0.010, u, v, 0.001, material='screen_off')
     lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
     # ---- infotainment: gloss surround (wider on the left for the volume knob + SCREEN button), 8-inch screen
-    zs_scr = 0.748
+    zs_scr = 0.752
     bez = _panel('console.screen_bezel', 0.262, 0.140, cx + 0.020, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
     scr = _panel('console.screen', 0.236, 0.122, cx + 0.020, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
     _panel('console.screen_strip', 0.040, 0.140, cx - 0.135, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
     _knob('console.volume_knob', cx - 0.135, zs_scr + 0.030, 0.014, 0.012, proud=0.0015)
     _panel('console.screen_btn', 0.026, 0.014, cx - 0.135, zs_scr - 0.010, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     _panel('console.screen_btn2', 0.026, 0.014, cx - 0.135, zs_scr - 0.034, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    # ---- control block under the screen (reference: one black panel, two large knobs at its sides spanning both
-    # rows, row 1 = RADIO MEDIA home MENU prev next BACK, row 2 = A/C, four mode buttons, rear defrost, SYNC)
-    zc = 0.636
-    _panel('console.hvac', 0.310, 0.104, cx, zc, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
-    for k, dx in enumerate((-0.125, 0.125)):
-        o, u, v, n = stack_frame(cx + dx, zc)
-        kn = lib.revolve(f'console.hvac_knob_{k}', [(0, 0), (0.024, 0), (0.024, 0.012), (0.022, 0.016), (0.0, 0.016)], segments=36, material='chrome', origin=o + n * 0.0015, direction=n)
+    # ---- control block under the screen, laid out from the reference photo:
+    #   media row tight under the bezel: RADIO MEDIA home (MENU) prev next BACK, two large knobs at the panel sides
+    #   spanning the media row and the first climate row; climate row A: A/C face face+feet rear-defrost SYNC;
+    #   climate row B under the middle three: feet feet+defrost front-defrost; badge panel below.
+    zc = 0.628
+    _panel('console.hvac', 0.310, 0.122, cx, zc, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
+    zm = 0.666
+    for k, dx in enumerate((-0.128, 0.128)):
+        o, u, v, n = stack_frame(cx + dx, 0.650)
+        kn = lib.revolve(f'console.hvac_knob_{k}', [(0, 0), (0.021, 0), (0.021, 0.012), (0.019, 0.016), (0.0, 0.016)], segments=36, material='chrome', origin=o + n * 0.0015, direction=n)
         lib.tag(kn, f'console.hvac_knob.{"left" if k == 0 else "right"}', 'trim', selectable=False)
-        cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.019, 0), (0.019, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=o + n * 0.0175, direction=n)
+        cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.0165, 0), (0.0165, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=o + n * 0.0175, direction=n)
         lib.tag(cap, f'console.hvac_knob_cap.{k}', 'console', selectable=False)
-    zm = zc + 0.026   # media row
-    xs = [cx - 0.084 + 0.028 * i for i in range(7)]
+    xs = [cx - 0.078 + 0.026 * i for i in range(7)]
     for i, x in enumerate(xs):
         if i == 3:
             o, u, v, n = stack_frame(x, zm)
-            b = lib.revolve('console.media_menu', [(0, 0), (0.0125, 0), (0.0125, 0.004), (0.011, 0.005), (0.0, 0.005)], segments=28, material='plastic_black_gloss', origin=o + n * 0.0015, direction=n)
+            b = lib.revolve('console.media_menu', [(0, 0), (0.012, 0), (0.012, 0.004), (0.0105, 0.005), (0.0, 0.005)], segments=28, material='plastic_black_gloss', origin=o + n * 0.0015, direction=n)
             lib.tag(b, 'console.media_btn.menu', 'console', selectable=False)
         else:
-            _panel(f'console.media_btn_{i}', 0.024, 0.015, x, zm, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    zh = zc - 0.026   # climate row
-    for i, x in enumerate(xs):
-        _panel(f'console.hvac_btn_{i}', 0.024, 0.015, x, zh, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    # ---- badge lip at the foot of the stack where it turns into the console plate
-    _panel('console.badge_strip', 0.200, 0.010, cx, 0.571, 0.002, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.003)
+            _panel(f'console.media_btn_{i}', 0.022, 0.013, x, zm, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    za = 0.634
+    for i, x in enumerate([cx - 0.066, cx - 0.033, cx, cx + 0.033, cx + 0.066]):
+        _panel(f'console.hvac_btn_a{i}', 0.028, 0.015, x, za, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    zb = 0.610
+    for i, x in enumerate([cx - 0.033, cx, cx + 0.033]):
+        _panel(f'console.hvac_btn_b{i}', 0.028, 0.015, x, zb, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    # badge panel: black plate across the foot with the CORVETTE badge left of centre and a small switch on the right
+    # CORVETTE badge plate left of centre and a small switch on the right, at the foot of the control panel
+    _panel('console.badge_strip', 0.075, 0.011, cx - 0.045, 0.584, 0.0035, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.002)
+    _panel('console.foot_switch', 0.030, 0.016, cx + 0.085, 0.584, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- engine start button on the driver edge of the stack beside the screen (IMG_4495)
     o, u, v, n = stack_frame(cx - 0.138, 0.700)
     sb = lib.revolve('dash.start_button', [(0, 0), (0.016, 0), (0.016, 0.006), (0.013, 0.008), (0, 0.008)], segments=28, material='metal_satin_dark', origin=o + n * 0.002, direction=n)

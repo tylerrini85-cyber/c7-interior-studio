@@ -81,6 +81,12 @@ knee bolster / glovebox split line on the passenger lower dash.
 |---------------|-------------|
 | Only two knobs on the real car, the rest buttons; controls spilling onto the leather; bad transition into the console | One black control panel under the screen with two chrome-rimmed knobs at its sides spanning both rows; row 1 RADIO, MEDIA, home, round MENU, previous, next, BACK; row 2 A/C, four mode buttons, rear defrost, SYNC; the badge strip sits at the foot; console plate pulled back to start where the foot ends and the button row in front of the shifter removed |
 
+## Tenth pass (owner: shifter distance and button placement, matched to the reference photo)
+| Owner finding | Change made |
+|---------------|-------------|
+| Shifter far too far from the screen | Shifter moved forward to 0.40 m (boot starts at the foot of the stack), lever raised so the knob reaches the climate rows like the photo |
+| Buttons in the wrong places | Laid out from the photo: media row 16 mm under the bezel (RADIO, MEDIA, home, round MENU, prev, next, BACK at 26 mm pitch), two 42 mm knobs at the panel sides centred between the media row and climate row A, climate row A of five (A/C, face, face+feet, rear defrost, SYNC) and row B of three under its middle (feet, feet+defrost, front defrost), the control panel running down to a CORVETTE badge plate left of centre with a small switch on the right; flat face extended down to 0.566 so nothing sits on the foot curve |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

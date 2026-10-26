@@ -52,7 +52,7 @@ def build_shifter(variant='automatic'):
         lib.add_subsurf(boot, 1)
         lib.tag(boot, 'console.shifter.boot', 'console')
         # short lever leaning slightly rearward, then the leather knob with its chrome collar
-        top = base + Vector((0, -0.012, 0.072))
+        top = base + Vector((0, -0.016, 0.090))
         lever = lib.sweep_tube('console.shifter.lever', [base + Vector((0, 0, 0.030)), top], 0.009, n=16, material='metal_satin_dark')
         lib.tag(lever, 'console.shifter.lever', 'console', selectable=False)
         knob = lib.revolve('console.shifter.knob', [(0.0, 0.0), (0.015, 0.0), (0.019, 0.008), (0.0225, 0.026), (0.0215, 0.046), (0.017, 0.060), (0.009, 0.066), (0.0, 0.067)], segments=32, material='leather_black', origin=top - Vector((0, 0, 0.004)), direction=(0, -0.16, 1))
