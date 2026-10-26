@@ -4,6 +4,7 @@ import { COMPONENT_MAP, VARIANTS, type VariantSlot } from '../registry/component
 import { MATERIAL_GROUPS, MATERIAL_PRESETS } from '../materials/engine';
 import type { Finish, MaterialKind, StitchPattern } from '../project/schema';
 import { Button, ColorPicker, Section, Segmented, Select, TextField, Toggle } from './common';
+import { StarlightControls } from './LightingPanel';
 
 const PROFANITY = /\b(fuck|shit|bitch|cunt|nigg|fag)\w*/i;
 
@@ -79,6 +80,7 @@ export function Inspector() {
           {cfg.stitch && cfg.stitch.pattern !== 'none' && <ColorPicker label="Thread color" value={cfg.stitch.color} onChange={(c) => setPart(selected, { stitch: { pattern: cfg.stitch!.pattern, color: c } }, { transient: true })} onCommit={commit} compact />}
         </Section>
       )}
+      {(selected === 'roof.headliner' || selected === 'roof.panel') && <StarlightControls open={project.lighting.starlight.enabled} />}
       {caps.text && (
         <Section title="Custom text / embroidery">
           <TextField label="Text" value={cfg.text ?? ''} maxLength={16} placeholder="e.g. initials" onChange={(t) => { if (PROFANITY.test(t)) { notify('That text is not allowed', 'error'); return; } setPart(selected, { text: t }, { transient: true }); }} onCommit={commit} />

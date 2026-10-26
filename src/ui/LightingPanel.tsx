@@ -12,11 +12,50 @@ const LIGHT_PRESETS = [
 
 interface SavedLighting { name: string; lighting: ReturnType<typeof useStore.getState>['project'] extends infer P ? P extends { lighting: infer L } ? L : never : never }
 
+const STAR_PALETTES: { name: string; colors: string[] }[] = [
+  { name: 'Warm white', colors: ['#fff1d6'] }, { name: 'Cool white', colors: ['#ffffff'] }, { name: 'Ice blue', colors: ['#cfe3ff', '#ffffff'] },
+  { name: 'Purple', colors: ['#b26bff', '#e0c8ff'] }, { name: 'Red', colors: ['#ff3b30', '#ff9a8a'] }, { name: 'Amber', colors: ['#ffb300', '#fff1d6'] },
+  { name: 'Teal', colors: ['#00e5ff', '#9ffcff'] }, { name: 'Multicolor', colors: ['#ffffff', '#9fc9ff', '#ffd8a8', '#ff9fd6'] },
+];
+
+/** Starlight headliner controls (shared by the Lighting tab and the headliner inspector). */
+export function StarlightControls({ open = true }: { open?: boolean }) {
+  const project = useStore((s) => s.project);
+  const setStarlight = useStore((s) => s.setStarlight);
+  const commit = useStore((s) => s.commitTransient);
+  if (!project) return null;
+  const { starlight } = project.lighting;
+  return (
+    <Section title="Starlight headliner" defaultOpen={open} right={<Toggle label="" value={starlight.enabled} onChange={(v) => setStarlight({ enabled: v })} />}>
+      {!starlight.enabled && <p className="muted small">Switch on to embed fiber-optic style stars in the headliner and roof panel.</p>}
+      <div className="field"><span className="field-label">Star color presets</span>
+        <div className="material-chips">{STAR_PALETTES.map((p) => <button type="button" key={p.name} className={`chip-btn ${JSON.stringify(starlight.colors) === JSON.stringify(p.colors) ? 'sel' : ''}`} onClick={() => setStarlight({ enabled: true, colors: p.colors })}><span className="mini-swatch" style={{ display: 'inline-block', width: 12, height: 12, marginRight: 6, verticalAlign: -1, background: p.colors[0] }} />{p.name}</button>)}</div>
+      </div>
+      <div className="field"><span className="field-label">Custom star colors</span>
+        <div className="star-colors">
+          {starlight.colors.map((c, i) => <ColorPicker key={i} value={c} onChange={(nc) => setStarlight({ colors: starlight.colors.map((x, j) => (j === i ? nc : x)) }, { transient: true })} onCommit={commit} compact />)}
+          <div className="row-actions">
+            {starlight.colors.length < 4 && <Button size="sm" icon="plus" onClick={() => setStarlight({ colors: [...starlight.colors, '#9fc9ff'] })}>Add color</Button>}
+            {starlight.colors.length > 1 && <Button size="sm" icon="close" onClick={() => setStarlight({ colors: starlight.colors.slice(0, -1) })}>Remove</Button>}
+          </div>
+        </div>
+      </div>
+      <Slider label="Number of stars" value={starlight.count} min={50} max={1500} step={10} onChange={(v) => setStarlight({ count: v }, { transient: true })} onCommit={commit} format={(v) => `${v}`} />
+      <Select<StarPattern> label="Pattern" value={starlight.pattern} onChange={(p) => setStarlight({ pattern: p })} options={[{ value: 'random', label: 'Randomized' }, { value: 'milkyway', label: 'Milky Way band' }, { value: 'constellation', label: 'Constellation clusters' }, { value: 'grid', label: 'Even grid' }, { value: 'spiral', label: 'Spiral' }]} />
+      <Slider label="Brightness" value={starlight.brightness} min={0} max={1} onChange={(v) => setStarlight({ brightness: v }, { transient: true })} onCommit={commit} />
+      <Slider label="Star size" value={starlight.size} min={0.5} max={2} onChange={(v) => setStarlight({ size: v }, { transient: true })} onCommit={commit} />
+      <Slider label="Twinkle intensity" value={starlight.twinkle} min={0} max={1} onChange={(v) => setStarlight({ twinkle: v }, { transient: true })} onCommit={commit} />
+      <Slider label="Twinkle speed" value={starlight.twinkleSpeed} min={0.1} max={3} onChange={(v) => setStarlight({ twinkleSpeed: v }, { transient: true })} onCommit={commit} />
+      <Toggle label="Shooting stars" value={starlight.shooting} onChange={(v) => setStarlight({ shooting: v })} />
+      <Button size="sm" icon="dice" onClick={() => setStarlight({ seed: Math.floor(Math.random() * 1e6) })}>Re-roll pattern</Button>
+    </Section>
+  );
+}
+
 export function LightingPanel() {
   const project = useStore((s) => s.project);
   const setZone = useStore((s) => s.setZone);
   const setMaster = useStore((s) => s.setMaster);
-  const setStarlight = useStore((s) => s.setStarlight);
   const setElectronics = useStore((s) => s.setElectronics);
   const setEnvironment = useStore((s) => s.setEnvironment);
   const updateProject = useStore((s) => s.updateProject);
@@ -24,7 +63,7 @@ export function LightingPanel() {
   const notify = useStore((s) => s.notify);
   const [saved, setSaved] = useState<SavedLighting[] | null>(null);
   if (!project) return null;
-  const { master, zones, starlight } = project.lighting;
+  const { master, zones } = project.lighting;
   const loadSaved = async () => { const list = await getSetting<SavedLighting[]>('lightingPresets', []); setSaved(list); return list; };
   if (saved === null) void loadSaved();
 
@@ -55,25 +94,7 @@ export function LightingPanel() {
           </div>
         ))}
       </Section>
-      <Section title="Starlight headliner" right={<Toggle label="" value={starlight.enabled} onChange={(v) => setStarlight({ enabled: v })} />}>
-        <Slider label="Number of stars" value={starlight.count} min={50} max={1500} step={10} onChange={(v) => setStarlight({ count: v }, { transient: true })} onCommit={commit} format={(v) => `${v}`} />
-        <Select<StarPattern> label="Pattern" value={starlight.pattern} onChange={(p) => setStarlight({ pattern: p })} options={[{ value: 'random', label: 'Randomized' }, { value: 'milkyway', label: 'Milky Way band' }, { value: 'constellation', label: 'Constellation clusters' }, { value: 'grid', label: 'Even grid' }, { value: 'spiral', label: 'Spiral' }]} />
-        <div className="field"><span className="field-label">Star colors</span>
-          <div className="star-colors">
-            {starlight.colors.map((c, i) => <ColorPicker key={i} value={c} onChange={(nc) => setStarlight({ colors: starlight.colors.map((x, j) => (j === i ? nc : x)) }, { transient: true })} onCommit={commit} compact />)}
-            <div className="row-actions">
-              {starlight.colors.length < 4 && <Button size="sm" icon="plus" onClick={() => setStarlight({ colors: [...starlight.colors, '#9fc9ff'] })}>Add color</Button>}
-              {starlight.colors.length > 1 && <Button size="sm" icon="close" onClick={() => setStarlight({ colors: starlight.colors.slice(0, -1) })}>Remove</Button>}
-            </div>
-          </div>
-        </div>
-        <Slider label="Brightness" value={starlight.brightness} min={0} max={1} onChange={(v) => setStarlight({ brightness: v }, { transient: true })} onCommit={commit} />
-        <Slider label="Star size" value={starlight.size} min={0.5} max={2} onChange={(v) => setStarlight({ size: v }, { transient: true })} onCommit={commit} />
-        <Slider label="Twinkle intensity" value={starlight.twinkle} min={0} max={1} onChange={(v) => setStarlight({ twinkle: v }, { transient: true })} onCommit={commit} />
-        <Slider label="Twinkle speed" value={starlight.twinkleSpeed} min={0.1} max={3} onChange={(v) => setStarlight({ twinkleSpeed: v }, { transient: true })} onCommit={commit} />
-        <Toggle label="Shooting stars" value={starlight.shooting} onChange={(v) => setStarlight({ shooting: v })} />
-        <Button size="sm" icon="dice" onClick={() => setStarlight({ seed: Math.floor(Math.random() * 1e6) })}>Re-roll pattern</Button>
-      </Section>
+      <StarlightControls />
       <Section title="Instrument & display themes" defaultOpen={false}>
         <Select<GaugeTheme> label="Gauge cluster theme" value={project.electronics.gaugeTheme} onChange={(v) => setElectronics({ gaugeTheme: v })} options={[{ value: 'tour', label: 'Tour (factory)' }, { value: 'sport', label: 'Sport (factory)' }, { value: 'track', label: 'Track (factory)' }, { value: 'concept_neon', label: 'Neon ring (concept)' }, { value: 'concept_minimal', label: 'Minimal (concept)' }]} />
         <ColorPicker label="Gauge accent / needle color" value={project.electronics.gaugeColor} onChange={(c) => setElectronics({ gaugeColor: c })} compact />

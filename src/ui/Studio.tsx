@@ -37,7 +37,9 @@ function PartsBrowser() {
         return (
           <div key={cat} className={`cat ${isOpen ? 'open' : ''}`}>
             <button type="button" className="cat-head" onClick={() => setOpen(isOpen ? null : cat)}><Icon name="chevron" size={14} />{CATEGORY_LABELS[cat]}<em>{items.length}</em></button>
-            {isOpen && <ul className="part-list">{items.map((c) => <li key={c.id}><button type="button" className={selected === c.id ? 'sel' : ''} onClick={() => focusOn(c.id)} onMouseEnter={() => hover(c.id)} onMouseLeave={() => hover(null)}>{c.label}</button></li>)}</ul>}
+            {isOpen && <ul className="part-list">{items.map((c) => <li key={c.id}><button type="button" className={selected === c.id ? 'sel' : ''} onClick={() => focusOn(c.id)} onMouseEnter={() => hover(c.id)} onMouseLeave={() => hover(null)}>{c.label}</button></li>)}
+              {cat === 'roof' && <li><button type="button" onClick={() => { focusOn('roof.panel'); useStore.getState().setStarlight({ enabled: true }); }}>✦ Starlight headliner<small>stars &amp; colors</small></button></li>}
+            </ul>}
           </div>
         );
       })}

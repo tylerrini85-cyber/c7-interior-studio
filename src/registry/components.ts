@@ -36,10 +36,12 @@ export interface ComponentDef {
   focus?: [number, number, number];
 }
 
-const SOFT: MaterialKind[] = ['leather', 'leather_perforated', 'leather_textured', 'leather_gloss', 'alcantara', 'suede', 'fabric', 'woven'];
+const CARBON: MaterialKind[] = ['carbon_twill', 'carbon_gloss', 'carbon_matte', 'carbon_forged', 'carbon_colored'];
+// Carbon fiber is offered on every part (soft trims included) so any surface can be wrapped.
+const SOFT: MaterialKind[] = ['leather', 'leather_perforated', 'leather_textured', 'leather_gloss', 'alcantara', 'suede', 'fabric', 'woven', ...CARBON];
 const HARD: MaterialKind[] = ['carbon_twill', 'carbon_forged', 'carbon_matte', 'carbon_gloss', 'carbon_colored', 'aluminum_brushed', 'aluminum_polished', 'chrome', 'titanium', 'steel_brushed', 'anodized', 'plastic_gloss', 'plastic_matte', 'plastic_soft', 'paint', 'satin', 'polymer_textured'];
 const ALL: MaterialKind[] = [...SOFT, ...HARD];
-const CARPETS: MaterialKind[] = ['carpet', 'fabric', 'rubber', 'leather'];
+const CARPETS: MaterialKind[] = ['carpet', 'fabric', 'rubber', 'leather', ...CARBON];
 
 export const FACTORY_COLORS: Record<FactoryColorId, { label: string; main: string; accent: string; stitch: string; carpet: string }> = {
   jet_black: { label: 'Jet Black', main: '#141416', accent: '#1b1b1e', stitch: '#3a3a3e', carpet: '#111113' },
@@ -61,7 +63,7 @@ function seat(prefix: 'seats.driver' | 'seats.passenger', label: string, group: 
     { id: `${prefix}.back.bolsters`, label: `${label} backrest bolsters`, category: 'seats', group, nodes: [`${prefix}.back.bolsters`], caps: { materials: SOFT, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus },
     { id: `${prefix}.headrest`, label: `${label} headrest`, category: 'seats', group, nodes: [`${prefix}.headrest`, `${prefix}.headrest.neck`], caps: { materials: SOFT, stitch: true, text: true, variantSlot: prefix }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' }, variant: 'gt', text: 'C7', textColor: '#9a9a9e' }), focus },
     { id: `${prefix}.back.shell`, label: `${label} back shell`, category: 'seats', group, nodes: [`${prefix}.back.shell`], caps: { materials: HARD }, factory: F('plastic_matte', '#121214'), focus },
-    { id: `${prefix}.seatbelt`, label: `${label} seatbelt`, category: 'seats', group, nodes: [`${prefix}.seatbelt`], caps: { materials: ['fabric', 'woven'] }, factory: F('woven', '#161618'), focus },
+    { id: `${prefix}.seatbelt`, label: `${label} seatbelt`, category: 'seats', group, nodes: [`${prefix}.seatbelt`], caps: { materials: ['fabric', 'woven', 'carbon_twill'] }, factory: F('woven', '#161618'), focus },
   ];
 }
 
@@ -82,14 +84,14 @@ function door(prefix: 'doors.driver' | 'doors.passenger', label: string): Compon
 
 export const COMPONENTS: ComponentDef[] = [
   // steering
-  { id: 'steering.rim.upper', label: 'Upper rim', category: 'steering', group: 'Steering wheel', nodes: ['steering.rim.upper'], caps: { materials: [...SOFT, 'carbon_twill', 'carbon_forged', 'carbon_gloss', 'carbon_colored'], stitch: true, variantSlot: 'steering' }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' }, variant: 'factory' }), focus: [-0.37, 0.66, -0.46] },
-  { id: 'steering.rim.lower', label: 'Lower rim', category: 'steering', group: 'Steering wheel', nodes: ['steering.rim.lower'], caps: { materials: [...SOFT, 'carbon_twill', 'carbon_forged', 'carbon_gloss', 'carbon_colored'], stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [-0.37, 0.66, -0.46] },
+  { id: 'steering.rim.upper', label: 'Upper rim', category: 'steering', group: 'Steering wheel', nodes: ['steering.rim.upper'], caps: { materials: SOFT, stitch: true, variantSlot: 'steering' }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' }, variant: 'factory' }), focus: [-0.37, 0.66, -0.46] },
+  { id: 'steering.rim.lower', label: 'Lower rim', category: 'steering', group: 'Steering wheel', nodes: ['steering.rim.lower'], caps: { materials: SOFT, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [-0.37, 0.66, -0.46] },
   { id: 'steering.grip.left', label: 'Left grip', category: 'steering', group: 'Steering wheel', nodes: ['steering.grip.left'], caps: { materials: SOFT, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [-0.37, 0.66, -0.46] },
   { id: 'steering.grip.right', label: 'Right grip', category: 'steering', group: 'Steering wheel', nodes: ['steering.grip.right'], caps: { materials: SOFT, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [-0.37, 0.66, -0.46] },
   { id: 'steering.spokes', label: 'Spokes', category: 'steering', group: 'Steering wheel', nodes: ['steering.spoke.left', 'steering.spoke.right', 'steering.spoke.lower'], caps: { materials: HARD }, factory: F('aluminum_brushed', '#3a3c40'), focus: [-0.37, 0.66, -0.46] },
   { id: 'steering.spokes.insert', label: 'Accent insert', category: 'steering', group: 'Steering wheel', nodes: ['steering.spoke.lower.insert'], caps: { materials: HARD, accent: true }, factory: F('aluminum_brushed', '#8d9096'), focus: [-0.37, 0.66, -0.46] },
   { id: 'steering.hub', label: 'Center hub', category: 'steering', group: 'Steering wheel', nodes: ['steering.hub'], caps: { materials: [...SOFT, ...HARD] }, factory: F('plastic_soft', '#141416'), focus: [-0.37, 0.66, -0.46] },
-  { id: 'steering.emblem', label: 'Emblem surround', category: 'steering', group: 'Steering wheel', nodes: ['steering.emblem'], caps: { materials: ['chrome', 'aluminum_polished', 'aluminum_brushed', 'anodized', 'plastic_gloss', 'carbon_gloss'] }, factory: F('chrome', '#d8d8dc'), focus: [-0.37, 0.66, -0.46] },
+  { id: 'steering.emblem', label: 'Emblem surround', category: 'steering', group: 'Steering wheel', nodes: ['steering.emblem'], caps: { materials: ['chrome', 'aluminum_polished', 'aluminum_brushed', 'anodized', 'plastic_gloss', ...CARBON] }, factory: F('chrome', '#d8d8dc'), focus: [-0.37, 0.66, -0.46] },
   { id: 'steering.paddles', label: 'Paddle shifters', category: 'steering', group: 'Steering wheel', nodes: ['steering.paddle.left', 'steering.paddle.right'], caps: { materials: HARD }, factory: F('aluminum_brushed', '#3a3c40'), focus: [-0.37, 0.66, -0.46] },
   { id: 'column.shroud', label: 'Column shroud', category: 'steering', group: 'Steering wheel', nodes: ['column.shroud', 'column.stalk.left', 'column.stalk.right'], caps: { materials: HARD }, factory: F('plastic_soft', '#121214'), focus: [-0.37, 0.66, -0.56] },
   // dashboard
@@ -110,7 +112,7 @@ export const COMPONENTS: ComponentDef[] = [
   { id: 'console.side_trim', label: 'Console side accents', category: 'console', group: 'Center console', nodes: ['console.side_trim.driver', 'console.side_trim.passenger'], caps: { materials: HARD, accent: true }, factory: F('aluminum_brushed', '#8d9096'), focus: [0, 0.56, -0.1] },
   { id: 'console.shifter', label: 'Shifter', category: 'console', group: 'Center console', nodes: ['console.shifter.knob', 'console.shifter.lever'], caps: { materials: [...SOFT, ...HARD], variantSlot: 'shifter' }, factory: F('leather', '#141416', { variant: 'automatic' }), focus: [0, 0.65, -0.26] },
   { id: 'console.shifter.boot', label: 'Shifter boot', category: 'console', group: 'Center console', nodes: ['console.shifter.boot'], caps: { materials: SOFT, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [0, 0.6, -0.26] },
-  { id: 'console.shifter.ring', label: 'Shifter ring', category: 'console', group: 'Center console', nodes: ['console.shifter.ring'], caps: { materials: ['chrome', 'aluminum_polished', 'aluminum_brushed', 'anodized', 'titanium', 'carbon_gloss'] }, factory: F('chrome', '#d8d8dc'), focus: [0, 0.65, -0.26] },
+  { id: 'console.shifter.ring', label: 'Shifter ring', category: 'console', group: 'Center console', nodes: ['console.shifter.ring'], caps: { materials: ['chrome', 'aluminum_polished', 'aluminum_brushed', 'anodized', 'titanium', ...CARBON] }, factory: F('chrome', '#d8d8dc'), focus: [0, 0.65, -0.26] },
   { id: 'console.dial', label: 'Drive mode dial', category: 'console', group: 'Center console', nodes: ['console.drive_mode_dial'], caps: { materials: HARD }, factory: F('aluminum_brushed', '#3a3c40'), focus: [-0.08, 0.58, -0.14] },
   { id: 'console.armrest', label: 'Armrest lid', category: 'console', group: 'Center console', nodes: ['console.armrest'], caps: { materials: SOFT, stitch: true, text: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' }, text: '' }), focus: [0, 0.62, 0.27] },
   { id: 'console.screen_bezel', label: 'Infotainment bezel', category: 'console', group: 'Center console', nodes: ['console.screen_bezel'], caps: { materials: HARD }, factory: F('plastic_gloss', '#0e0e10'), focus: [0.02, 0.74, -0.55] },
@@ -121,8 +123,8 @@ export const COMPONENTS: ComponentDef[] = [
   ...door('doors.driver', 'Driver'),
   ...door('doors.passenger', 'Passenger'),
   // roof
-  { id: 'roof.headliner', label: 'Headliner', category: 'roof', group: 'Headliner & roof', nodes: ['roof.header', 'roof.rear_strip', 'roof.rail.driver', 'roof.rail.passenger'], caps: { materials: [...SOFT, 'carbon_twill', 'carbon_forged'], stitch: true }, factory: F('suede', '#1a1a1c', { stitch: { color: '#2a2a2e', pattern: 'none' } }), focus: [0, 1.05, 0.05] },
-  { id: 'roof.panel', label: 'Removable roof panel', category: 'roof', group: 'Headliner & roof', nodes: ['roof.panel'], caps: { materials: [...SOFT, 'carbon_twill', 'carbon_forged', 'carbon_gloss'], stitch: true }, factory: F('suede', '#1a1a1c', { stitch: { color: '#2a2a2e', pattern: 'none' } }), focus: [0, 1.05, 0.1] },
+  { id: 'roof.headliner', label: 'Headliner', category: 'roof', group: 'Headliner & roof', nodes: ['roof.header', 'roof.rear_strip', 'roof.rail.driver', 'roof.rail.passenger'], caps: { materials: SOFT, stitch: true }, factory: F('suede', '#1a1a1c', { stitch: { color: '#2a2a2e', pattern: 'none' } }), focus: [0, 1.05, 0.05] },
+  { id: 'roof.panel', label: 'Removable roof panel', category: 'roof', group: 'Headliner & roof', nodes: ['roof.panel'], caps: { materials: SOFT, stitch: true }, factory: F('suede', '#1a1a1c', { stitch: { color: '#2a2a2e', pattern: 'none' } }), focus: [0, 1.05, 0.1] },
   { id: 'roof.visors', label: 'Sun visors', category: 'roof', group: 'Headliner & roof', nodes: ['roof.visor.driver', 'roof.visor.passenger'], caps: { materials: SOFT }, factory: F('suede', '#1a1a1c'), focus: [-0.36, 1.02, -0.45] },
   { id: 'pillars', label: 'A-pillars & header', category: 'pillars', group: 'Headliner & roof', nodes: ['pillar.a.driver', 'pillar.a.passenger', 'pillar.header', 'pillar.halo'], caps: { materials: SOFT }, factory: F('suede', '#1a1a1c'), focus: [-0.6, 0.95, -0.7] },
   { id: 'pillars.b', label: 'B-pillar trim', category: 'pillars', group: 'Headliner & roof', nodes: ['pillar.b.driver', 'pillar.b.passenger'], caps: { materials: [...SOFT, ...HARD] }, factory: F('plastic_soft', '#121214'), focus: [-0.65, 0.6, 0.55] },
@@ -132,7 +134,7 @@ export const COMPONENTS: ComponentDef[] = [
   { id: 'floor.carpet', label: 'Carpet', category: 'floor', group: 'Floor', nodes: ['floor.carpet', 'trim.kick.driver', 'trim.kick.passenger', 'rear.bulkhead', 'rear.cargo_floor', 'rear.quarter.driver', 'rear.quarter.passenger'], caps: { materials: CARPETS }, factory: F('carpet', '#111113'), focus: [-0.3, 0.1, -0.4] },
   { id: 'floor.mats.driver', label: 'Driver floor mat', category: 'floor', group: 'Floor', nodes: ['floor.mats.driver'], caps: { materials: CARPETS, stitch: true, text: true }, factory: F('carpet', '#111113', { stitch: { color: '#3a3a3e', pattern: 'single' }, text: '' }), focus: [-0.39, 0.1, -0.42] },
   { id: 'floor.mats.passenger', label: 'Passenger floor mat', category: 'floor', group: 'Floor', nodes: ['floor.mats.passenger'], caps: { materials: CARPETS, stitch: true, text: true }, factory: F('carpet', '#111113', { stitch: { color: '#3a3a3e', pattern: 'single' }, text: '' }), focus: [0.39, 0.1, -0.42] },
-  { id: 'pedals', label: 'Pedal covers', category: 'floor', group: 'Floor', nodes: ['pedals.brake', 'pedals.accelerator', 'pedals.dead_pedal'], caps: { materials: ['rubber', 'aluminum_brushed', 'aluminum_polished', 'steel_brushed', 'anodized', 'carbon_twill'] }, factory: F('rubber', '#141416'), focus: [-0.35, 0.2, -0.86] },
+  { id: 'pedals', label: 'Pedal covers', category: 'floor', group: 'Floor', nodes: ['pedals.brake', 'pedals.accelerator', 'pedals.dead_pedal'], caps: { materials: ['rubber', 'aluminum_brushed', 'aluminum_polished', 'steel_brushed', 'anodized', ...CARBON] }, factory: F('rubber', '#141416'), focus: [-0.35, 0.2, -0.86] },
   { id: 'sills', label: 'Sill plates', category: 'trim', group: 'Trim', nodes: ['doors.driver.sill_plate', 'doors.passenger.sill_plate'], caps: { materials: HARD, text: true }, factory: F('aluminum_brushed', '#8d9096', { text: 'C7 STINGRAY' }), focus: [-0.64, 0.2, -0.05] },
 ];
 
