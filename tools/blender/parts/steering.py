@@ -104,9 +104,7 @@ def build_spokes_and_hub(variant, c, u, v, n):
         rings.append(lib.place_profile(shield, c - n * depth, u, v, scale=(scale, scale)))
     hub = lib.loft_object('steering.hub', rings, close_u=True, cap_start=True, cap_end=True, material='plastic_soft')
     lib.tag(hub, 'steering.hub', 'steering')
-    # emblem carrier: a flat badge the runtime textures with the crossed-flags image supplied by the owner
-    badge = lib.extrude_profile('steering.emblem', lib.rounded_rect2d(0.046, 0.024, 0.003), c + v * 0.004 + n * 0.0352, u, v, 0.0015, material='chrome')
-    lib.tag(badge, 'steering.emblem', 'steering')
+    # the crossed-flags emblem is a transparent decal the runtime places on the airbag cover (no carrier plate)
     if thin:
         top = rim_centerline(variant, math.pi / 2).y
         stripe = lib.extrude_profile('steering.rim.marker', lib.rounded_rect2d(0.02, 0.012, 0.003), c + v * top - n * (rim_radius(variant, math.pi / 2) - 0.002), u, v, -0.003, material='emblem')

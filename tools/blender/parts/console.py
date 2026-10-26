@@ -43,38 +43,38 @@ def build_shifter(variant='automatic'):
     y = L.SHIFTER_Y
     base = Vector((0.0, y, L.CONSOLE_TOP_Z + 0.01))
     if variant == 'automatic':
-        # leather boot: truncated pyramid with a soft top collar
+        # leather boot: low truncated pyramid with a soft collar (about 95 x 110 mm at the plate, 38 mm tall)
         rings = []
-        for s, (w, d, h) in ((0.0, (0.11, 0.13, 0.0)), (0.5, (0.07, 0.085, 0.045)), (1.0, (0.038, 0.042, 0.08))):
-            prof = lib.rounded_rect2d(w, d, 0.012)
+        for s_, (w, d, h) in ((0.0, (0.090, 0.110, 0.0)), (0.5, (0.058, 0.072, 0.022)), (1.0, (0.030, 0.034, 0.038))):
+            prof = lib.rounded_rect2d(w, d, 0.010)
             rings.append(lib.place_profile(prof, base + Vector((0, 0, h)), (1, 0, 0), (0, 1, 0)))
         boot = lib.loft_object('console.shifter.boot', rings, close_u=True, cap_start=True, cap_end=False, material='leather_black', uv_scale=3.0)
         lib.add_subsurf(boot, 1)
         lib.tag(boot, 'console.shifter.boot', 'console')
-        # lever + knob (leaning slightly rearward)
-        top = base + Vector((0, -0.03, 0.17))
-        lever = lib.sweep_tube('console.shifter.lever', [base + Vector((0, 0, 0.07)), top], 0.012, n=16, material='metal_satin_dark')
+        # short lever leaning slightly rearward, then the leather knob with its chrome collar
+        top = base + Vector((0, -0.012, 0.072))
+        lever = lib.sweep_tube('console.shifter.lever', [base + Vector((0, 0, 0.030)), top], 0.009, n=16, material='metal_satin_dark')
         lib.tag(lever, 'console.shifter.lever', 'console', selectable=False)
-        knob = lib.revolve('console.shifter.knob', [(0.0, 0.0), (0.016, 0.0), (0.020, 0.012), (0.024, 0.035), (0.026, 0.06), (0.024, 0.078), (0.016, 0.088), (0.0, 0.09)], segments=32, material='leather_black', origin=top - Vector((0, 0, 0.01)), direction=(0, -0.18, 1))
+        knob = lib.revolve('console.shifter.knob', [(0.0, 0.0), (0.015, 0.0), (0.019, 0.008), (0.0225, 0.026), (0.0215, 0.046), (0.017, 0.060), (0.009, 0.066), (0.0, 0.067)], segments=32, material='leather_black', origin=top - Vector((0, 0, 0.004)), direction=(0, -0.16, 1))
         lib.tag(knob, 'console.shifter.knob', 'console')
-        ring = lib.revolve('console.shifter.ring', [(0.022, 0.0), (0.027, 0.0), (0.027, 0.012), (0.022, 0.012)], segments=32, material='chrome', origin=top - Vector((0, 0, 0.01)), direction=(0, -0.18, 1))
+        ring = lib.revolve('console.shifter.ring', [(0.016, 0.0), (0.0205, 0.0), (0.0205, 0.009), (0.016, 0.009)], segments=32, material='chrome', origin=top - Vector((0, 0, 0.006)), direction=(0, -0.16, 1))
         lib.tag(ring, 'console.shifter.ring', 'trim', selectable=False)
         # PRNDL indicator strip beside the boot
-        ind = lib.extrude_profile('console.shifter.indicator', lib.rounded_rect2d(0.012, 0.10, 0.003), base + Vector((-0.075, 0.0, 0.0)), (1, 0, 0), (0, 1, 0), 0.001, material='screen_off')
+        ind = lib.extrude_profile('console.shifter.indicator', lib.rounded_rect2d(0.012, 0.10, 0.003), base + Vector((-0.070, 0.0, 0.0)), (1, 0, 0), (0, 1, 0), 0.001, material='screen_off')
         lib.tag(ind, 'console.shifter.indicator', 'electronics', selectable=False)
     else:
         # manual: round boot and taller lever with a spherical knob
         rings = []
-        for s, (r, h) in ((0.0, (0.06, 0.0)), (0.5, (0.038, 0.05)), (1.0, (0.02, 0.10))):
+        for s, (r, h) in ((0.0, (0.050, 0.0)), (0.5, (0.030, 0.035)), (1.0, (0.016, 0.065))):
             rings.append(lib.place_profile(lib.circle2d(r, 28), base + Vector((0, 0, h)), (1, 0, 0), (0, 1, 0)))
         boot = lib.loft_object('console.shifter.boot', rings, close_u=True, cap_start=True, cap_end=False, material='leather_black', uv_scale=3.0)
         lib.add_subsurf(boot, 1)
         lib.tag(boot, 'console.shifter.boot', 'console')
-        h = 0.22 if variant == 'manual' else 0.16
-        top = base + Vector((0, -0.02, h))
-        lever = lib.sweep_tube('console.shifter.lever', [base + Vector((0, 0, 0.09)), top], 0.011, n=16, material='metal_brushed')
+        h = 0.15 if variant == 'manual' else 0.12
+        top = base + Vector((0, -0.015, h))
+        lever = lib.sweep_tube('console.shifter.lever', [base + Vector((0, 0, 0.06)), top], 0.010, n=16, material='metal_brushed')
         lib.tag(lever, 'console.shifter.lever', 'console', selectable=False)
-        knob = lib.revolve('console.shifter.knob', [(0.0, 0.0), (0.02, 0.0), (0.03, 0.02), (0.028, 0.04), (0.0, 0.05)], segments=32, material='leather_black', origin=top, direction=(0, -0.1, 1), subsurf=1)
+        knob = lib.revolve('console.shifter.knob', [(0.0, 0.0), (0.016, 0.0), (0.024, 0.016), (0.022, 0.034), (0.0, 0.042)], segments=32, material='leather_black', origin=top, direction=(0, -0.1, 1), subsurf=1)
         lib.tag(knob, 'console.shifter.knob', 'console')
 
 

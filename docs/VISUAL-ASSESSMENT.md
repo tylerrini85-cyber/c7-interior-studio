@@ -35,6 +35,13 @@ dash trim and the removable roof. App captures: `docs/renders-web/01..10` (softw
 Still approximate: dash-top sculpting between the hood and the passenger pad, the exact stack edge curvature, and the
 knee bolster / glovebox split line on the passenger lower dash.
 
+## Third pass (owner review: screen, emblem, shifter)
+| Owner finding | Change made |
+|---------------|-------------|
+| Screen should show the Corvette logo | Factory infotainment home is the crossed flags on black with temperature and clock in the status strip (IMG_4506); both screens now get a true planar projection of their face, which also fixed the cluster showing only a corner of its artwork |
+| Wheel logo without the rectangle, bigger | Emblem carrier plate removed; the artwork is a transparent decal straight on the airbag cover, 58 mm wide (IMG_4499/4516) |
+| Gear shift far too big | A8 shifter rebuilt to photo scale: 90 x 110 mm boot 38 mm tall, short lever, 45 mm leather knob with a chrome collar, about 140 mm above the plate (IMG_4508/4499); manual variants scaled to match |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

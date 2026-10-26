@@ -37,7 +37,7 @@ export const PRESETS: Preset[] = [
     doc.parts = factoryParts('jet_black');
     setAll(doc, isSoft, { color: '#0d0d0f', stitch: { color: '#1c1c1e', pattern: 'single' } });
     setAll(doc, isTrim, { material: 'carbon_matte', color: '#111113' });
-    setAll(doc, (id) => id === 'steering.emblem' || id === 'console.shifter.ring', { material: 'anodized', color: '#1a1a1c' });
+    setAll(doc, (id) => id === 'console.shifter.ring', { material: 'anodized', color: '#1a1a1c' });
   } },
   { id: 'redline', name: 'Redline Performance', description: 'Black Alcantara with Adrenaline Red inserts and red stitching', apply: (doc) => {
     doc.parts = factoryParts('jet_black');

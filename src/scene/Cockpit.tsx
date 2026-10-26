@@ -106,7 +106,7 @@ function MaterialSync({ doc }: { doc: ProjectDoc }) {
           if (om) { overlay = new THREE.Mesh(mesh.geometry, om); overlay.name = '__stitch'; overlay.raycast = () => {}; mesh.add(overlay); }
         }
         let decal: THREE.Mesh | undefined;
-        if (entry.component === 'steering.emblem') decal = makeEmblemDecal(mesh, 'hub');
+        if (entry.nodeName === 'steering.hub') decal = makeEmblemDecal(mesh, 'hub');
         else if (entry.nodeName.endsWith('.headrest') && (!cfg.text || cfg.text.trim() === '' || cfg.text.trim() === 'C7')) decal = makeEmblemDecal(mesh, 'headrest');
         else if (cfg.text && cfg.text.trim() && entry.component) decal = makeTextDecal(mesh, entry.component, cfg.text, cfg.textColor ?? '#c0c0c4');
         applied.current.set(mesh, { key, overlay, decal });
@@ -121,24 +121,57 @@ function MaterialSync({ doc }: { doc: ProjectDoc }) {
 }
 
 function screenMaterial(mesh: THREE.Mesh, tex: THREE.Texture, brightness: number): THREE.MeshPhysicalMaterial {
-  // remap the mesh's cap UV bounding box to [0,1]
+  // The exported cap UVs are not reliable for a planar image, so the occupant-facing face gets a fresh planar
+  // projection: find the most occupant-facing normal, keep the vertices within a few degrees of it (this excludes
+  // the thin side walls), project them onto that plane and normalise to [0,1] with V = 0 at the top.
   const geo = mesh.geometry;
-  const uv = geo.getAttribute('uv');
-  const nrm = geo.getAttribute('normal');
-  let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
-  // only the face that looks at the occupant (+z in three.js) defines the screen's UV box
-  for (let i = 0; i < uv.count; i++) {
-    if (nrm && nrm.getZ(i) < 0.7) continue;
-    const u = uv.getX(i), v = uv.getY(i); if (u < minU) minU = u; if (u > maxU) maxU = u; if (v < minV) minV = v; if (v > maxV) maxV = v;
+  const uv = geo.getAttribute('uv') as THREE.BufferAttribute;
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  // panel normal: mean of the occupant-side normals (the side walls cancel out), then the front face is the set
+  // of vertices lying on the frontmost plane along that normal (smoothed vertex normals make a normal-only test unreliable)
+  // panel normal: area-weighted sum of the occupant-facing triangles (the big front cap dominates the thin walls)
+  const N = new THREE.Vector3(0, 0, 0);
+  {
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), fn = new THREE.Vector3();
+    const tris: THREE.Vector3[] = [];
+    const index = geo.index;
+    const triCount = index ? index.count / 3 : pos.count / 3;
+    for (let t = 0; t < triCount; t++) {
+      const i0 = index ? index.getX(t * 3) : t * 3, i1 = index ? index.getX(t * 3 + 1) : t * 3 + 1, i2 = index ? index.getX(t * 3 + 2) : t * 3 + 2;
+      a.fromBufferAttribute(pos, i0); b.fromBufferAttribute(pos, i1); c.fromBufferAttribute(pos, i2);
+      fn.copy(b).sub(a).cross(c.clone().sub(a));
+      if (fn.z > 0) tris.push(fn.clone());
+    }
+    // only the large triangles (the cap) vote, so the thin walls cannot tilt the plane
+    const maxLen = tris.reduce((m, v) => Math.max(m, v.length()), 0);
+    for (const v of tris) if (v.length() > 0.2 * maxLen) N.add(v);
+    if (N.lengthSq() < 1e-12) N.set(0, 0, 1);
   }
-  if (!isFinite(minU)) { minU = 0; maxU = 1; minV = 0; maxV = 1; }
+  N.normalize();
+  const U = new THREE.Vector3(0, 1, 0).cross(N).normalize();
+  const V = new THREE.Vector3().crossVectors(N, U).normalize();
+  const p = new THREE.Vector3();
+  let dmax = -Infinity;
+  for (let i = 0; i < pos.count; i++) { p.fromBufferAttribute(pos, i); dmax = Math.max(dmax, p.dot(N)); }
+  const idx: number[] = []; const us: number[] = []; const vs: number[] = [];
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i);
+    if (p.dot(N) < dmax - 0.0025) continue;
+    idx.push(i); us.push(p.dot(U)); vs.push(p.dot(V));
+  }
+  if (idx.length >= 3) {
+    const minU = Math.min(...us), maxU = Math.max(...us), minV = Math.min(...vs), maxV = Math.max(...vs);
+    const w = Math.max(1e-6, maxU - minU), h = Math.max(1e-6, maxV - minV);
+    idx.forEach((i, k) => uv.setXY(i, (us[k] - minU) / w, (maxV - vs[k]) / h));
+    uv.needsUpdate = true;
+  }
   const t = tex.clone();
-  const w = Math.max(1e-6, maxU - minU), h = Math.max(1e-6, maxV - minV);
   t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
-  t.repeat.set(1 / w, 1 / h);
-  t.offset.set(-minU / w, -minV / h);
+  t.repeat.set(1, 1); t.offset.set(0, 0);
   t.needsUpdate = true;
-  const m = new THREE.MeshPhysicalMaterial({ color: '#000000', roughness: 0.12, metalness: 0, clearcoat: 0.8, clearcoatRoughness: 0.05 });
+  // the source canvas may still be drawing (logo image loading): re-upload this clone when it finishes
+  (tex as unknown as THREE.EventDispatcher<{ imageLoaded: object }>).addEventListener('imageLoaded', () => { t.needsUpdate = true; });
+  const m = new THREE.MeshPhysicalMaterial({ color: '#000000', roughness: 0.22, metalness: 0, clearcoat: 0.45, clearcoatRoughness: 0.12 });
   m.emissiveMap = t; m.emissive.set('#ffffff'); m.emissiveIntensity = 0.5 + 1.3 * brightness;
   m.name = 'screen';
   return m;
@@ -151,12 +184,17 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mes
   const mat = new THREE.MeshStandardMaterial({ map: emblemTexture(), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.35, metalness: 0.4, alphaTest: 0.05 });
   let plane: THREE.Mesh;
   if (where === 'hub') {
-    // the badge plate lies in the tilted wheel plane; its outward normal points up and toward the driver (+z)
-    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.044, 0.023), mat);
+    // crossed flags straight on the airbag cover (IMG_4499/4516: about 58 mm wide, just above the hub centre).
+    // Wheel centre and tilt come from the Blender layout (WHEEL_CENTER, WHEEL_TILT); the plane sits a hair in
+    // front of the cover's apex so nothing but the artwork shows.
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.058, 0.034), mat);
     const tilt = (24 * Math.PI) / 180;
+    const up = new THREE.Vector3(0, Math.cos(tilt), -Math.sin(tilt));
     const nrm = new THREE.Vector3(0, Math.sin(tilt), Math.cos(tilt));
-    plane.position.copy(c).addScaledVector(nrm, 0.0015);
+    const hubCenter = new THREE.Vector3(-0.37, 0.645, -0.46);
+    plane.position.copy(hubCenter).addScaledVector(up, 0.006).addScaledVector(nrm, 0.0358);
     plane.lookAt(plane.position.clone().add(nrm));
+    void c;
   } else {
     // headrest front face leans back with the seat and faces forward (-z)
     plane = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.026), mat);

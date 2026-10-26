@@ -382,16 +382,39 @@ export function infotainmentTexture(theme: string, brightness: number): THREE.Te
   const hit = cache.get(key); if (hit) return hit;
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const ctx = c.getContext('2d')!;
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; cache.set(key, t);
+  const alpha = 0.5 + 0.5 * brightness;
+  if (theme === 'factory') {
+    // factory MyLink home: black screen, crossed flags centred, temperature and clock in the status strip
+    ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#d8dbe0'; ctx.font = '18px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'left'; ctx.fillText('74°', 18, 30);
+    ctx.textAlign = 'right'; ctx.fillText('4:10', w - 18, 30);
+    const img = new Image();
+    img.onload = () => {
+      const lw = w * 0.46, lh = lw * (img.height / img.width);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, (w - lw) / 2, (h - lh) / 2 + 6, lw, lh);
+      t.needsUpdate = true;
+      // per-screen clones (see screenMaterial) share this canvas but upload separately: tell them to refresh
+      (t as unknown as THREE.EventDispatcher<{ imageLoaded: object }>).dispatchEvent({ type: 'imageLoaded' });
+    };
+    img.src = `${import.meta.env.BASE_URL}branding/crossed-flags.png`;
+    t.needsUpdate = true;
+    return t;
+  }
   const accent = theme === 'concept_red' ? '#ff3b30' : theme === 'concept_blue' ? '#3d7bff' : '#9aa0a6';
-  ctx.fillStyle = theme === 'factory' ? '#0b1020' : '#06070a'; ctx.fillRect(0, 0, w, h);
-  ctx.globalAlpha = 0.5 + 0.5 * brightness;
+  ctx.fillStyle = '#06070a'; ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = alpha;
   ctx.fillStyle = accent; ctx.fillRect(0, 0, w, 6);
   ctx.fillStyle = '#e8e8ec'; ctx.font = '26px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'left';
-  ctx.fillText(theme === 'factory' ? 'Chevrolet MyLink' : 'Studio Concept UI', 24, 48);
+  ctx.fillText('Studio Concept UI', 24, 48);
   const tiles = ['Audio', 'Phone', 'Nav', 'PDR', 'Settings', 'Climate'];
-  tiles.forEach((t, i) => { const x = 24 + (i % 3) * 156, y = 80 + Math.floor(i / 3) * 110; ctx.fillStyle = theme === 'factory' ? '#1a2440' : '#14161c'; ctx.fillRect(x, y, 140, 90); ctx.fillStyle = accent; ctx.fillRect(x, y + 82, 140, 4); ctx.fillStyle = '#e8e8ec'; ctx.font = '20px sans-serif'; ctx.fillText(t, x + 14, y + 36); });
-  ctx.fillStyle = '#9aa0a6'; ctx.font = '16px sans-serif'; ctx.textAlign = 'right'; ctx.fillText(theme === 'factory' ? '' : 'CONCEPT (non-factory)', w - 16, h - 14);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; cache.set(key, t); return t;
+  tiles.forEach((tl, i) => { const x = 24 + (i % 3) * 156, y = 80 + Math.floor(i / 3) * 110; ctx.fillStyle = '#14161c'; ctx.fillRect(x, y, 140, 90); ctx.fillStyle = accent; ctx.fillRect(x, y + 82, 140, 4); ctx.fillStyle = '#e8e8ec'; ctx.font = '20px sans-serif'; ctx.fillText(tl, x + 14, y + 36); });
+  ctx.fillStyle = '#9aa0a6'; ctx.font = '16px sans-serif'; ctx.textAlign = 'right'; ctx.fillText('CONCEPT (non-factory)', w - 16, h - 14);
+  t.needsUpdate = true;
+  return t;
 }
 
 /** Text label texture (headrest embroidery, floor mats, sill plates). */
