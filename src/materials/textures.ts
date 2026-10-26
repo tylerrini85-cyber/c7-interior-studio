@@ -388,9 +388,6 @@ export function infotainmentTexture(theme: string, brightness: number): THREE.Te
     // factory screen: crossed flags with the CORVETTE wordmark under them on black, temperature and clock in the strip
     ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h);
     ctx.globalAlpha = alpha;
-    ctx.fillStyle = '#d8dbe0'; ctx.font = '17px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-    ctx.textAlign = 'left'; ctx.fillText('74°', 16, 26);
-    ctx.textAlign = 'right'; ctx.fillText('4:10', w - 16, 26);
     ctx.fillStyle = '#e8e9ec'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.font = 'bold 44px "Arial Black", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
     const text = 'CORVETTE', spacing = 10;

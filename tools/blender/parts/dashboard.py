@@ -137,7 +137,7 @@ def build_column():
 STACK_CX = 0.01
 # (z, y) of the occupant-facing stack surface at the stack centreline, bottom (waterfall into the console) to top
 # waterfall at the foot, then one straight plane (slope 0.69) from z 0.60 up to the dash lip (IMG: flat angled stack face)
-STACK_FACE = [(0.545, 0.44), (0.552, 0.47), (0.562, 0.51), (0.578, 0.55), (0.60, 0.585), (0.64, 0.594), (0.70, 0.606), (0.76, 0.618), (0.81, 0.628), (0.845, 0.636), (0.852, 0.648)]  # ~80 deg face, waterfall only at the foot
+STACK_FACE = [(0.545, 0.46), (0.552, 0.51), (0.56, 0.555), (0.572, 0.578), (0.60, 0.585), (0.64, 0.594), (0.70, 0.606), (0.76, 0.618), (0.81, 0.628), (0.845, 0.636), (0.852, 0.648)]  # ~80 deg face, waterfall only at the foot
 STACK_HALF_W = [(0.545, 0.152), (0.60, 0.156), (0.68, 0.161), (0.76, 0.165), (0.862, 0.168)]
 
 
@@ -157,7 +157,7 @@ def stack_half_w(z):
 
 def stack_y(x, z):
     """y of the stack face at lateral x, height z; the face is yawed toward the driver (driver side further forward, passenger side closer to the occupants)."""
-    k = 0.6 + 0.4 * max(0.0, min(1.0, (z - 0.555) / 0.045))   # full yaw over the whole flat face
+    k = 0.6 + 0.4 * max(0.0, min(1.0, (z - 0.552) / 0.025))   # full yaw over the whole flat face
     # STACK_YAW is negative: the driver (-x) end of the face sits further forward (+y), so the face turns toward the driver
     return _interp(STACK_FACE, z) + math.tan(L.STACK_YAW) * (x - STACK_CX) * k
 
@@ -212,7 +212,7 @@ def build_center_stack():
     body = lib.loft_object('console.stack', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.0)
     lib.tag(body, 'console.stack', 'console')
     # ---- top strip: two slim centre vents with the hazard / passenger-airbag pod between (IMG_4506, 4493)
-    zt = 0.826
+    zt = 0.835
     for k, dx in enumerate((-0.088, 0.088)):
         side = 'left' if k == 0 else 'right'
         floor = _panel(f'dash.vent_center_{k}_floor', 0.092, 0.030, cx + dx, zt, 0.001, 0.004, 'plastic_black', 'dashboard', selectable=False, r=0.004)
@@ -223,7 +223,7 @@ def build_center_stack():
             lib.tag(vane, f'dash.vents.center.{k}.vane{j}', 'dashboard', selectable=False)
         knob = lib.box(f'dash.vent_center_{k}_knob', (0.012, 0.004, 0.006), o + n * 0.004, material='plastic_black_gloss')
         lib.tag(knob, f'dash.vents.center.{k}.knob', 'dashboard', selectable=False)
-        ring = lib.extrude_profile(f'dash.vent_center_{k}', lib.rounded_rect2d(0.100, 0.038, 0.006), o - n * 0.002, u, v, 0.0045, material='metal_brushed')
+        ring = lib.extrude_profile(f'dash.vent_center_{k}', lib.rounded_rect2d(0.100, 0.036, 0.006), o - n * 0.002, u, v, 0.0045, material='metal_brushed')
         hole = lib.extrude_profile(f'dash.vent_center_{k}_hole', lib.rounded_rect2d(0.092, 0.030, 0.004), o - n * 0.03, u, v, 0.06)
         lib.add_boolean(ring, hole)
         lib.tag(ring, f'dash.vents.center.{side}', 'dashboard')
@@ -234,33 +234,33 @@ def build_center_stack():
     ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.016, 0.009, 0.002), o + n * 0.0025 - u * 0.010, u, v, 0.001, material='screen_off')
     lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
     # ---- infotainment: gloss surround (wider on the left for the volume knob + SCREEN button), 8-inch screen
-    zs_scr = 0.752
-    bez = _panel('console.screen_bezel', 0.262, 0.168, cx + 0.020, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
-    scr = _panel('console.screen', 0.232, 0.138, cx + 0.020, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
-    _panel('console.screen_strip', 0.040, 0.168, cx - 0.135, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
-    _knob('console.volume_knob', cx - 0.135, zs_scr + 0.034, 0.014, 0.012, proud=0.0015)
-    _panel('console.screen_btn', 0.026, 0.014, cx - 0.135, zs_scr - 0.008, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    zs_scr = 0.748
+    bez = _panel('console.screen_bezel', 0.262, 0.140, cx + 0.020, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
+    scr = _panel('console.screen', 0.236, 0.122, cx + 0.020, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
+    _panel('console.screen_strip', 0.040, 0.140, cx - 0.135, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
+    _knob('console.volume_knob', cx - 0.135, zs_scr + 0.030, 0.014, 0.012, proud=0.0015)
+    _panel('console.screen_btn', 0.026, 0.014, cx - 0.135, zs_scr - 0.010, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     _panel('console.screen_btn2', 0.026, 0.014, cx - 0.135, zs_scr - 0.034, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- media row: two knobs and five buttons (RADIO, MEDIA, home, MENU, BACK)
-    zm = 0.657
-    _panel('console.media', 0.310, 0.042, cx, zm, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
+    zm = 0.652
+    _panel('console.media', 0.310, 0.038, cx, zm, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
     for k, dx in enumerate((-0.125, 0.125)):
-        _knob(f'console.media_knob_{k}', cx + dx, zm, 0.016, 0.012)
+        _knob(f'console.media_knob_{k}', cx + dx, zm, 0.015, 0.012)
     for i in range(5):
         _panel(f'console.media_btn_{i}', 0.030, 0.018, cx - 0.076 + 0.038 * i, zm, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- climate row: temperature and fan knobs with two button rows between (IMG_4495)
-    zh = 0.600
-    _panel('console.hvac', 0.310, 0.072, cx, zh, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
+    zh = 0.598
+    _panel('console.hvac', 0.310, 0.066, cx, zh, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
     for k, dx in enumerate((-0.118, 0.118)):
-        _knob(f'console.hvac_knob_{k}', cx + dx, zh, 0.025, 0.014)
+        _knob(f'console.hvac_knob_{k}', cx + dx, zh, 0.023, 0.014)
         o, u, v, n = stack_frame(cx + dx, zh)
         face = lib.revolve(f'console.hvac_lcd_{k}', [(0, 0), (0.018, 0), (0.018, 0.001), (0, 0.001)], segments=32, material='screen_off', origin=o + n * 0.0175, direction=n)
         lib.tag(face, f'console.hvac_lcd.{k}', 'electronics', selectable=False)
     for r in range(2):
         for c in range(4):
-            _panel(f'console.hvac_btn_{r}{c}', 0.030, 0.016, cx - 0.054 + 0.036 * c, zh + 0.016 - 0.032 * r, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+            _panel(f'console.hvac_btn_{r}{c}', 0.030, 0.015, cx - 0.054 + 0.036 * c, zh + 0.014 - 0.028 * r, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- badge lip at the foot of the stack where it turns into the console plate
-    _panel('console.badge_strip', 0.200, 0.011, cx, 0.566, 0.002, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.003)
+    _panel('console.badge_strip', 0.200, 0.010, cx, 0.5585, 0.002, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.003)
     # ---- engine start button on the driver edge of the stack beside the screen (IMG_4495)
     o, u, v, n = stack_frame(cx - 0.138, 0.700)
     sb = lib.revolve('dash.start_button', [(0, 0), (0.016, 0), (0.016, 0.006), (0.013, 0.008), (0, 0.008)], segments=28, material='metal_satin_dark', origin=o + n * 0.002, direction=n)
@@ -331,10 +331,10 @@ def build_grab_handle():
     stack and continues as the passenger edge of the console plate (IMG_4499 / IMG_4506 / IMG_4513)."""
     cx = STACK_CX
     # straight bar parallel to the flat stack face, 40 mm off it, from the dash lip down past the foot
-    o_top, u, v, n_top = stack_frame(cx + stack_half_w(0.85) + 0.002, 0.85)
-    o_mid, u, v, n_mid = stack_frame(cx + stack_half_w(0.64) + 0.002, 0.64)
-    a = o_top + n_top * 0.010
-    b = o_mid + n_mid * 0.052
+    o_top, u, v, n_top = stack_frame(cx + stack_half_w(0.85) + 0.012, 0.85)
+    o_mid, u, v, n_mid = stack_frame(cx + stack_half_w(0.64) + 0.012, 0.64)
+    a = o_top + n_top * 0.012
+    b = o_mid + n_mid * 0.075
     d = (b - a).normalized()
     length = (0.85 - 0.575) / -d.z
     pts, nrms = [], []
