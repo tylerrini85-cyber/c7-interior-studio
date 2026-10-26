@@ -203,7 +203,7 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mes
     // so step down along the pad and out along its normal from the pad's centre
     // Large badge centred on the headrest pad. The pad centre comes from the seat layout (hinge + 0.89 of the
     // backrest height along the recline axis, pad surface 0.101 m forward), only the seat's x is taken from the mesh.
-    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.072, 0.042), mat);
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.105, 0.061), mat);
     const nrm = new THREE.Vector3(0, Math.sin(SEATBACK_RECLINE), -Math.cos(SEATBACK_RECLINE));
     // pad centre from the pad mesh itself (works for every seat variant): x and height band from its bounds,
     // z from the frontmost vertices near the centre line (frontmost is the smallest z in three.js)

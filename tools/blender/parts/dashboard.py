@@ -333,8 +333,8 @@ def build_grab_handle():
     # straight bar parallel to the flat stack face, 40 mm off it, from the dash lip down past the foot
     o_top, u, v, n_top = stack_frame(cx + stack_half_w(0.85) + 0.002, 0.85)
     o_mid, u, v, n_mid = stack_frame(cx + stack_half_w(0.64) + 0.002, 0.64)
-    a = o_top + n_top * 0.006
-    b = o_mid + n_mid * 0.040
+    a = o_top + n_top * 0.010
+    b = o_mid + n_mid * 0.052
     d = (b - a).normalized()
     length = (0.85 - 0.575) / -d.z
     pts, nrms = [], []
@@ -345,7 +345,7 @@ def build_grab_handle():
     # bend onto the console plate edge and run rearward to the armrest
     for (x, y, z) in ((0.150, foot.y - 0.06, 0.569), (0.128, foot.y - 0.14, 0.569), (0.118, 0.20, 0.569), (0.118, 0.0, 0.569), (0.118, -0.20, 0.569), (0.118, -0.32, 0.569)):
         pts.append(Vector((x, y, z))); nrms.append(Vector((0, 0, 1)))
-    blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.030, 0.009, material='metal_brushed', uv_scale=2.0, bevel=0.002)
+    blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.036, 0.014, material='metal_brushed', uv_scale=2.0, bevel=0.003)
     lib.tag(blade, 'dash.grab_trim', 'dashboard')
 
 
