@@ -385,35 +385,28 @@ export function infotainmentTexture(theme: string, brightness: number): THREE.Te
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; cache.set(key, t);
   const alpha = 0.5 + 0.5 * brightness;
   if (theme === 'factory') {
-    // factory MyLink home (IMG_4499 / IMG_4495): dark gradient, status strip, two rows of app tiles, page arrows
-    const g = ctx.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#15181d'); g.addColorStop(1, '#07080a');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    // factory screen: crossed flags with the CORVETTE wordmark under them on black, temperature and clock in the strip
+    ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h);
     ctx.globalAlpha = alpha;
     ctx.fillStyle = '#d8dbe0'; ctx.font = '17px "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
     ctx.textAlign = 'left'; ctx.fillText('74°', 16, 26);
     ctx.textAlign = 'right'; ctx.fillText('4:10', w - 16, 26);
-    const tiles: { label: string; color: string; glyph: (x: number, y: number) => void }[] = [
-      { label: 'AUDIO', color: '#e9ecef', glyph: (x, y) => { ctx.beginPath(); ctx.moveTo(x - 18, y - 8); ctx.lineTo(x - 8, y - 8); ctx.lineTo(x + 4, y - 18); ctx.lineTo(x + 4, y + 18); ctx.lineTo(x - 8, y + 8); ctx.lineTo(x - 18, y + 8); ctx.closePath(); ctx.fill(); ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x + 6, y, 12, -0.9, 0.9); ctx.stroke(); ctx.beginPath(); ctx.arc(x + 6, y, 19, -0.9, 0.9); ctx.stroke(); } },
-      { label: 'PHONE', color: '#e0372b', glyph: (x, y) => { ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(x, y + 4, 18, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); ctx.beginPath(); ctx.arc(x - 16, y + 10, 5, 0, Math.PI * 2); ctx.arc(x + 16, y + 10, 5, 0, Math.PI * 2); ctx.fill(); } },
-      { label: 'PROJECTION', color: '#3b86f5', glyph: (x, y) => { ctx.lineWidth = 3; ctx.strokeRect(x - 20, y - 14, 40, 26); ctx.fillRect(x - 10, y + 15, 20, 4); ctx.beginPath(); ctx.moveTo(x - 6, y - 6); ctx.lineTo(x + 8, y); ctx.lineTo(x - 6, y + 6); ctx.closePath(); ctx.fill(); } },
-      { label: 'NAV', color: '#38c172', glyph: (x, y) => { ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#0d1a12'; ctx.beginPath(); ctx.moveTo(x, y - 13); ctx.lineTo(x + 9, y + 10); ctx.lineTo(x, y + 5); ctx.lineTo(x - 9, y + 10); ctx.closePath(); ctx.fill(); } },
-      { label: 'SETTINGS', color: '#f0b429', glyph: (x, y) => { ctx.beginPath(); for (let i = 0; i < 16; i++) { const r = i % 2 ? 20 : 15; const a = (i / 16) * Math.PI * 2; ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.fillStyle = '#1a1406'; ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI * 2); ctx.fill(); } },
-      { label: 'WEATHER', color: '#7fd3ff', glyph: (x, y) => { ctx.lineWidth = 3; ctx.lineCap = 'round'; for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI; ctx.beginPath(); ctx.moveTo(x - Math.cos(a) * 20, y - Math.sin(a) * 20); ctx.lineTo(x + Math.cos(a) * 20, y + Math.sin(a) * 20); ctx.stroke(); } ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); } },
-      { label: 'PDR', color: '#b8bec6', glyph: (x, y) => { ctx.lineWidth = 3; ctx.strokeRect(x - 20, y - 12, 32, 24); ctx.beginPath(); ctx.moveTo(x + 12, y - 4); ctx.lineTo(x + 22, y - 10); ctx.lineTo(x + 22, y + 10); ctx.lineTo(x + 12, y + 4); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.arc(x - 4, y, 6, 0, Math.PI * 2); ctx.stroke(); } },
-      { label: 'TEXT', color: '#5aa9ff', glyph: (x, y) => { ctx.beginPath(); ctx.moveTo(x - 22, y - 14); ctx.lineTo(x + 22, y - 14); ctx.lineTo(x + 22, y + 8); ctx.lineTo(x - 2, y + 8); ctx.lineTo(x - 12, y + 18); ctx.lineTo(x - 12, y + 8); ctx.lineTo(x - 22, y + 8); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#0a1420'; for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.arc(x + i * 10, y - 3, 2.5, 0, Math.PI * 2); ctx.fill(); } } },
-    ];
-    const cols = 4, cw = 104, rh = 116, x0 = (w - cols * cw) / 2, y0 = 48;
-    tiles.forEach((tl, i) => {
-      const cx = x0 + (i % cols) * cw + cw / 2, cy = y0 + Math.floor(i / cols) * rh + 44;
-      ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(cx - cw / 2 + 4, cy - 42, cw - 8, rh - 8);
-      ctx.fillStyle = tl.color; ctx.strokeStyle = tl.color;
-      tl.glyph(cx, cy);
-      ctx.fillStyle = '#e6e8eb'; ctx.font = '13px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText(tl.label, cx, cy + 50);
-    });
-    ctx.strokeStyle = '#8a9099'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(16, h / 2 - 8); ctx.lineTo(8, h / 2); ctx.lineTo(16, h / 2 + 8); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(w - 16, h / 2 - 8); ctx.lineTo(w - 8, h / 2); ctx.lineTo(w - 16, h / 2 + 8); ctx.stroke();
+    ctx.fillStyle = '#e8e9ec'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = 'bold 44px "Arial Black", "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    const text = 'CORVETTE', spacing = 10;
+    let total = -spacing; for (const ch of text) total += ctx.measureText(ch).width + spacing;
+    let x = (w - total) / 2;
+    for (const ch of text) { const cw = ctx.measureText(ch).width; ctx.fillText(ch, x + cw / 2, h * 0.78); x += cw + spacing; }
+    ctx.textBaseline = 'alphabetic';
+    const img = new Image();
+    img.onload = () => {
+      const lw = w * 0.44, lh = lw * (img.height / img.width);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(img, (w - lw) / 2, h * 0.46 - lh / 2, lw, lh);
+      t.needsUpdate = true;
+      (t as unknown as THREE.EventDispatcher<{ imageLoaded: object }>).dispatchEvent({ type: 'imageLoaded' });
+    };
+    img.src = `${import.meta.env.BASE_URL}branding/crossed-flags.png`;
     t.needsUpdate = true;
     return t;
   }

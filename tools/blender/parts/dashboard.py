@@ -330,18 +330,22 @@ def build_grab_handle():
     """Passenger grab blade: a thin aluminium ribbon that runs from the dash top down the passenger edge of the
     stack and continues as the passenger edge of the console plate (IMG_4499 / IMG_4506 / IMG_4513)."""
     cx = STACK_CX
+    # straight bar parallel to the flat stack face, 40 mm off it, from the dash lip down past the foot
+    o_top, u, v, n_top = stack_frame(cx + stack_half_w(0.85) + 0.002, 0.85)
+    o_mid, u, v, n_mid = stack_frame(cx + stack_half_w(0.64) + 0.002, 0.64)
+    a = o_top + n_top * 0.006
+    b = o_mid + n_mid * 0.040
+    d = (b - a).normalized()
+    length = (0.85 - 0.575) / -d.z
     pts, nrms = [], []
-    zs = [0.850, 0.835, 0.81, 0.77, 0.73, 0.69, 0.65, 0.615, 0.585, 0.565, 0.552]
-    for z in zs:
-        x = cx + stack_half_w(z) + 0.002
-        o, u, v, n = stack_frame(x, z)
-        s = (z - 0.552) / (0.850 - 0.552)
-        proud = 0.004 + 0.034 * math.sin(math.pi * s) ** 1.2   # open gap behind the bar: it is a handle
-        pts.append(o + n * proud); nrms.append(n)
-    # then rearward along the passenger edge of the console plate (plate edge x = 0.118)
-    for (x, y, z) in ((0.150, 0.46, 0.567), (0.132, 0.40, 0.569), (0.120, 0.30, 0.569), (0.118, 0.05, 0.569), (0.118, -0.08, 0.569)):
+    for i in range(8):
+        t = i / 7
+        pts.append(a + d * (length * t)); nrms.append(n_mid)
+    foot = pts[-1]
+    # bend onto the console plate edge and run rearward to the armrest
+    for (x, y, z) in ((0.150, foot.y - 0.06, 0.569), (0.128, foot.y - 0.14, 0.569), (0.118, 0.20, 0.569), (0.118, 0.0, 0.569), (0.118, -0.20, 0.569), (0.118, -0.32, 0.569)):
         pts.append(Vector((x, y, z))); nrms.append(Vector((0, 0, 1)))
-    blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.028, 0.008, material='metal_brushed', uv_scale=2.0, bevel=0.002)
+    blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.030, 0.009, material='metal_brushed', uv_scale=2.0, bevel=0.002)
     lib.tag(blade, 'dash.grab_trim', 'dashboard')
 
 

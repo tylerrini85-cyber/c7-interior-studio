@@ -205,7 +205,15 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mes
     // backrest height along the recline axis, pad surface 0.101 m forward), only the seat's x is taken from the mesh.
     plane = new THREE.Mesh(new THREE.PlaneGeometry(0.072, 0.042), mat);
     const nrm = new THREE.Vector3(0, Math.sin(SEATBACK_RECLINE), -Math.cos(SEATBACK_RECLINE));
-    plane.position.set(c.x, 0.958, 0.418).addScaledVector(nrm, 0.004);
+    // pad centre from the pad mesh itself (works for every seat variant): x and height band from its bounds,
+    // z from the frontmost vertices near the centre line (frontmost is the smallest z in three.js)
+    const pos = mesh.geometry.getAttribute('position');
+    const cy = (bb.min.y + bb.max.y) / 2;
+    let zf = Infinity;
+    const p = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) { p.fromBufferAttribute(pos, i); if (Math.abs(p.x - c.x) < 0.02 && Math.abs(p.y - cy) < 0.02) zf = Math.min(zf, p.z); }
+    if (!isFinite(zf)) zf = bb.min.z;
+    plane.position.set(c.x, cy, zf).addScaledVector(nrm, 0.004);
     plane.lookAt(plane.position.clone().add(nrm));
   }
   plane.name = '__decal';

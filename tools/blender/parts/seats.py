@@ -48,14 +48,17 @@ def back_center_depth(s, variant):
 
 def back_bolster(s, x, hw, variant):
     """Side-bolster bulge at lateral x (relative to the seat centre)."""
-    amp = {'gt': 0.072, 'competition': 0.105, 'racing_shell': 0.12}[variant]
+    amp = {'gt': 0.105, 'competition': 0.13, 'racing_shell': 0.14}[variant]
     env = math.sin(math.pi * max(0.0, min(1.0, s / 0.80))) if s < 0.80 else 0.0
-    env = env ** 0.8
-    peak = hw - 0.075
+    env = env ** 0.7
+    env *= 1.0 + 0.25 * _gauss(s, 0.62, 0.12)                                  # shoulder wings reach furthest forward
+    peak = hw - 0.07
     u = (abs(x) - peak) / 0.085
     shape = max(0.0, 1.0 - u * u)
-    inner = _sm(hw - 0.19, hw - 0.12, abs(x))                                   # flat centre, pads start outboard
-    return amp * env * shape * inner
+    inner = _sm(hw - 0.20, hw - 0.12, abs(x))
+    # the centre is a shallow trough between the pads (bucket feel)
+    trough = -0.014 * max(0.0, 1.0 - (abs(x) / max(0.05, hw - 0.12)) ** 2) * (env if s < 0.80 else 0.0)
+    return amp * env * shape * inner + trough
 
 
 def back_front(s, x, variant):
@@ -99,13 +102,14 @@ def cush_top(t):
 
 
 def cush_bolster(t, x, hw, variant):
-    amp = {'gt': 0.058, 'competition': 0.09, 'racing_shell': 0.10}[variant]
-    env = 0.35 + 0.65 * math.sin(math.pi * min(1.0, max(0.0, (t + 0.05) / 1.05)))
-    peak = hw - 0.065
+    amp = {'gt': 0.085, 'competition': 0.11, 'racing_shell': 0.12}[variant]
+    env = 0.45 + 0.55 * math.sin(math.pi * min(1.0, max(0.0, (t + 0.05) / 1.05)))
+    peak = hw - 0.062
     u = (abs(x) - peak) / 0.08
     shape = max(0.0, 1.0 - u * u)
-    inner = _sm(hw - 0.17, hw - 0.11, abs(x))
-    return amp * env * shape * inner
+    inner = _sm(hw - 0.18, hw - 0.11, abs(x))
+    dish = -0.012 * max(0.0, 1.0 - (abs(x) / max(0.05, hw - 0.11)) ** 2) * (1.0 - _sm(0.75, 1.0, t))
+    return amp * env * shape * inner + dish
 
 
 def cush_surface(t, x, variant):

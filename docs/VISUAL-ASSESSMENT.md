@@ -68,6 +68,14 @@ knee bolster / glovebox split line on the passenger lower dash.
 | The bar on the passenger side stands off the centre piece with a gap behind it | The aluminium bar is a real grab handle: 28 x 8 mm section, attached at the dash top and at the console edge, standing up to 38 mm off the stack edge in between so there is an open gap behind it |
 | Stack was turned toward the passenger | Yaw sign fixed; the face turns 18 degrees toward the driver |
 
+## Eighth pass (owner: seat badge, bucket depth, straight bar, screen logo)
+| Owner finding | Change made |
+|---------------|-------------|
+| Seat badge missing | Badge position now comes from the headrest pad mesh itself (x and height from its bounds, depth from its frontmost vertices), so it sits on the head pad for every seat variant; a saved headrest text other than blank or "C7" still replaces it by design |
+| Seats too flat, shape good | Back bolsters deepened to 105 mm with the shoulder wings reaching furthest forward and a shallow trough down the centre; cushion bolsters deepened to 85 mm with a dished centre |
+| Passenger bar should be straight and extend further | Bar is a straight 30 x 9 mm bar parallel to the stack face, 40 mm off it, from the dash lip past the foot, then along the console plate edge back to the armrest |
+| Logo on the centre screen with CORVETTE under it | Factory screen shows the crossed flags with the CORVETTE wordmark beneath, temperature and clock in the strip |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.
