@@ -78,7 +78,7 @@ DIAL_Y = 0.12
 SCREEN_CENTER = (0.0, 0.66, 0.74)
 SCREEN_W = 0.19
 SCREEN_H = 0.115
-STACK_YAW = math.radians(-9)   # centre stack rotated toward the driver (negative = toward -X)
+STACK_YAW = math.radians(-14)   # centre stack rotated toward the driver (negative = toward -X)
 
 # seats (GT)
 SEAT_W = 0.52

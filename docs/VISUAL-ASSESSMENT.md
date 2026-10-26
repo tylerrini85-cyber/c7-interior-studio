@@ -49,6 +49,12 @@ knee bolster / glovebox split line on the passenger lower dash.
 | The bar on the passenger side of the centre is not on the real car | The round leather ridge beside the grab blade was removed; the blade now sits almost flush on the stack like IMG_4499 / 4506 |
 | Bucket seats need to match the photos | GT seat rebuilt from IMG_4500 / 4507 / 4497 / 4513 / 4503 / 4504: one-piece hooded backrest with the headrest integrated (wide shoulders tapering to a rounded crown), stitched rounded-top headrest pad with the flags badge at its foot, 165 x 45 mm pass-through slot with a dark liner, wide perforated centre inserts on both cushion and back with a bordered seam, deep wrapped bolsters that fade out toward the hood, lumbar push, plastic back shell, outboard trim with three switches; no embroidered text by default |
 
+## Fifth pass (owner review: seat badge, stack angle and screen size)
+| Owner finding | Change made |
+|---------------|-------------|
+| Seat badge should be on the headrest and much bigger | Badge is a 72 mm decal centred on the headrest pad, placed from the seat layout rather than the mesh bounds |
+| Stack should be slanted toward the driver, screen bigger and in the middle | Stack body narrowed to about 33 cm and yawed 14 degrees toward the driver over its full height; screen enlarged to 215 x 128 mm and centred with the power / SCREEN strip in its own narrow panel on the left; media row widened; climate knobs enlarged with dark display faces and two rows of four buttons between them; top vents, start button, inner passenger vent and trim band moved to suit |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.
