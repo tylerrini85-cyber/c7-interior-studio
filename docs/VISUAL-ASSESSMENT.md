@@ -24,6 +24,17 @@ dash trim and the removable roof. App captures: `docs/renders-web/01..10` (softw
 - Center stack: screen-side power/volume knob and SCREEN button are present only as generic buttons.
 - No exterior; the halo and rear hatch are simplified.
 
+## Second pass (owner review of the first pass, IMG_4499 / 4495 / 4506 / 4491 / 4509 / 4493 / 4516)
+| Owner finding | What was wrong | Change made |
+|---------------|----------------|-------------|
+| Wheel should be round; flat bottom as an option | Factory rim had a flat segment; paddles were in front of the rim; arms were horizontal bars | Factory rim is now fully round; "Flat-bottom (Z06 / ZR1 style)" is a variant; arms rise from the hub to the rim at 9:30 / 2:30 with the switch pods at their ends; paddles sit behind the rim |
+| Center stack does not connect to the console | Stack was a thin floating plate with a gap above the console plate | Stack is one solid rearward-leaning body from under the dash lip down to a waterfall that meets the console plate; the badge lip sits where the face turns horizontal |
+| Area around the screen is wrong | Screen and chunky vents hovering on rods | Gloss surround with the volume knob and SCREEN button on its left, 8-in screen, media row (two knobs, five buttons), climate row (two knobs, eight buttons); two slim top vents with the hazard / airbag pod between |
+| Passenger side not accurate | Wide aluminium fin hanging in space; vent parts buried inside the pad; trim band culled | Thin aluminium grab blade that stands off the stack face in the middle and continues as the console plate edge, with a stitched leather ridge outboard of it; trim bands rebuilt as solids with bright edges; vents rebuilt flush with louvres, slider and bezel; outer passenger vent is the short one with the seat switches under it |
+
+Still approximate: dash-top sculpting between the hood and the passenger pad, the exact stack edge curvature, and the
+knee bolster / glovebox split line on the passenger lower dash.
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

@@ -97,16 +97,16 @@ export const COMPONENTS: ComponentDef[] = [
   // dashboard
   { id: 'dash.upper', label: 'Upper dash pad', category: 'dashboard', group: 'Dashboard', nodes: ['dash.upper', 'dash.end.driver', 'dash.end.passenger'], caps: { materials: SOFT, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [0, 0.85, -0.75] },
   { id: 'dash.glovebox', label: 'Passenger lower dash', category: 'dashboard', group: 'Dashboard', nodes: ['dash.glovebox'], caps: { materials: ALL, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [0.45, 0.6, -0.7] },
-  { id: 'dash.trim.driver', label: 'Driver dash trim', category: 'dashboard', group: 'Dashboard', nodes: ['dash.trim.driver'], caps: { materials: HARD, accent: true }, factory: F('aluminum_brushed', '#8d9096'), focus: [-0.6, 0.72, -0.62] },
-  { id: 'dash.trim.passenger', label: 'Passenger dash trim', category: 'dashboard', group: 'Dashboard', nodes: ['dash.trim.passenger'], caps: { materials: HARD, accent: true }, factory: F('aluminum_brushed', '#8d9096'), focus: [0.45, 0.72, -0.62] },
+  { id: 'dash.trim.driver', label: 'Driver dash trim', category: 'dashboard', group: 'Dashboard', nodes: ['dash.trim.driver'], caps: { materials: ALL, accent: true }, factory: F('plastic_soft', '#141416'), focus: [-0.6, 0.72, -0.62] },
+  { id: 'dash.trim.passenger', label: 'Passenger dash trim', category: 'dashboard', group: 'Dashboard', nodes: ['dash.trim.passenger'], caps: { materials: ALL, accent: true }, factory: F('plastic_soft', '#141416'), focus: [0.45, 0.72, -0.62] },
   { id: 'dash.grab', label: 'Passenger grab handle', category: 'dashboard', group: 'Dashboard', nodes: ['dash.grab'], caps: { materials: ALL, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [0.22, 0.7, -0.5] },
   { id: 'dash.grab_trim', label: 'Grab handle trim', category: 'dashboard', group: 'Dashboard', nodes: ['dash.grab_trim'], caps: { materials: HARD, accent: true }, factory: F('aluminum_brushed', '#8d9096'), focus: [0.22, 0.7, -0.5] },
-  { id: 'dash.vents', label: 'Air vents', category: 'dashboard', group: 'Dashboard', nodes: ['dash.vents.driver.ring', 'dash.vents.passenger.ring', 'dash.vents.center.left', 'dash.vents.center.right'], caps: { materials: HARD }, factory: F('aluminum_brushed', '#3a3c40'), focus: [-0.6, 0.75, -0.66] },
+  { id: 'dash.vents', label: 'Air vents', category: 'dashboard', group: 'Dashboard', nodes: ['dash.vents.driver.ring', 'dash.vents.passenger.ring', 'dash.vents.passenger_inner.ring', 'dash.vents.center.left', 'dash.vents.center.right', 'dash.passenger_switches.ring', 'console.badge_strip'], caps: { materials: HARD }, factory: F('aluminum_brushed', '#3a3c40'), focus: [-0.6, 0.75, -0.66] },
   { id: 'dash.lower', label: 'Under-dash panels', category: 'dashboard', group: 'Dashboard', nodes: ['dash.under', 'dash.switch_panel', 'dash.defroster', 'dash.center_speaker'], caps: { materials: HARD }, factory: F('plastic_soft', '#121214'), focus: [-0.4, 0.45, -0.72] },
   { id: 'cluster.bezel', label: 'Instrument cluster bezel', category: 'dashboard', group: 'Dashboard', nodes: ['cluster.bezel', 'cluster.hood'], caps: { materials: HARD }, factory: F('plastic_soft', '#121214'), focus: [-0.37, 0.78, -0.74] },
   // center stack / console
-  { id: 'console.stack', label: 'Center stack face', category: 'console', group: 'Center console', nodes: ['console.stack'], caps: { materials: HARD, accent: true }, factory: F('plastic_gloss', '#0e0e10'), focus: [0.02, 0.7, -0.55] },
-  { id: 'console.hvac', label: 'Climate control panel', category: 'console', group: 'Center console', nodes: ['console.hvac'], caps: { materials: HARD }, factory: F('plastic_soft', '#121214'), focus: [0.02, 0.62, -0.5] },
+  { id: 'console.stack', label: 'Center stack body', category: 'console', group: 'Center console', nodes: ['console.stack'], caps: { materials: ALL, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [0.02, 0.7, -0.55] },
+  { id: 'console.hvac', label: 'Climate control panel', category: 'console', group: 'Center console', nodes: ['console.hvac', 'console.media'], caps: { materials: HARD }, factory: F('plastic_soft', '#121214'), focus: [0.02, 0.62, -0.5] },
   { id: 'console.main', label: 'Console body', category: 'console', group: 'Center console', nodes: ['console.main'], caps: { materials: ALL, stitch: true }, factory: F('leather', '#141416', { stitch: { color: '#3a3a3e', pattern: 'single' } }), focus: [0, 0.56, -0.1] },
   { id: 'console.trim', label: 'Console trim plate', category: 'console', group: 'Center console', nodes: ['console.trim', 'console.cupholder_plate'], caps: { materials: HARD, accent: true }, factory: F('plastic_gloss', '#0e0e10'), focus: [0, 0.56, -0.26] },
   { id: 'console.side_trim', label: 'Console side accents', category: 'console', group: 'Center console', nodes: ['console.side_trim.driver', 'console.side_trim.passenger'], caps: { materials: HARD, accent: true }, factory: F('aluminum_brushed', '#8d9096'), focus: [0, 0.56, -0.1] },
@@ -174,8 +174,8 @@ export function factoryParts(color: FactoryColorId = 'jet_black'): Record<Compon
 
 export const VARIANTS: Record<VariantSlot, { id: string; label: string; file?: string; description: string }[]> = {
   steering: [
-    { id: 'factory', label: 'Factory C7 wheel', description: '14.1 in three-spoke wheel with shallow flat segment' },
-    { id: 'flat_bottom', label: 'Flat-bottom racing', file: 'variants/steering_flat_bottom.glb', description: 'Thicker rim, pronounced flat bottom' },
+    { id: 'factory', label: 'Factory Stingray wheel', description: '14.1 in round three-spoke wheel' },
+    { id: 'flat_bottom', label: 'Flat-bottom (Z06 / ZR1 style)', file: 'variants/steering_flat_bottom.glb', description: 'Thicker rim with a flat bottom and trim insert' },
     { id: 'd_shape', label: 'Custom performance D-shape', file: 'variants/steering_d_shape.glb', description: 'Flat top and bottom, center marker' },
     { id: 'led_performance', label: 'LED performance wheel', file: 'variants/steering_led_performance.glb', description: 'D-shape with shift-light LED strip' },
   ],

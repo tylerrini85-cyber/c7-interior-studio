@@ -46,7 +46,7 @@ const step = async (name, fn) => { current = name; try { await fn(); results.pus
     assert(mat.startsWith('alcantara|'), 'material applied to mesh: ' + mat);
   });
   await step('geometry variant swap (flat-bottom wheel) loads variant GLB', async () => {
-    await page.getByRole('button', { name: /Flat-bottom racing/ }).click();
+    await page.getByRole('button', { name: /Flat-bottom/ }).click();
     await page.waitForFunction(() => { const r = window.__c7registry; return [...r.entries.values()].some((e) => e.source === 'variant:steering:flat_bottom'); }, null, { timeout: 120000 });
     const info = await page.evaluate(() => { const r = window.__c7registry; const fac = r.entries.get(r.byNode.get('column.shroud')); const hidden = [...r.entries.values()].filter((e) => e.source === 'cockpit' && e.nodeName.startsWith('steering.')).length; const v = [...r.entries.values()].filter((e) => e.source === 'variant:steering:flat_bottom').length; return { hidden, v, fac: !!fac }; });
     assert.equal(info.hidden, 0, 'factory wheel nodes unregistered'); assert(info.v > 5, 'variant nodes registered');

@@ -310,6 +310,30 @@ def sweep_tube(name, path, radius, n=16, radius_fn=None, closed_path=False, cap=
     return obj
 
 
+def ribbon(name, pts, normals, width, thick, material=None, collection='Cockpit', uv_scale=1.0, bevel=0.0):
+    """Sweep a flat rectangular strip (width across the surface, thick along the given surface normals) along a
+    polyline. The wide face lies on the surface described by `normals`; the strip stands `thick` proud of it."""
+    pts = [Vector(p) for p in pts]
+    rings = []
+    n_pts = len(pts)
+    for i in range(n_pts):
+        if i == 0:
+            t = (pts[1] - pts[0]).normalized()
+        elif i == n_pts - 1:
+            t = (pts[-1] - pts[-2]).normalized()
+        else:
+            t = ((pts[i + 1] - pts[i]).normalized() + (pts[i] - pts[i - 1]).normalized()).normalized()
+        nn = Vector(normals[i]).normalized()
+        nn = (nn - t * nn.dot(t)).normalized()
+        b = t.cross(nn).normalized()
+        o = pts[i]
+        rings.append([o - b * (width / 2), o + b * (width / 2), o + b * (width / 2) + nn * thick, o - b * (width / 2) + nn * thick])
+    obj = loft_object(name, rings, close_u=True, cap_start=True, cap_end=True, material=material, collection=collection, uv_scale=uv_scale)
+    if bevel > 0:
+        add_bevel(obj, bevel, 2)
+    return obj
+
+
 def extrude_profile(name, profile2d, origin, u_axis, v_axis, depth, material=None, collection='Cockpit', bevel=0.0, bevel_segments=3, subsurf=0, uv_scale=1.0, taper=1.0):
     """Extrude a closed 2D profile along the plane normal by depth. taper scales the far face."""
     u = Vector(u_axis).normalized(); v = Vector(v_axis).normalized(); nrm = u.cross(v).normalized()

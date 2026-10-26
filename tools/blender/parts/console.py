@@ -25,7 +25,7 @@ def _console_section(y):
 
 
 def build_body():
-    ys = [0.47, 0.42, 0.36, 0.28, 0.20, 0.12, 0.04, -0.04, -0.10, -0.2, -0.3, -0.4, -0.47, -0.55, L.REAR_BULKHEAD_Y + 0.02]
+    ys = [0.50, 0.46, 0.42, 0.36, 0.28, 0.20, 0.12, 0.04, -0.04, -0.10, -0.2, -0.3, -0.4, -0.47, -0.55, L.REAR_BULKHEAD_Y + 0.02]
     rings = [_console_section(y) for y in ys]
     body = lib.loft_object('console.main', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.5)
     lib.add_subsurf(body, 1)
@@ -35,7 +35,7 @@ def build_body():
     lib.tag(plate, 'console.trim', 'console')
     # side accent strips (brushed) along the top edges of the console
     for side in (-1, 1):
-        strip = lib.box(f'console.side_trim_{side}', (0.012, 0.95, 0.008), (side * (L.CONSOLE_HALF_W - 0.03), -0.02, L.CONSOLE_TOP_Z + 0.004), material='metal_brushed', bevel=0.002)
+        strip = lib.box(f'console.side_trim_{side}', (0.006, 0.60, 0.009), (side * 0.118, 0.15, L.CONSOLE_TOP_Z + 0.0045), material='metal_brushed', bevel=0.001)
         lib.tag(strip, f'console.side_trim.{"driver" if side < 0 else "passenger"}', 'trim', selectable=False)
 
 
@@ -93,7 +93,7 @@ def build_dial_and_switches():
         lib.tag(b, f'console.btn.{k}', 'console', selectable=False)
     # traction / PDR buttons row at the front of the console below the stack
     for k in range(3):
-        b = lib.extrude_profile(f'console.front_btn_{k}', lib.rounded_rect2d(0.03, 0.016, 0.003), (-0.04 + 0.04 * k, 0.42, L.CONSOLE_TOP_Z + 0.011), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
+        b = lib.extrude_profile(f'console.front_btn_{k}', lib.rounded_rect2d(0.03, 0.016, 0.003), (-0.04 + 0.04 * k, 0.365, L.CONSOLE_TOP_Z + 0.011), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
         lib.tag(b, f'console.front_btn.{k}', 'console', selectable=False)
 
 
