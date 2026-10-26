@@ -76,6 +76,11 @@ knee bolster / glovebox split line on the passenger lower dash.
 | Passenger bar should be straight and extend further | Bar is a straight 30 x 9 mm bar parallel to the stack face, 40 mm off it, from the dash lip past the foot, then along the console plate edge back to the armrest |
 | Logo on the centre screen with CORVETTE under it | Factory screen shows the crossed flags with the CORVETTE wordmark beneath, temperature and clock in the strip |
 
+## Ninth pass (owner: control block and the foot of the stack)
+| Owner finding | Change made |
+|---------------|-------------|
+| Only two knobs on the real car, the rest buttons; controls spilling onto the leather; bad transition into the console | One black control panel under the screen with two chrome-rimmed knobs at its sides spanning both rows; row 1 RADIO, MEDIA, home, round MENU, previous, next, BACK; row 2 A/C, four mode buttons, rear defrost, SYNC; the badge strip sits at the foot; console plate pulled back to start where the foot ends and the button row in front of the shifter removed |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

@@ -241,26 +241,30 @@ def build_center_stack():
     _knob('console.volume_knob', cx - 0.135, zs_scr + 0.030, 0.014, 0.012, proud=0.0015)
     _panel('console.screen_btn', 0.026, 0.014, cx - 0.135, zs_scr - 0.010, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     _panel('console.screen_btn2', 0.026, 0.014, cx - 0.135, zs_scr - 0.034, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    # ---- media row: two knobs and five buttons (RADIO, MEDIA, home, MENU, BACK)
-    zm = 0.652
-    _panel('console.media', 0.310, 0.038, cx, zm, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
+    # ---- control block under the screen (reference: one black panel, two large knobs at its sides spanning both
+    # rows, row 1 = RADIO MEDIA home MENU prev next BACK, row 2 = A/C, four mode buttons, rear defrost, SYNC)
+    zc = 0.636
+    _panel('console.hvac', 0.310, 0.104, cx, zc, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
     for k, dx in enumerate((-0.125, 0.125)):
-        _knob(f'console.media_knob_{k}', cx + dx, zm, 0.015, 0.012)
-    for i in range(5):
-        _panel(f'console.media_btn_{i}', 0.030, 0.018, cx - 0.076 + 0.038 * i, zm, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    # ---- climate row: temperature and fan knobs with two button rows between (IMG_4495)
-    zh = 0.598
-    _panel('console.hvac', 0.310, 0.066, cx, zh, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
-    for k, dx in enumerate((-0.118, 0.118)):
-        _knob(f'console.hvac_knob_{k}', cx + dx, zh, 0.023, 0.014)
-        o, u, v, n = stack_frame(cx + dx, zh)
-        face = lib.revolve(f'console.hvac_lcd_{k}', [(0, 0), (0.018, 0), (0.018, 0.001), (0, 0.001)], segments=32, material='screen_off', origin=o + n * 0.0175, direction=n)
-        lib.tag(face, f'console.hvac_lcd.{k}', 'electronics', selectable=False)
-    for r in range(2):
-        for c in range(4):
-            _panel(f'console.hvac_btn_{r}{c}', 0.030, 0.015, cx - 0.054 + 0.036 * c, zh + 0.014 - 0.028 * r, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+        o, u, v, n = stack_frame(cx + dx, zc)
+        kn = lib.revolve(f'console.hvac_knob_{k}', [(0, 0), (0.024, 0), (0.024, 0.012), (0.022, 0.016), (0.0, 0.016)], segments=36, material='chrome', origin=o + n * 0.0015, direction=n)
+        lib.tag(kn, f'console.hvac_knob.{"left" if k == 0 else "right"}', 'trim', selectable=False)
+        cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.019, 0), (0.019, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=o + n * 0.0175, direction=n)
+        lib.tag(cap, f'console.hvac_knob_cap.{k}', 'console', selectable=False)
+    zm = zc + 0.026   # media row
+    xs = [cx - 0.084 + 0.028 * i for i in range(7)]
+    for i, x in enumerate(xs):
+        if i == 3:
+            o, u, v, n = stack_frame(x, zm)
+            b = lib.revolve('console.media_menu', [(0, 0), (0.0125, 0), (0.0125, 0.004), (0.011, 0.005), (0.0, 0.005)], segments=28, material='plastic_black_gloss', origin=o + n * 0.0015, direction=n)
+            lib.tag(b, 'console.media_btn.menu', 'console', selectable=False)
+        else:
+            _panel(f'console.media_btn_{i}', 0.024, 0.015, x, zm, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    zh = zc - 0.026   # climate row
+    for i, x in enumerate(xs):
+        _panel(f'console.hvac_btn_{i}', 0.024, 0.015, x, zh, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- badge lip at the foot of the stack where it turns into the console plate
-    _panel('console.badge_strip', 0.200, 0.010, cx, 0.5585, 0.002, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.003)
+    _panel('console.badge_strip', 0.200, 0.010, cx, 0.571, 0.002, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.003)
     # ---- engine start button on the driver edge of the stack beside the screen (IMG_4495)
     o, u, v, n = stack_frame(cx - 0.138, 0.700)
     sb = lib.revolve('dash.start_button', [(0, 0), (0.016, 0), (0.016, 0.006), (0.013, 0.008), (0, 0.008)], segments=28, material='metal_satin_dark', origin=o + n * 0.002, direction=n)

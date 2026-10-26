@@ -31,11 +31,11 @@ def build_body():
     lib.add_subsurf(body, 1)
     lib.tag(body, 'console.main', 'console')
     # gloss trim plate on top around the shifter (waterfall continues from the stack)
-    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.23, 0.68, 0.02), (0.0, 0.19, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
+    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.23, 0.60, 0.02), (0.0, 0.15, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
     lib.tag(plate, 'console.trim', 'console')
     # side accent strips (brushed) along the top edges of the console
     for side in (-1, 1):
-        strip = lib.box(f'console.side_trim_{side}', (0.006, 0.68, 0.009), (side * 0.118, 0.19, L.CONSOLE_TOP_Z + 0.0045), material='metal_brushed', bevel=0.001)
+        strip = lib.box(f'console.side_trim_{side}', (0.006, 0.60, 0.009), (side * 0.118, 0.15, L.CONSOLE_TOP_Z + 0.0045), material='metal_brushed', bevel=0.001)
         lib.tag(strip, f'console.side_trim.{"driver" if side < 0 else "passenger"}', 'trim', selectable=False)
 
 
@@ -91,10 +91,6 @@ def build_dial_and_switches():
     for k in range(2):
         b = lib.extrude_profile(f'console.btn_{k}', lib.rounded_rect2d(0.03, 0.018, 0.004), (0.085, L.DIAL_Y - 0.015 - 0.024 * k, L.CONSOLE_TOP_Z + 0.01), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
         lib.tag(b, f'console.btn.{k}', 'console', selectable=False)
-    # traction / PDR buttons row at the front of the console below the stack
-    for k in range(3):
-        b = lib.extrude_profile(f'console.front_btn_{k}', lib.rounded_rect2d(0.03, 0.016, 0.003), (-0.04 + 0.04 * k, 0.40, L.CONSOLE_TOP_Z + 0.011), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
-        lib.tag(b, f'console.front_btn.{k}', 'console', selectable=False)
 
 
 def build_cupholders_and_armrest():
