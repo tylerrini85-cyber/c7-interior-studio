@@ -54,6 +54,8 @@ export function StarlightControls({ open = true }: { open?: boolean }) {
 
 export function LightingPanel() {
   const project = useStore((s) => s.project);
+  const settings = useStore((s) => s.settings);
+  const setSettings = useStore((s) => s.setSettings);
   const setZone = useStore((s) => s.setZone);
   const setMaster = useStore((s) => s.setMaster);
   const setElectronics = useStore((s) => s.setElectronics);
@@ -71,6 +73,8 @@ export function LightingPanel() {
     <div className="lighting-panel">
       <Section title="Environment">
         <Segmented<EnvironmentId> ariaLabel="Lighting condition" value={project.environment} onChange={setEnvironment} options={[{ value: 'day', label: 'Day', icon: 'sun' }, { value: 'sunset', label: 'Sunset', icon: 'sunset' }, { value: 'night', label: 'Night', icon: 'moon' }, { value: 'showroom', label: 'Showroom', icon: 'showroom' }]} />
+        <Slider label="Cabin fill light" value={settings.cabinFill} min={0} max={2} step={0.05} onChange={(v) => { setSettings({ cabinFill: v }); void setSetting('settings', { ...settings, cabinFill: v }); }} format={(v) => `${Math.round(v * 100)}%`} />
+        <p className="muted small">Soft always-on light in the footwells, console and rear so low areas stay visible. This is a viewing aid, not part of the design.</p>
       </Section>
       <Section title="Ambient RGB lighting" right={<Toggle label="" value={master.enabled} onChange={(v) => setMaster({ enabled: v })} />}>
         <ColorPicker label="Master color" value={master.color} onChange={(c) => setMaster({ color: c }, { transient: true })} onCommit={commit} compact />

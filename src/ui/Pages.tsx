@@ -14,6 +14,7 @@ export function SettingsPage() {
         <Select<Quality> label="Render quality" value={settings.quality} onChange={(v) => update({ quality: v })} options={[{ value: 'ultra', label: 'Ultra (1.5x pixels, ambient occlusion, 2K shadows)' }, { value: 'high', label: 'High (1.25x pixels, shadows, antialiasing)' }, { value: 'balanced', label: 'Balanced (1x pixels, shadows)' }, { value: 'mobile', label: 'Mobile (no shadows, fewer lights)' }]} />
         <Slider label="Look sensitivity" value={settings.lookSensitivity} min={0.3} max={2.5} step={0.05} onChange={(v) => update({ lookSensitivity: v })} />
         <Slider label="Movement speed" value={settings.moveSpeed} min={0.4} max={2} step={0.05} onChange={(v) => update({ moveSpeed: v })} />
+        <Slider label="Cabin fill light" value={settings.cabinFill} min={0} max={2} step={0.05} onChange={(v) => update({ cabinFill: v })} format={(v) => `${Math.round(v * 100)}%`} />
         <Slider label="Default field of view" value={settings.defaultFov} min={45} max={95} step={1} onChange={(v) => update({ defaultFov: v })} format={(v) => `${v}°`} />
         <Toggle label="Invert vertical look" value={settings.invertY} onChange={(v) => update({ invertY: v })} />
         <Select label="Arrow keys" value={settings.arrowMode} onChange={(v) => update({ arrowMode: v })} options={[{ value: 'look', label: 'Rotate the view' }, { value: 'move', label: 'Move (same as WASD)' }]} />

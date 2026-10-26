@@ -8,10 +8,10 @@ import { useStore } from '../state/store';
 interface EnvSpec { zenith: string; horizon: string; ground: string; sunColor: string; sunIntensity: number; sunDir: [number, number, number]; ambient: number; hemiSky: string; hemiGround: string; hemi: number; bgBlur: number; exposure: number; envIntensity: number; bgIntensity: number; }
 
 export const ENVIRONMENTS: Record<EnvironmentId, EnvSpec> = {
-  day: { zenith: '#2f6fc4', horizon: '#c9dcf0', ground: '#4a4d52', sunColor: '#fff2dc', sunIntensity: 3.0, sunDir: [0.5, 0.8, -0.3], ambient: 0.12, hemiSky: '#9fc0ea', hemiGround: '#3c3835', hemi: 0.35, bgBlur: 0.02, exposure: 0.85, envIntensity: 0.7, bgIntensity: 0.55 },
-  sunset: { zenith: '#1f2550', horizon: '#ff8a3c', ground: '#2c2529', sunColor: '#ffa860', sunIntensity: 2.2, sunDir: [-0.9, 0.18, -0.35], ambient: 0.08, hemiSky: '#7a5a8a', hemiGround: '#2c2529', hemi: 0.3, bgBlur: 0.02, exposure: 0.9, envIntensity: 0.7, bgIntensity: 1.0 },
-  night: { zenith: '#03040a', horizon: '#0e1220', ground: '#07080b', sunColor: '#aeb8ff', sunIntensity: 0.2, sunDir: [-0.4, 0.7, 0.4], ambient: 0.03, hemiSky: '#141a2c', hemiGround: '#05060a', hemi: 0.15, bgBlur: 0.0, exposure: 1.1, envIntensity: 0.3, bgIntensity: 1.0 },
-  showroom: { zenith: '#3a3d44', horizon: '#50545c', ground: '#1e2024', sunColor: '#ffffff', sunIntensity: 1.0, sunDir: [0.3, 0.9, 0.2], ambient: 0.1, hemiSky: '#c9ccd3', hemiGround: '#2a2c31', hemi: 0.35, bgBlur: 0.04, exposure: 1.0, envIntensity: 0.9, bgIntensity: 0.8 },
+  day: { zenith: '#2f6fc4', horizon: '#c9dcf0', ground: '#4a4d52', sunColor: '#fff2dc', sunIntensity: 3.0, sunDir: [0.5, 0.8, -0.3], ambient: 0.22, hemiSky: '#9fc0ea', hemiGround: '#4a4440', hemi: 0.55, bgBlur: 0.02, exposure: 0.95, envIntensity: 0.85, bgIntensity: 0.55 },
+  sunset: { zenith: '#1f2550', horizon: '#ff8a3c', ground: '#2c2529', sunColor: '#ffa860', sunIntensity: 2.2, sunDir: [-0.9, 0.18, -0.35], ambient: 0.16, hemiSky: '#7a5a8a', hemiGround: '#3a3236', hemi: 0.45, bgBlur: 0.02, exposure: 1.0, envIntensity: 0.8, bgIntensity: 1.0 },
+  night: { zenith: '#03040a', horizon: '#0e1220', ground: '#07080b', sunColor: '#aeb8ff', sunIntensity: 0.2, sunDir: [-0.4, 0.7, 0.4], ambient: 0.08, hemiSky: '#1a2238', hemiGround: '#0a0b10', hemi: 0.25, bgBlur: 0.0, exposure: 1.15, envIntensity: 0.45, bgIntensity: 1.0 },
+  showroom: { zenith: '#3a3d44', horizon: '#50545c', ground: '#1e2024', sunColor: '#ffffff', sunIntensity: 1.0, sunDir: [0.3, 0.9, 0.2], ambient: 0.2, hemiSky: '#c9ccd3', hemiGround: '#3a3c42', hemi: 0.5, bgBlur: 0.04, exposure: 1.1, envIntensity: 1.1, bgIntensity: 0.8 },
 };
 
 function buildEnvScene(spec: EnvSpec, env: EnvironmentId): THREE.Scene {
@@ -44,8 +44,22 @@ function buildEnvScene(spec: EnvSpec, env: EnvironmentId): THREE.Scene {
   return scene;
 }
 
+/** Always-on soft fill lights so footwells, pedals, mats and low trim stay readable in every environment.
+ *  Positions are in three.js coords (x right, y up, z toward the rear). */
+const FILL_LIGHTS: { pos: [number, number, number]; i: number; d: number; color?: string }[] = [
+  { pos: [-0.37, 0.42, -0.55], i: 0.5, d: 1.4 },   // driver footwell, under the dash
+  { pos: [0.37, 0.42, -0.55], i: 0.5, d: 1.4 },    // passenger footwell
+  { pos: [0.0, 0.95, -0.15], i: 0.30, d: 1.8 },     // over the console
+  { pos: [-0.37, 0.70, 0.15], i: 0.18, d: 1.2 },    // driver seat area
+  { pos: [0.37, 0.70, 0.15], i: 0.18, d: 1.2 },     // passenger seat area
+  { pos: [0.0, 0.85, 0.65], i: 0.22, d: 1.5 },      // rear cabin
+  { pos: [-0.55, 0.75, -0.1], i: 0.12, d: 0.9 },    // driver door
+  { pos: [0.55, 0.75, -0.1], i: 0.12, d: 0.9 },     // passenger door
+];
+
 export function Environment() {
   const { gl, scene } = useThree();
+  const cabinFill = useStore((s) => s.settings.cabinFill);
   const env = useStore((s) => s.project?.environment ?? 'showroom');
   const spec = ENVIRONMENTS[env];
   const quality = useStore((s) => s.settings.quality);
@@ -76,6 +90,9 @@ export function Environment() {
         <pointLight position={[0.3, 0.78, 0.3]} intensity={0.18} distance={2.5} decay={2} color="#fff6ea" />
       </>}
       {env === 'night' && <pointLight position={[0, 1.02, -0.35]} intensity={0.35} distance={2.5} decay={2} color="#ffe0b0" />}
+      {FILL_LIGHTS.slice(0, quality === 'mobile' ? 4 : FILL_LIGHTS.length).map((f, i) => (
+        <pointLight key={i} position={f.pos} intensity={f.i * cabinFill * (env === 'night' ? 0.8 : 1)} distance={f.d} decay={2} color={f.color ?? (env === 'sunset' ? '#ffe2c8' : env === 'night' ? '#dfe6ff' : '#fff4e6')} />
+      ))}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.22, 0]} receiveShadow>
         <planeGeometry args={[40, 40]} />
         <meshStandardMaterial color={spec.ground} roughness={0.95} />

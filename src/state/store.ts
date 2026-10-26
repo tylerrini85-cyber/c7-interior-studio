@@ -22,6 +22,7 @@ export interface Settings {
   reduceMotion: boolean;
   showHints: boolean;
   defaultFov: number;
+  cabinFill: number;   // 0..2, multiplier for the always-on interior fill lights
 }
 
 export interface AppState {
@@ -93,7 +94,7 @@ const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|M
 
 export const DEFAULT_SETTINGS: Settings = {
   quality: isMobile ? 'mobile' : 'high', lookSensitivity: 1, moveSpeed: 1, invertY: false, arrowMode: 'look', autosave: true,
-  reduceMotion: false, showHints: true, defaultFov: 75,
+  reduceMotion: false, showHints: true, defaultFov: 75, cabinFill: 1,
 };
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
