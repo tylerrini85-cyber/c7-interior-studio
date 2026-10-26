@@ -1,4 +1,5 @@
 /** Project document schema (v1). The single source of truth for a customized interior. */
+import { factoryParts } from '../registry/components';
 
 export const SCHEMA_VERSION = 1 as const;
 
@@ -142,6 +143,12 @@ export function newId(): string {
 }
 
 /** Migrate any older document shape to the current schema. */
+const SUPERSEDED_DEFAULTS: Record<ComponentId, { material: MaterialKind; color: string }[]> = {
+  'console.stack': [{ material: 'plastic_gloss', color: '#0e0e10' }],
+  'dash.trim.driver': [{ material: 'aluminum_brushed', color: '#8d9096' }],
+  'dash.trim.passenger': [{ material: 'aluminum_brushed', color: '#8d9096' }],
+};
+
 export function migrate(doc: unknown): ProjectDoc {
   const d = doc as Partial<ProjectDoc> & Record<string, unknown>;
   if (!d || typeof d !== 'object') throw new Error('Invalid project document');
@@ -167,5 +174,15 @@ export function migrate(doc: unknown): ProjectDoc {
     linkSeats: typeof d.linkSeats === 'boolean' ? d.linkSeats : true,
     linkDoors: typeof d.linkDoors === 'boolean' ? d.linkDoors : true,
   };
+  // Factory defaults that changed after a photo-accuracy pass: a saved part that still holds the OLD default is
+  // treated as untouched and follows the new default, so older projects pick up the corrected stock look.
+  // Parts the owner changed are left exactly as saved. Components added since the project was saved get factory values.
+  const fresh = factoryParts(out.base.factoryColor);
+  for (const [id, cfg] of Object.entries(fresh)) {
+    const stored = out.parts[id];
+    if (!stored) { out.parts[id] = cfg; continue; }
+    const olds = SUPERSEDED_DEFAULTS[id];
+    if (olds && olds.some((o) => o.material === stored.material && o.color === stored.color && !stored.stitch && !stored.variant)) out.parts[id] = cfg;
+  }
   return out;
 }
