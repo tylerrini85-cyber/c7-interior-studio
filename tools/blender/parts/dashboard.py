@@ -156,9 +156,10 @@ def stack_half_w(z):
 
 
 def stack_y(x, z):
-    """y of the stack face at lateral x, height z; the face is yawed toward the driver (passenger side further forward)."""
+    """y of the stack face at lateral x, height z; the face is yawed toward the driver (driver side further forward, passenger side closer to the occupants)."""
     k = 0.6 + 0.4 * max(0.0, min(1.0, (z - 0.555) / 0.045))   # full yaw over the whole flat face
-    return _interp(STACK_FACE, z) + math.tan(-L.STACK_YAW) * (x - STACK_CX) * k
+    # STACK_YAW is negative: the driver (-x) end of the face sits further forward (+y), so the face turns toward the driver
+    return _interp(STACK_FACE, z) + math.tan(L.STACK_YAW) * (x - STACK_CX) * k
 
 
 def stack_frame(x, z):
