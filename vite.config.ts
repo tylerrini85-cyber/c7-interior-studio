@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react';
 // Relative base so the build works on GitHub Pages project sites and any sub-path.
 export default defineConfig({
   base: './',
+  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
   plugins: [react()],
   build: {
     target: 'es2020',

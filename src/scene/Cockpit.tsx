@@ -12,6 +12,9 @@ import { SEATBACK_RECLINE } from './coords';
 import type { PartConfig, ProjectDoc } from '../project/schema';
 
 export const MODEL_BASE = `${import.meta.env.BASE_URL}models/`;
+// build id appended to model urls so a normal reload always fetches new geometry (GitHub Pages caches for 10 min)
+declare const __BUILD_ID__: string;
+const MODEL_V = typeof __BUILD_ID__ === 'string' ? `?v=${__BUILD_ID__}` : '';
 
 const HIDDEN_NODES = new Set(['cluster.screen', 'cluster.speedo', 'cluster.fuel', 'cluster.temp']);
 const SCREEN_NODES = new Set(['cluster.glass', 'console.screen']);
@@ -312,7 +315,7 @@ function VariantLoader({ slot, doc }: { slot: VariantSlot; doc: ProjectDoc }) {
   const variant = variantForSlot(doc, slot);
   const def = VARIANTS[slot].find((v) => v.id === variant);
   if (!def?.file) return null;
-  return <GlbGroup url={MODEL_BASE + def.file} source={`variant:${slot}:${variant}`} />;
+  return <GlbGroup url={MODEL_BASE + def.file + MODEL_V} source={`variant:${slot}:${variant}`} />;
 }
 
 export function Cockpit({ registry }: { registry: MeshRegistry }) {
@@ -327,7 +330,7 @@ export function Cockpit({ registry }: { registry: MeshRegistry }) {
   return (
     <RegistryContext.Provider value={registry}>
       <Picking>
-        <GlbGroup url={MODEL_BASE + 'c7-cockpit.glb'} source="cockpit" hidePrefixes={hide} />
+        <GlbGroup url={MODEL_BASE + 'c7-cockpit.glb' + MODEL_V} source="cockpit" hidePrefixes={hide} />
         {(Object.keys(VARIANTS) as VariantSlot[]).map((slot) => <VariantLoader key={slot} slot={slot} doc={doc} />)}
       </Picking>
       <MaterialSync doc={doc} />
@@ -336,4 +339,4 @@ export function Cockpit({ registry }: { registry: MeshRegistry }) {
   );
 }
 
-useGLTF.preload(MODEL_BASE + 'c7-cockpit.glb');
+useGLTF.preload(MODEL_BASE + 'c7-cockpit.glb' + MODEL_V);

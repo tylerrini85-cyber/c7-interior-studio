@@ -55,6 +55,12 @@ knee bolster / glovebox split line on the passenger lower dash.
 | Seat badge should be on the headrest and much bigger | Badge is a 72 mm decal centred on the headrest pad, placed from the seat layout rather than the mesh bounds |
 | Stack should be slanted toward the driver, screen bigger and in the middle | Stack body narrowed to about 33 cm and yawed 14 degrees toward the driver over its full height; screen enlarged to 215 x 128 mm and centred with the power / SCREEN strip in its own narrow panel on the left; media row widened; climate knobs enlarged with dark display faces and two rows of four buttons between them; top vents, start button, inner passenger vent and trim band moved to suit |
 
+## Sixth pass (owner: "nothing changed")
+| Finding | Change made |
+|---------|-------------|
+| Stack still read as plates on a curved body, not one flat angled panel | Stack face is now a single plane from the top vents to the climate row (waterfall only at the foot), yawed 18 degrees toward the driver over its full height; screen bezel, media and climate panels sit flush in that plane with only knobs and buttons standing proud; screen enlarged to 232 x 138 mm |
+| Live site could keep showing the old model after a deploy | Model files are requested with a build id (`?v=`) so a normal reload fetches new geometry; GitHub Pages caches the fixed-name files for ten minutes otherwise |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

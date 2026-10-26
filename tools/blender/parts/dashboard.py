@@ -136,7 +136,8 @@ def build_column():
 # ---------------------------------------------------------------------------
 STACK_CX = 0.01
 # (z, y) of the occupant-facing stack surface at the stack centreline, bottom (waterfall into the console) to top
-STACK_FACE = [(0.545, 0.395), (0.555, 0.415), (0.575, 0.44), (0.60, 0.47), (0.64, 0.505), (0.70, 0.55), (0.76, 0.59), (0.81, 0.62), (0.845, 0.64), (0.852, 0.652)]
+# waterfall at the foot, then one straight plane (slope 0.69) from z 0.60 up to the dash lip (IMG: flat angled stack face)
+STACK_FACE = [(0.545, 0.395), (0.555, 0.415), (0.575, 0.44), (0.60, 0.47), (0.64, 0.4976), (0.70, 0.539), (0.76, 0.5804), (0.81, 0.6149), (0.845, 0.639), (0.852, 0.652)]
 STACK_HALF_W = [(0.545, 0.152), (0.60, 0.156), (0.68, 0.161), (0.76, 0.165), (0.862, 0.168)]
 
 
@@ -156,7 +157,7 @@ def stack_half_w(z):
 
 def stack_y(x, z):
     """y of the stack face at lateral x, height z; the face is yawed toward the driver (passenger side further forward)."""
-    k = 0.55 + 0.45 * max(0.0, min(1.0, (z - 0.555) / 0.30))
+    k = 0.6 + 0.4 * max(0.0, min(1.0, (z - 0.555) / 0.045))   # full yaw over the whole flat face
     return _interp(STACK_FACE, z) + math.tan(-L.STACK_YAW) * (x - STACK_CX) * k
 
 
@@ -232,23 +233,23 @@ def build_center_stack():
     ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.016, 0.009, 0.002), o + n * 0.0025 - u * 0.010, u, v, 0.001, material='screen_off')
     lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
     # ---- infotainment: gloss surround (wider on the left for the volume knob + SCREEN button), 8-inch screen
-    zs_scr = 0.757
-    bez = _panel('console.screen_bezel', 0.250, 0.158, cx + 0.018, zs_scr, 0.0025, 0.012, 'plastic_black_gloss', 'console', bevel=0.002, r=0.008)
-    scr = _panel('console.screen', 0.215, 0.128, cx + 0.018, zs_scr, 0.0035, 0.001, 'screen_off', 'electronics', r=0.003)
-    _panel('console.screen_strip', 0.040, 0.158, cx - 0.132, zs_scr, 0.0025, 0.012, 'plastic_black', 'console', selectable=False, r=0.006)
-    _knob('console.volume_knob', cx - 0.132, zs_scr + 0.030, 0.014, 0.012, proud=0.0025)
-    _panel('console.screen_btn', 0.026, 0.014, cx - 0.132, zs_scr - 0.010, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    _panel('console.screen_btn2', 0.026, 0.014, cx - 0.132, zs_scr - 0.034, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    zs_scr = 0.752
+    bez = _panel('console.screen_bezel', 0.262, 0.168, cx + 0.020, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
+    scr = _panel('console.screen', 0.232, 0.138, cx + 0.020, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
+    _panel('console.screen_strip', 0.040, 0.168, cx - 0.135, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
+    _knob('console.volume_knob', cx - 0.135, zs_scr + 0.034, 0.014, 0.012, proud=0.0015)
+    _panel('console.screen_btn', 0.026, 0.014, cx - 0.135, zs_scr - 0.008, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    _panel('console.screen_btn2', 0.026, 0.014, cx - 0.135, zs_scr - 0.034, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- media row: two knobs and five buttons (RADIO, MEDIA, home, MENU, BACK)
     zm = 0.657
-    _panel('console.media', 0.300, 0.040, cx, zm, 0.0025, 0.006, 'plastic_black', 'console', r=0.006)
+    _panel('console.media', 0.310, 0.042, cx, zm, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
     for k, dx in enumerate((-0.125, 0.125)):
         _knob(f'console.media_knob_{k}', cx + dx, zm, 0.016, 0.012)
     for i in range(5):
         _panel(f'console.media_btn_{i}', 0.030, 0.018, cx - 0.076 + 0.038 * i, zm, 0.0045, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- climate row: temperature and fan knobs with two button rows between (IMG_4495)
     zh = 0.600
-    _panel('console.hvac', 0.300, 0.070, cx, zh, 0.0025, 0.006, 'plastic_black', 'console', r=0.006)
+    _panel('console.hvac', 0.310, 0.072, cx, zh, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
     for k, dx in enumerate((-0.118, 0.118)):
         _knob(f'console.hvac_knob_{k}', cx + dx, zh, 0.025, 0.014)
         o, u, v, n = stack_frame(cx + dx, zh)
