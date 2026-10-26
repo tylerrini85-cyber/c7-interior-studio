@@ -42,6 +42,13 @@ knee bolster / glovebox split line on the passenger lower dash.
 | Wheel logo without the rectangle, bigger | Emblem carrier plate removed; the artwork is a transparent decal straight on the airbag cover, 58 mm wide (IMG_4499/4516) |
 | Gear shift far too big | A8 shifter rebuilt to photo scale: 90 x 110 mm boot 38 mm tall, short lever, 45 mm leather knob with a chrome collar, about 140 mm above the plate (IMG_4508/4499); manual variants scaled to match |
 
+## Fourth pass (owner review: screen UI, passenger bar, seats)
+| Owner finding | Change made |
+|---------------|-------------|
+| Screen should match the photos | Factory home is now the MyLink layout from IMG_4499 / 4495: status strip with temperature and clock, two rows of app tiles (Audio, Phone, Projection, Nav, Settings, Weather, PDR, Text) with icon glyphs, page arrows |
+| The bar on the passenger side of the centre is not on the real car | The round leather ridge beside the grab blade was removed; the blade now sits almost flush on the stack like IMG_4499 / 4506 |
+| Bucket seats need to match the photos | GT seat rebuilt from IMG_4500 / 4507 / 4497 / 4513 / 4503 / 4504: one-piece hooded backrest with the headrest integrated (wide shoulders tapering to a rounded crown), stitched rounded-top headrest pad with the flags badge at its foot, 165 x 45 mm pass-through slot with a dark liner, wide perforated centre inserts on both cushion and back with a bordered seam, deep wrapped bolsters that fade out toward the hood, lumbar push, plastic back shell, outboard trim with three switches; no embroidered text by default |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

@@ -196,10 +196,12 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mes
     plane.lookAt(plane.position.clone().add(nrm));
     void c;
   } else {
-    // headrest front face leans back with the seat and faces forward (-z)
-    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.026), mat);
+    // flags badge at the bottom centre of the stitched headrest pad (IMG_4500): the pad leans back with the seat,
+    // so step down along the pad and out along its normal from the pad's centre
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.036, 0.021), mat);
     const nrm = new THREE.Vector3(0, Math.sin(SEATBACK_RECLINE), -Math.cos(SEATBACK_RECLINE));
-    plane.position.set(c.x, c.y - 0.012, bb.min.z).addScaledVector(nrm, 0.002);
+    const upv = new THREE.Vector3(0, Math.cos(SEATBACK_RECLINE), Math.sin(SEATBACK_RECLINE));
+    plane.position.copy(c).addScaledVector(upv, -0.072).addScaledVector(nrm, 0.0045);
     plane.lookAt(plane.position.clone().add(nrm));
   }
   plane.name = '__decal';

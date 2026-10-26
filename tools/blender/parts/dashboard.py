@@ -321,8 +321,7 @@ def build_outer_vents():
 
 def build_grab_handle():
     """Passenger grab blade: a thin aluminium ribbon that runs from the dash top down the passenger edge of the
-    stack (standing off the face in the middle so fingers fit behind it) and continues as the passenger edge of
-    the console plate. The leather cockpit ridge runs just outboard of it (IMG_4499 / IMG_4506 / IMG_4513)."""
+    stack and continues as the passenger edge of the console plate (IMG_4499 / IMG_4506 / IMG_4513)."""
     cx = STACK_CX
     pts, nrms = [], []
     zs = [0.850, 0.835, 0.81, 0.77, 0.73, 0.69, 0.65, 0.615, 0.585, 0.565, 0.552]
@@ -330,25 +329,13 @@ def build_grab_handle():
         x = cx + stack_half_w(z) - 0.020
         o, u, v, n = stack_frame(x, z)
         s = (z - 0.552) / (0.850 - 0.552)
-        proud = 0.004 + 0.022 * math.sin(math.pi * s) ** 1.5
+        proud = 0.003 + 0.006 * math.sin(math.pi * s) ** 1.5
         pts.append(o + n * proud); nrms.append(n)
     # then rearward along the passenger edge of the console plate (plate edge x = 0.118)
     for (x, y, z) in ((0.140, 0.40, 0.566), (0.125, 0.355, 0.569), (0.118, 0.28, 0.569), (0.118, 0.05, 0.569), (0.118, -0.08, 0.569)):
         pts.append(Vector((x, y, z))); nrms.append(Vector((0, 0, 1)))
     blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.024, 0.006, material='metal_brushed', uv_scale=2.0)
     lib.tag(blade, 'dash.grab_trim', 'dashboard')
-    # leather ridge outboard of the blade: the rounded passenger shoulder of the stack, continuing as the
-    # console's passenger top edge
-    path = []
-    for z in zs:
-        w = stack_half_w(z)
-        o, u, v, n = stack_frame(cx + w - 0.024, z)
-        path.append(Vector((cx + w + 0.004, o.y + 0.012, z)))
-    for (x, y, z) in ((0.166, 0.40, 0.561), (0.154, 0.34, 0.560), (0.149, 0.20, 0.560), (0.148, 0.05, 0.560), (0.148, -0.08, 0.560)):
-        path.append(Vector((x, y, z)))
-    path = lib.spline_through(path, n_per_seg=2, tension=0.4)
-    pad = lib.sweep_tube('dash.grab', path, (0.020, 0.016), n=14, cap=True, material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0)
-    lib.tag(pad, 'dash.grab', 'dashboard')
 
 
 def _loft_needs_flip(rings, outward):
