@@ -407,4 +407,14 @@ export function textTexture(text: string, color: string, bg = 'rgba(0,0,0,0)'): 
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; cache.set(key, t); return t;
 }
 
+let emblemTex: THREE.Texture | null = null;
+/** Crossed-flags artwork supplied by the owner (public/branding/crossed-flags.png). */
+export function emblemTexture(): THREE.Texture {
+  if (emblemTex) return emblemTex;
+  const t = new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}branding/crossed-flags.png`);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
+  emblemTex = t;
+  return t;
+}
+
 export function disposeTextureCache() { for (const t of cache.values()) t.dispose(); cache.clear(); }

@@ -31,7 +31,7 @@ def build_body():
     lib.add_subsurf(body, 1)
     lib.tag(body, 'console.main', 'console')
     # gloss trim plate on top around the shifter (waterfall continues from the stack)
-    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.22, 0.36, 0.02), (0.0, 0.26, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.23, 0.60, 0.02), (0.0, 0.15, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
     lib.tag(plate, 'console.trim', 'console')
     # side accent strips (brushed) along the top edges of the console
     for side in (-1, 1):
@@ -55,7 +55,7 @@ def build_shifter(variant='automatic'):
         top = base + Vector((0, -0.03, 0.17))
         lever = lib.sweep_tube('console.shifter.lever', [base + Vector((0, 0, 0.07)), top], 0.012, n=16, material='metal_satin_dark')
         lib.tag(lever, 'console.shifter.lever', 'console', selectable=False)
-        knob = lib.revolve('console.shifter.knob', [(0.0, 0.0), (0.018, 0.0), (0.025, 0.015), (0.027, 0.04), (0.024, 0.06), (0.015, 0.072), (0.0, 0.075)], segments=32, material='leather_black', origin=top - Vector((0, 0, 0.01)), direction=(0, -0.18, 1))
+        knob = lib.revolve('console.shifter.knob', [(0.0, 0.0), (0.016, 0.0), (0.020, 0.012), (0.024, 0.035), (0.026, 0.06), (0.024, 0.078), (0.016, 0.088), (0.0, 0.09)], segments=32, material='leather_black', origin=top - Vector((0, 0, 0.01)), direction=(0, -0.18, 1))
         lib.tag(knob, 'console.shifter.knob', 'console')
         ring = lib.revolve('console.shifter.ring', [(0.022, 0.0), (0.027, 0.0), (0.027, 0.012), (0.022, 0.012)], segments=32, material='chrome', origin=top - Vector((0, 0, 0.01)), direction=(0, -0.18, 1))
         lib.tag(ring, 'console.shifter.ring', 'trim', selectable=False)

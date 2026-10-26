@@ -95,7 +95,7 @@ def build_seat(prefix, side_x, variant='gt'):
     lib.add_subsurf(base, 1)
     lib.tag(base, f'{prefix}.base.bolsters', 'seats')
     base_st = [L.CUSHION_Y0 + 0.04 + (L.CUSHION_Y1 - 0.05 - L.CUSHION_Y0 - 0.04) * i / 23 for i in range(24)]
-    _insert_strip(f'{prefix}.base.insert', lambda y: _cushion_ring(y, variant, side_x), base_st, 0.16, Vector((0, 0, 0.007)), 'leather_black_perf', f'{prefix}.base.center', pleats=0 if variant == 'racing_shell' else 3)
+    _insert_strip(f'{prefix}.base.insert', lambda y: _cushion_ring(y, variant, side_x), base_st, 0.16, Vector((0, 0, 0.007)), 'leather_black_perf', f'{prefix}.base.center', pleats=0)
     # ---- seatback
     hs = [0.0, 0.05, 0.12, 0.2, 0.3, 0.4, 0.5, 0.58, L.SEATBACK_H - 0.03, L.SEATBACK_H]
     rings = [_smooth_ring(_back_ring(h, variant, side_x)) for h in hs]
@@ -104,7 +104,7 @@ def build_seat(prefix, side_x, variant='gt'):
     lib.tag(back, f'{prefix}.back.bolsters', 'seats')
     hinge, up, fwd = _back_frame()
     back_st = [0.05 + (L.SEATBACK_H - 0.08) * i / 35 for i in range(36)]
-    _insert_strip(f'{prefix}.back.insert', lambda h: _back_ring(h, variant, side_x), back_st, 0.16, fwd * 0.007, 'leather_black_perf', f'{prefix}.back.center', pleats=0 if variant == 'racing_shell' else 6)
+    _insert_strip(f'{prefix}.back.insert', lambda h: _back_ring(h, variant, side_x), back_st, 0.16, fwd * 0.007, 'leather_black_perf', f'{prefix}.back.center', pleats=0)
     # ---- headrest (integrated): neck + head pad
     if variant != 'racing_shell':
         top_o = hinge + up * L.SEATBACK_H + Vector((side_x, 0, 0))

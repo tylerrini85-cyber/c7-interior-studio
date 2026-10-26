@@ -6,7 +6,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useStore, selectRenderDoc, variantForSlot } from '../state/store';
 import { componentForNode, COMPONENT_MAP, VARIANTS, VARIANT_SLOT_NODES, type VariantSlot } from '../registry/components';
 import { buildMaterial, configKey, fixedMaterialFor, stitchOverlayMaterial, MATERIAL_PRESETS } from '../materials/engine';
-import { clusterTexture, infotainmentTexture, textTexture } from '../materials/textures';
+import { clusterTexture, emblemTexture, infotainmentTexture, textTexture } from '../materials/textures';
 import { MeshRegistry, RegistryContext, useRegistry } from './registry';
 import { SEATBACK_RECLINE } from './coords';
 import type { PartConfig, ProjectDoc } from '../project/schema';
@@ -106,7 +106,9 @@ function MaterialSync({ doc }: { doc: ProjectDoc }) {
           if (om) { overlay = new THREE.Mesh(mesh.geometry, om); overlay.name = '__stitch'; overlay.raycast = () => {}; mesh.add(overlay); }
         }
         let decal: THREE.Mesh | undefined;
-        if (cfg.text && cfg.text.trim() && entry.component) decal = makeTextDecal(mesh, entry.component, cfg.text, cfg.textColor ?? '#c0c0c4');
+        if (entry.component === 'steering.emblem') decal = makeEmblemDecal(mesh, 'hub');
+        else if (entry.component?.endsWith('.headrest') && (!cfg.text || cfg.text.trim() === '' || cfg.text.trim() === 'C7')) decal = makeEmblemDecal(mesh, 'headrest');
+        else if (cfg.text && cfg.text.trim() && entry.component) decal = makeTextDecal(mesh, entry.component, cfg.text, cfg.textColor ?? '#c0c0c4');
         applied.current.set(mesh, { key, overlay, decal });
       }
     };
@@ -140,6 +142,29 @@ function screenMaterial(mesh: THREE.Mesh, tex: THREE.Texture, brightness: number
   m.emissiveMap = t; m.emissive.set('#ffffff'); m.emissiveIntensity = 0.5 + 1.3 * brightness;
   m.name = 'screen';
   return m;
+}
+
+function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mesh {
+  mesh.geometry.computeBoundingBox();
+  const bb = mesh.geometry.boundingBox!;
+  const c = bb.getCenter(new THREE.Vector3());
+  const mat = new THREE.MeshStandardMaterial({ map: emblemTexture(), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.35, metalness: 0.4, alphaTest: 0.05 });
+  let plane: THREE.Mesh;
+  if (where === 'hub') {
+    // badge plate lies in the tilted wheel plane; its normal is the largest extent's cross axis -> use the bounding box
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.044, 0.022), mat);
+    const tilt = (24 * Math.PI) / 180;
+    plane.position.set(c.x, c.y + Math.sin(tilt) * 0.0012, c.z + Math.cos(tilt) * 0.0012);
+    plane.rotation.set(tilt, 0, 0);
+  } else {
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.025), mat);
+    plane.position.set(c.x, c.y - 0.012, bb.min.z - 0.002);
+    plane.rotation.set(-SEATBACK_RECLINE, Math.PI, 0);
+  }
+  plane.name = '__decal';
+  plane.raycast = () => {};
+  mesh.add(plane);
+  return plane;
 }
 
 function makeTextDecal(mesh: THREE.Mesh, component: string, text: string, color: string): THREE.Mesh | undefined {

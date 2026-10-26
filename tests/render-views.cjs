@@ -22,7 +22,7 @@ const VIEWS = {
   const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   page.setDefaultTimeout(240000);
-  await page.goto('http://localhost:4173/?quality=' + q, { waitUntil: 'networkidle' });
+  await page.goto('' + (process.env.BASE || 'http://localhost:4173') + '/?quality=' + q, { waitUntil: 'networkidle' });
   await page.getByRole('button', { name: 'New Project' }).click();
   if (process.env.ENV) await page.getByRole('button', { name: process.env.ENV }).click();
   await page.getByRole('button', { name: 'Enter the cockpit' }).click();

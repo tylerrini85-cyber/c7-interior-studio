@@ -19,34 +19,24 @@ def wheel_frame(center=None, tilt=None):
 
 
 def rim_centerline(variant, a):
-    """Return 2D point (in wheel plane) of the rim centreline at angle a (0 = right/3 o'clock, CCW)."""
+    """2D point (wheel plane) of the rim centreline at angle a (0 = 3 o'clock, CCW). The factory C7 wheel has a
+    genuine flat bottom (reference photos IMG_4495/4511/4515)."""
     r = R_CENTER
     x, y = r * math.cos(a), r * math.sin(a)
-    if variant == 'factory':
-        # gentle flattening of the very bottom (C7 wheel has a shallow flat segment under the lower spoke)
-        flat = -0.93 * r
-        if y < flat:
-            y = flat
-    elif variant == 'flat_bottom':
-        flat = -0.76 * r
-        if y < flat:
-            y = flat
-    elif variant in ('d_shape', 'led_performance'):
-        if y < -0.72 * r:
-            y = -0.72 * r
-        if y > 0.86 * r:
-            y = 0.86 * r
+    flat = {'factory': -0.68, 'flat_bottom': -0.62, 'd_shape': -0.62, 'led_performance': -0.62}[variant] * r
+    if y < flat:
+        y = flat
+    if variant in ('d_shape', 'led_performance') and y > 0.84 * r:
+        y = 0.84 * r
     return Vector((x, y))
 
 
 def rim_radius(variant, a):
-    base = L.RIM_RADIUS
-    if variant in ('flat_bottom', 'd_shape', 'led_performance'):
-        base = 0.019
+    base = L.RIM_RADIUS if variant == 'factory' else 0.019
     # thumb rests: thicker just above the horizontal spokes (10 and 2 o'clock)
-    for ta in (math.radians(160), math.radians(20)):
+    for ta in (math.radians(155), math.radians(25)):
         d = abs((a - ta + math.pi) % (2 * math.pi) - math.pi)
-        base += 0.004 * max(0.0, 1 - d / math.radians(22))
+        base += 0.0045 * max(0.0, 1 - d / math.radians(24))
     return base
 
 
@@ -57,78 +47,73 @@ def build_rim_segment(cid, variant, a0, a1, material, c, u, v, n, steps=28):
         p2 = rim_centerline(variant, a)
         path.append(c + u * p2.x + v * p2.y)
         radii.append(rim_radius(variant, a))
-    obj = lib.sweep_tube(cid, path, 0.0, n=18, radius_fn=lambda t: (radii[min(int(round(t * steps)), steps)], radii[min(int(round(t * steps)), steps)] * 0.92), cap=True, material=material, up_hint=n, uv_scale=4.0)
+    obj = lib.sweep_tube(cid, path, 0.0, n=18, radius_fn=lambda t: (radii[min(int(round(t * steps)), steps)], radii[min(int(round(t * steps)), steps)] * 0.9), cap=True, material=material, up_hint=n, uv_scale=4.0)
     lib.tag(obj, cid, 'steering')
+    return obj
+
+
+def _plate(cid, pts2d, c, u, v, n, depth, back, material, bevel=0.003):
+    """Flat plate in the wheel plane: pts2d outline (CCW), extruded from depth `back` toward the driver by `depth`."""
+    prof = [Vector(p) for p in pts2d]
+    obj = lib.extrude_profile(cid, prof, c - n * back, u, v, depth, material=material, bevel=bevel, bevel_segments=3)
     return obj
 
 
 def build_spokes_and_hub(variant, c, u, v, n):
     thin = variant in ('d_shape', 'led_performance')
-    spoke_mat = 'metal_satin_dark' if not thin else 'carbon'
-    # horizontal spokes: from hub edge to the rim at 0 and 180 deg, tall flat sections with leather-topped button pods
-    for side, cid in ((-1, 'steering.spoke.left'), (1, 'steering.spoke.right')):
-        rings = []
-        for s, (h, d) in ((0.0, (0.075, 0.026)), (0.55, (0.060, 0.022)), (1.0, (0.042, 0.020))):
-            x = side * (0.06 + (R_CENTER - 0.06 + 0.012) * s)
-            prof = lib.rounded_rect2d(d, h, 0.012)
-            # profile plane: d along n (depth), h along v
-            rings.append(lib.place_profile(prof, c + u * x + v * (0.004 - 0.004 * s), n, v))
-        sp = lib.loft_object(cid, rings, close_u=True, cap_start=True, cap_end=True, material=spoke_mat)
-        lib.add_bevel(sp, 0.004, 3)
-        lib.tag(sp, cid, 'steering')
-        # switch pod on the front face of the spoke
-        pod = lib.extrude_profile(cid + '.pod', lib.rounded_rect2d(0.042, 0.055, 0.008), c + u * (side * 0.088) - n * 0.0, u, v, -0.022, material='plastic_black', bevel=0.003)
-        lib.tag(pod, cid + '.pod', 'steering', selectable=False)
-        for r in range(2):
-            for k in range(2):
-                b = lib.extrude_profile(f'{cid}.btn{r}{k}', lib.rounded_rect2d(0.016, 0.014, 0.003), c + u * (side * 0.088 + (k - 0.5) * 0.019) + v * (0.014 - 0.028 * r) - n * 0.023, u, v, -0.003, material='plastic_black_gloss')
-                lib.tag(b, f'{cid}.btn{r}{k}', 'steering', selectable=False)
-        # paddle shifter behind the spoke (A8)
-        pad = lib.extrude_profile(cid + '.paddle', lib.rounded_rect2d(0.075, 0.045, 0.012), c + u * (side * 0.125) + v * 0.0 + n * 0.035, u, v, 0.004, material='metal_satin_dark', bevel=0.002)
-        lib.tag(pad, 'steering.paddle.left' if side < 0 else 'steering.paddle.right', 'steering', selectable=False)
-    # lower spoke: broad tapering blade from hub to rim bottom
-    rings = []
+    frame_mat = 'carbon' if thin else 'metal_brushed'
     bottom = rim_centerline(variant, -math.pi / 2).y
-    for s, (w, d) in ((0.0, (0.075, 0.03)), (0.6, (0.055, 0.022)), (1.0, (0.045, 0.02))):
-        y = -0.045 + (bottom + 0.012 + 0.045) * s
-        prof = lib.rounded_rect2d(w, d, 0.008)
-        rings.append(lib.place_profile(prof, c + v * y, u, n))
-    low = lib.loft_object('steering.spoke.lower', rings, close_u=True, cap_start=True, cap_end=True, material=spoke_mat)
-    lib.add_bevel(low, 0.003, 3)
-    lib.tag(low, 'steering.spoke.lower', 'steering')
-    # lower spoke trim insert (brushed)
-    ins = lib.extrude_profile('steering.spoke.lower.insert', lib.rounded_rect2d(0.03, 0.07, 0.006), c + v * (-0.085) - n * 0.012, u, v, -0.002, material='metal_brushed')
+    # ---- silver Y frame: left arm, right arm, lower stem (one visual piece, three meshes sharing the component)
+    arm_l = [(-0.048, 0.040), (-0.118, 0.030), (-0.158, 0.012), (-0.160, -0.016), (-0.120, -0.034), (-0.048, -0.046)]
+    arm_r = [(-x, y) for (x, y) in reversed(arm_l)]
+    stem = [(-0.034, -0.040), (0.034, -0.040), (0.024, bottom + 0.014), (-0.024, bottom + 0.014)]
+    for cid, pts in (('steering.spoke.left', arm_l), ('steering.spoke.right', arm_r), ('steering.spoke.lower', stem)):
+        pl = _plate(cid, pts, c, u, v, n, -0.016, 0.004, frame_mat)
+        lib.tag(pl, cid, 'steering')
+    # ---- black switch pods inset into the outer ends of the arms
+    for side, cid in ((-1, 'steering.spoke.left'), (1, 'steering.spoke.right')):
+        pod = lib.extrude_profile(cid + '.pod', lib.rounded_rect2d(0.040, 0.052, 0.008), c + u * (side * 0.112) - n * 0.005, u, v, -0.006, material='plastic_black')
+        lib.tag(pod, cid + '.pod', 'steering', selectable=False)
+        for r in range(3):
+            b = lib.extrude_profile(f'{cid}.btn{r}', lib.rounded_rect2d(0.028, 0.012, 0.003), c + u * (side * 0.112) + v * (0.016 - 0.016 * r) - n * 0.0055, u, v, -0.0025, material='plastic_black_gloss')
+            lib.tag(b, f'{cid}.btn{r}', 'steering', selectable=False)
+        # paddle shifter behind the arm (A8)
+        pad = lib.extrude_profile(cid + '.paddle', lib.rounded_rect2d(0.080, 0.046, 0.012), c + u * (side * 0.125) + n * 0.034, u, v, 0.004, material='metal_satin_dark', bevel=0.002)
+        lib.tag(pad, 'steering.paddle.left' if side < 0 else 'steering.paddle.right', 'steering', selectable=False)
+    # ---- lower insert (badge plate) on the stem, and the flat-bottom trim on the rim
+    ins = lib.extrude_profile('steering.spoke.lower.insert', lib.rounded_rect2d(0.030, 0.034, 0.005), c + v * (bottom + 0.045) - n * 0.0125, u, v, -0.002, material='plastic_black_gloss')
     lib.tag(ins, 'steering.spoke.lower.insert', 'steering', selectable=False)
-    # hub / airbag cover: shield-shaped (wider at top), domed toward the driver
+    flat_trim = lib.extrude_profile('steering.rim.flat_trim', lib.rounded_rect2d(0.11, 0.016, 0.005), c + v * (bottom - 0.004) - n * (L.RIM_RADIUS - 0.004), u, v, -0.004, material=frame_mat)
+    lib.tag(flat_trim, 'steering.rim.flat_trim', 'steering', selectable=False)
+    # ---- hub / airbag: shield outline, wide at the top, drawn to a soft point at the bottom
     shield = []
     for i in range(48):
-        a = 2 * math.pi * i / 48
-        t = 0.5 + 0.5 * math.sin(a)          # 1 at top, 0 at bottom (smooth)
-        rx = 0.062 + 0.011 * t
-        ry = 0.055 - 0.004 * t
-        shield.append(Vector((rx * math.cos(a), ry * math.sin(a))))
+        t = i / 48
+        a = 2 * math.pi * t
+        # superellipse-ish shield: wider at top, pointed bottom
+        rx = 0.066 * (1.0 if math.sin(a) > 0 else 0.88)
+        ry = 0.048 if math.sin(a) > 0 else 0.066
+        x = rx * math.copysign(abs(math.cos(a)) ** 0.9, math.cos(a))
+        y = ry * math.copysign(abs(math.sin(a)) ** (1.0 if math.sin(a) > 0 else 1.25), math.sin(a))
+        shield.append(Vector((x, y)))
     rings = []
-    for scale, depth in ((0.94, 0.030), (1.0, 0.010), (1.0, -0.016), (0.975, -0.024), (0.90, -0.029), (0.70, -0.032), (0.40, -0.0335)):
+    for scale, depth in ((0.90, 0.028), (1.0, 0.006), (1.0, -0.016), (0.97, -0.025), (0.88, -0.030), (0.60, -0.0335), (0.25, -0.035)):
         rings.append(lib.place_profile(shield, c - n * depth, u, v, scale=(scale, scale)))
     hub = lib.loft_object('steering.hub', rings, close_u=True, cap_start=True, cap_end=True, material='plastic_soft')
     lib.tag(hub, 'steering.hub', 'steering')
-    # emblem placeholder (development stand-in for the crossed flags): a bevelled badge with 'C7' text
-    badge = lib.extrude_profile('steering.emblem', lib.rounded_rect2d(0.034, 0.024, 0.006), c - n * 0.034, u, v, -0.003, material='chrome', bevel=0.001)
+    # emblem carrier: a flat badge the runtime textures with the crossed-flags image supplied by the owner
+    badge = lib.extrude_profile('steering.emblem', lib.rounded_rect2d(0.046, 0.024, 0.003), c + v * 0.004 - n * 0.0355, u, v, -0.001, material='chrome')
     lib.tag(badge, 'steering.emblem', 'steering')
-    txt = lib.text_object('steering.emblem.text', 'C7', 0.012, c - n * 0.0375, u, v, extrude=0.0005, material='emblem')
-    lib.tag(txt, 'steering.emblem.text', 'steering', selectable=False)
-    # centre marker stripe for performance wheels at 12 o'clock
     if thin:
         top = rim_centerline(variant, math.pi / 2).y
-        stripe = lib.extrude_profile('steering.rim.marker', lib.rounded_rect2d(0.02, 0.012, 0.003), c + v * (top) - n * (rim_radius(variant, math.pi / 2) - 0.002), u, v, -0.003, material='emblem')
+        stripe = lib.extrude_profile('steering.rim.marker', lib.rounded_rect2d(0.02, 0.012, 0.003), c + v * top - n * (rim_radius(variant, math.pi / 2) - 0.002), u, v, -0.003, material='emblem')
         lib.tag(stripe, 'steering.rim.marker', 'steering', selectable=False)
     if variant == 'led_performance':
         top = rim_centerline(variant, math.pi / 2).y
         for k in range(11):
-            x = -0.05 + 0.01 * k
-            led = lib.extrude_profile(f'steering.led_{k}', lib.rounded_rect2d(0.006, 0.004, 0.001), c + u * x + v * (top - 0.036) - n * 0.001, u, v, -0.002, material='emissive_white')
+            led = lib.extrude_profile(f'steering.led_{k}', lib.rounded_rect2d(0.006, 0.004, 0.001), c + u * (-0.05 + 0.01 * k) + v * (top - 0.036) - n * 0.001, u, v, -0.002, material='emissive_white')
             lib.tag(led, f'steering.led.{k}', 'steering', selectable=False)
-        strip = lib.extrude_profile('steering.led_strip', lib.rounded_rect2d(0.125, 0.012, 0.004), c + v * (top - 0.036) + n * 0.0, u, v, 0.006, material='plastic_black_gloss')
+        strip = lib.extrude_profile('steering.led_strip', lib.rounded_rect2d(0.125, 0.012, 0.004), c + v * (top - 0.036), u, v, 0.006, material='plastic_black_gloss')
         lib.tag(strip, 'steering.led_strip', 'steering', selectable=False)
 
 
@@ -136,8 +121,8 @@ def build(variant='factory', center=None):
     c, u, v, n = wheel_frame(center)
     d = math.radians
     rim_mat = 'leather_black'
-    build_rim_segment('steering.rim.upper', variant, d(28), d(152), rim_mat, c, u, v, n)
-    build_rim_segment('steering.grip.left', variant, d(150), d(212), rim_mat, c, u, v, n)
-    build_rim_segment('steering.rim.lower', variant, d(210), d(332), rim_mat, c, u, v, n)
-    build_rim_segment('steering.grip.right', variant, d(330), d(392), rim_mat, c, u, v, n)
+    build_rim_segment('steering.rim.upper', variant, d(25), d(155), rim_mat, c, u, v, n)
+    build_rim_segment('steering.grip.left', variant, d(153), d(217), rim_mat, c, u, v, n)
+    build_rim_segment('steering.rim.lower', variant, d(215), d(327), rim_mat, c, u, v, n, steps=40)
+    build_rim_segment('steering.grip.right', variant, d(325), d(387), rim_mat, c, u, v, n)
     build_spokes_and_hub(variant, c, u, v, n)
