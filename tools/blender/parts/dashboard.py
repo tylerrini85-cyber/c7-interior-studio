@@ -349,12 +349,13 @@ def build_outer_vents():
 
 
 # ---------------------------------------------------------------------------
-# passenger grab wing (B13 / B21 / B37 / B16): a brushed wing angled ~45 degrees off the stack's passenger edge
-# toward the driver, narrow at the top and widening downward, with a long teardrop grab slot through its lower
-# half. Its outer edge is the leather roll of the cockpit wrap, which turns rearward at the foot into the
-# console's passenger bolster and runs into the armrest.
+# passenger grab wing (B13 / B21 / B37 / B16 / owner photo of the slot): a fin standing rearward off the stack's
+# passenger edge and facing the driver (B38 shows it as a thin silver line beside the band), narrow at the top and
+# widening downward, with a long teardrop grab slot through its lower half. Its outer edge is the leather band of the
+# cockpit wrap, which carries on in the same line along the console's passenger edge into the armrest; the fin runs
+# down into the console top, and its passenger-facing back is leather (the colour seen through the slot).
 # ---------------------------------------------------------------------------
-WING_DIR = Vector((1.0, -1.0, 0.0)).normalized()     # away from the stack edge: outboard and toward the occupants
+WING_DIR = Vector((0.45, -1.0, 0.0)).normalized()    # away from the stack edge: mostly toward the occupants, partly outboard
 
 
 def _stack_edge(z):
@@ -368,8 +369,6 @@ def _wing_width(z):
     return 0.028 + 0.040 * (t * t * (3 - 2 * t))
 
 
-WING_Z = [0.852, 0.836, 0.815, 0.790, 0.760, 0.730, 0.700, 0.670, 0.640, 0.612, 0.594, 0.582]
-
 
 # ---------------------------------------------------------------------------
 # Passenger bar (B38 / B13 / B49 / B37): a wide, flat-faced leather band. It starts inside the dash top, runs down
@@ -378,9 +377,10 @@ WING_Z = [0.852, 0.836, 0.815, 0.790, 0.760, 0.730, 0.700, 0.670, 0.640, 0.612, 
 # the console carries the same bolster. All sections come from _band_ring so there are no seams or lumps.
 # ---------------------------------------------------------------------------
 BAND_UP = (0.023, 0.013)     # upright: half width along WING_DIR, half thickness toward the cabin
-BAND_CON = (0.2115, 0.024)   # console: nominal half height of the padded side wall (its bottom follows the carpet), half width
+BAND_CON = (0.2115, 0.015)   # console: nominal half height of the padded side wall (its bottom follows the carpet), half width
+                             # (about the upright's thickness, so the band reads as one even strip from above)
 CON_TOP = 0.025              # console side wall rises this far above the band's centre line
-CON_X, CON_Z = 0.146, 0.558  # console bolster centre line
+CON_X_DRV, CON_Z = 0.146, 0.558  # driver console bolster centre line (|x|) and the bolsters' centre height
 BEND_Z0, BEND_Z1 = 0.612, 0.552
 
 
@@ -413,6 +413,10 @@ def _band_centre_upright(z, ha):
     return e + WING_DIR * (_wing_width(z) + ha - 0.005)
 
 
+# passenger band x on the console: the same as at the stack's foot, so the band runs on in one line (B38 / owner photo)
+CON_X = _band_centre_upright(BEND_Z0, BAND_UP[0]).x
+
+
 def _band_path(side=1):
     """Smooth centre line of the band (passenger, side=1) or of the driver console bolster (side=-1)."""
     if side > 0:
@@ -423,9 +427,10 @@ def _band_path(side=1):
             ctrl.append(_band_centre_upright(z, BAND_UP[0]))
         p0 = ctrl[-1]
         t0 = (ctrl[-1] - ctrl[-2]).normalized()
-        p3 = Vector((CON_X, p0.y - 0.150, CON_Z))
-        p1 = p0 + t0 * 0.045
-        p2 = p3 + Vector((0, 0.075, 0))
+        # one smooth sweep from the stack edge onto the console edge, in the same vertical plane (no swerve)
+        p3 = Vector((CON_X, p0.y - 0.120, CON_Z))
+        p1 = p0 + t0 * 0.040
+        p2 = p3 + Vector((0, 0.065, 0))
         for k in range(1, 9):
             u = k / 9
             ctrl.append(p0 * (1 - u) ** 3 + p1 * 3 * u * (1 - u) ** 2 + p2 * 3 * u * u * (1 - u) + p3 * u ** 3)
@@ -434,7 +439,7 @@ def _band_path(side=1):
             ctrl.append(Vector((CON_X, y, CON_Z)))
     else:
         # runs forward under the stack to the dash lower so no end face shows beside the footwell
-        ctrl = [Vector((-CON_X, y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.012)]
+        ctrl = [Vector((-CON_X_DRV, y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.012)]
     path = lib.spline_through(ctrl, n_per_seg=6, tension=0.5)
     length = sum((path[i + 1] - path[i]).length for i in range(len(path) - 1))
     return lib.resample_open(path, max(12, int(length / 0.006)))
@@ -483,29 +488,48 @@ def build_grab_handle():
         band = lib.loft_object(cid, rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0, flip=side < 0)
         lib.add_subsurf(band, 1)
         lib.tag(band, cid, 'dashboard' if side > 0 else 'console')
-    # passenger console side under the stack (B38 / B49): the dark lower side of the console, flush with the band's
-    # console wall and running forward to the toe board. The band's bend stands off outboard of it, so the side shows
-    # under the loop as on the car; at the rear it runs on inside the band's console wall so no end face shows.
-    rings = []
+    # passenger console side under the stack: the dark lower side of the console below the band, running forward to
+    # the toe board. Under the stack it steps in to the stack's side so no ledge shows; at the rear it runs on inside
+    # the band's console wall so no end face shows.
+    band = _band_path(1)
+    y_bend0 = next(p.y for p in band if p.z <= BEND_Z0)          # band leaves the stack edge
+    y_bend1 = next(p.y for p in band if p.z <= CON_Z + 0.0015)   # band reaches the console line
     hb = BAND_CON[1] - 0.002         # 2 mm inside the band's (subdivided) console wall
-    for y in [0.900 - 0.64 * k / 32 for k in range(33)]:
-        # top just under the band's centre line; bottom just into the carpet, which climbs the toe board here
-        z_top, z_bot = 0.573, _wall_bottom(CON_X + hb, y)
-        c = Vector((CON_X, y, (z_top + z_bot) / 2))
+    x_stack = STACK_CX + stack_half_w(0.56) - hb                 # flush with the stack's side forward of the band
+    rings = []
+    for y in [0.900 - 0.64 * k / 40 for k in range(41)]:
+        xc = CON_X + (x_stack - CON_X) * _sm(y_bend0, y_bend0 + 0.10, y)
+        # top inside the band's console wall behind the bend, under the fin's foot from the bend forward;
+        # bottom just into the carpet, which climbs the toe board here
+        z_top = 0.573 - 0.025 * _sm(y_bend1 - 0.01, y_bend1 + 0.02, y)
+        z_bot = _wall_bottom(xc + hb, y)
+        c = Vector((xc, y, (z_top + z_bot) / 2))
         prof = lib.rounded_rect2d(z_top - z_bot, 2 * hb, BAND_CON[1] * 0.85, n_corner=6)
         rings.append([c + Vector((0, 0, 1)) * q.x + Vector((-1, 0, 0)) * q.y for q in prof])
     low = lib.loft_object('dash.grab.lower', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0)
     lib.add_subsurf(low, 1)
     lib.tag(low, 'dash.grab.lower', 'console', selectable=False)
-    # brushed wing: ruled surface from the stack edge to just under the band, then given thickness
+    # the fin: ruled surface from the stack edge to just inside the band, following the band down the stack and
+    # through its bend, so at the foot it lies on the console top and runs into it (owner photo: one piece)
     rings = []
-    for z in WING_Z:
-        a = _stack_edge(z)
-        b = a + WING_DIR * (_wing_width(z) + 0.004)
-        rings.append([a.lerp(b, k / 6) for k in range(7)])
-    wing = lib.loft_object('dash.grab_trim', rings, close_u=False, material='metal_brushed', uv_scale=2.0, flip=_loft_needs_flip(rings, (-1, -1, 0)))
+    for k, c in enumerate(band):
+        if c.z > 0.850:
+            continue        # the band's curl over the dash lip
+        a = _stack_edge(max(c.z, 0.556))
+        b = c + (a - c).normalized() * 0.010
+        rings.append([a.lerp(b, q / 6) for q in range(7)])
+        if c.z <= CON_Z + 0.0015:
+            break
+    n_pass = Vector((-WING_DIR.y, WING_DIR.x, 0.0))   # the fin's passenger-facing normal
+    face_out = -n_pass                                 # the driver-facing side
+    wing = lib.loft_object('dash.grab_trim', rings, close_u=False, material='metal_brushed', uv_scale=2.0, flip=_loft_needs_flip(rings, face_out))
     lib.add_solidify(wing, 0.005, offset=0.0)
-    # teardrop grab slot through the lower half of the wing, nearer its outer edge
+    # leather back on the passenger side of the fin (wrap colour; shows through the slot as on the car)
+    back_off = n_pass * 0.0055
+    brings = [[p + back_off for p in r] for r in rings]
+    back = lib.loft_object('dash.grab.back', brings, close_u=False, material='leather_black', uv_scale=3.0, flip=not _loft_needs_flip(brings, face_out))
+    lib.add_solidify(back, 0.006, offset=0.0)
+    # teardrop grab slot through the lower half of the fin, nearer its outer edge
     zc = 0.652
     a = _stack_edge(zc); w = _wing_width(zc)
     c = a + WING_DIR * (w * 0.52)
@@ -515,7 +539,9 @@ def build_grab_handle():
     slot = [Vector(p) for p in lib.spline_through([Vector(q) for q in reversed(((0.0, 0.052), (0.007, 0.024), (0.0125, -0.020), (0.0105, -0.040), (0.0, -0.047), (-0.0105, -0.040), (-0.0125, -0.020), (-0.007, 0.024)))], n_per_seg=4, closed=True, tension=0.5)]
     cutter = lib.extrude_profile('dash.grab_slot_cut', slot, c - nrm * 0.03, WING_DIR, up, 0.06)
     lib.add_boolean(wing, cutter)
+    lib.add_boolean(back, cutter)
     lib.tag(wing, 'dash.grab_trim', 'dashboard')
+    lib.tag(back, 'dash.grab.back', 'dashboard', selectable=False)
 
 
 def _loft_needs_flip(rings, outward):

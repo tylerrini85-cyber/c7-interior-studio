@@ -68,7 +68,8 @@ WHEEL_RADIUS = 0.179            # 14.1 in diameter
 RIM_RADIUS = 0.0165
 
 # console
-CONSOLE_HALF_W = 0.155
+CONSOLE_HALF_W = 0.155          # driver side
+CONSOLE_HALF_W_PASS = 0.195     # passenger side: runs out under the grab band, in line with it from the stack (B38)
 CONSOLE_TOP_Z = 0.56           # top at shifter area
 ARMREST_Z = 0.60
 ARMREST_Y0 = -0.40

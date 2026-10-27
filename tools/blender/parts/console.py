@@ -9,8 +9,9 @@ SHIFTER_VARIANTS = ['automatic', 'manual', 'short_throw']
 
 
 def _console_section(y):
-    """Closed ring (X-Z) of the console body at station y."""
-    hw = L.CONSOLE_HALF_W
+    """Closed ring (X-Z) of the console body at station y. The passenger side stays flat right out under the grab
+    band (its inner face is at about CONSOLE_HALF_W_PASS - 0.01) so no trench shows beside it."""
+    hw, hp = L.CONSOLE_HALF_W, L.CONSOLE_HALF_W_PASS
     # top height varies: 0.56 at the shifter area rising to 0.585 under the armrest
     top = L.CONSOLE_TOP_Z + 0.025 * lib.__dict__.get('smooth', lambda a, b, x: max(0, min(1, (x - a) / (b - a))))(0.0, -0.12, y) if False else L.CONSOLE_TOP_Z
     if y < -0.08:
@@ -18,8 +19,8 @@ def _console_section(y):
     base_z = 0.10
     pts = [
         (-hw - 0.06, base_z), (-hw - 0.02, base_z + 0.02), (-hw, 0.30), (-hw + 0.005, 0.46), (-hw + 0.02, top - 0.02), (-hw + 0.05, top),
-        (-hw + 0.10, top + 0.003), (0.0, top + 0.004), (hw - 0.10, top + 0.003), (hw - 0.05, top), (hw - 0.02, top - 0.02),
-        (hw - 0.005, 0.46), (hw, 0.30), (hw + 0.02, base_z + 0.02), (hw + 0.06, base_z), (0.0, base_z - 0.02),
+        (-hw + 0.10, top + 0.003), (0.0, top + 0.004), (hp - 0.10, top + 0.003), (hp - 0.006, top), (hp - 0.002, top - 0.02),
+        (hp, 0.46), (hp, 0.30), (hp + 0.02, base_z + 0.02), (hp + 0.06, base_z), (0.0, base_z - 0.02),
     ]
     return [Vector((x, y, z)) for x, z in pts]
 
@@ -34,7 +35,7 @@ def build_body():
     plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.122, 0.340, 0.018), (-0.052, 0.300, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
     lib.tag(plate, 'console.trim', 'console')
     # small switch square at the front of the passenger half, beside the shifter
-    sq = lib.extrude_profile('console.small_switches', lib.rounded_rect2d(0.050, 0.042, 0.006), (0.058, 0.420, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    sq = lib.extrude_profile('console.small_switches', lib.rounded_rect2d(0.050, 0.042, 0.006), (0.068, 0.420, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
     lib.tag(sq, 'console.small_switches', 'console', selectable=False)
 
 
@@ -90,14 +91,16 @@ def build_dial_and_switches():
 
 def build_cupholders_and_armrest():
     # long closed storage / cupholder lid on the passenger half, from beside the shifter back to the armrest
-    lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.098, 0.330, 0.016), (0.058, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.110, 0.330, 0.016), (0.068, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
     lib.tag(lid, 'console.cupholder_plate', 'console')
     # armrest lid: padded leather pad with rounded edges and a stitched seam
-    lid_c = (0.0, (L.ARMREST_Y0 + L.ARMREST_Y1) / 2, L.ARMREST_Z + 0.015)
-    lid = lib.box('console.armrest', (0.34, L.ARMREST_Y1 - L.ARMREST_Y0, 0.048), lid_c, material='leather_black', bevel=0.020, bevel_segments=6)
+    # wider on the passenger side so the grab band runs straight into its corner (B38)
+    x0, x1 = -0.17, L.CONSOLE_HALF_W_PASS + 0.015
+    lid_c = ((x0 + x1) / 2, (L.ARMREST_Y0 + L.ARMREST_Y1) / 2, L.ARMREST_Z + 0.015)
+    lid = lib.box('console.armrest', (x1 - x0, L.ARMREST_Y1 - L.ARMREST_Y0, 0.048), lid_c, material='leather_black', bevel=0.020, bevel_segments=6)
     lib.tag(lid, 'console.armrest', 'console')
     # storage bin front wall under the lid (dark)
-    bin_ = lib.box('console.armrest_bin', (0.30, L.ARMREST_Y1 - L.ARMREST_Y0 - 0.02, 0.03), (0.0, lid_c[1], L.ARMREST_Z - 0.02), material='plastic_black')
+    bin_ = lib.box('console.armrest_bin', (x1 - x0 - 0.04, L.ARMREST_Y1 - L.ARMREST_Y0 - 0.02, 0.03), (lid_c[0], lid_c[1], L.ARMREST_Z - 0.02), material='plastic_black')
     lib.tag(bin_, 'console.armrest_bin', 'console', selectable=False)
 
 

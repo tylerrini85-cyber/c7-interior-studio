@@ -161,6 +161,15 @@ Follow-up on the bar (B38 / B49):
 | Wall bottoms | A fixed depth: the toe board and tunnel poked through near the front | The bottom of every console side wall follows the carpet height (tunnel hump plus toe board) and sits 8 mm into it |
 | Driver console bolster | Inside out (mirrored frame) | Winding reversed |
 
+Second follow-up on the bar (owner photo of the slot / B38):
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Band line | The band sat about 0.23 m out at the stack but 0.146 m on the console, so it swerved inward at the foot and looked like a separate loop coming off the stack | The band keeps one x (about 0.20 m, measured from B38) from the stack's foot along the whole console into the armrest corner |
+| Fin | Angled 45 degrees outboard, ending above the bend with a gap under it | Stands mostly rearward off the stack edge, facing the driver, and follows the band through the bend so its foot lies on the console top; the passenger-facing back is leather in the wrap colour (the red seen through the slot) |
+| Console and armrest | Passenger edge at 0.155 m: too narrow to meet the band | Passenger side widened to 0.195 m with the top kept flat out under the band (no trench); armrest widened on that side; storage lid moved out with it |
+| Band width on the console | Grew to about twice its stack width right after the bend (a visible shoulder) | Same thickness all the way, so it reads as one even strip from above |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.
