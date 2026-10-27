@@ -128,6 +128,18 @@ door, wheel straight on, stack close-up). It revealed architecture that the firs
 | Steering wheel | B21, B04, B17 | Two flat arm plates and a separate stem; pods buried; small airbag | One silver V frame: arms from 9 and 3 o'clock sweep down around the airbag into the lower spoke; pods proud of the frame; larger airbag shield |
 | Registry | | Parts list showed a glovebox and console side accents that no longer exist | Removed; console plate defaults to brushed aluminium; new "Console storage lid" part |
 
+## Refinement pass (cluster, grab wing, raised keys), checked side by side with B41 / B58 / B13 / B21
+| Area | Photo evidence | Change made |
+|------|----------------|-------------|
+| Gauge cluster | B41, B21, B13 | Binnacle rebuilt as one moulding with three openings: D-shaped side pods and the centre display, each a short tunnel. Left pod is the 0-200 mph speedometer whose arc wraps the outer edge with its needle pivoting beside the display; right pod carries fuel (1 / ½ / 0) above, coolant (260 / 220 / 100 °F) below and the CORVETTE script. Centre display themes: Tour (round tach with bright ring, redline, crossed flags, gear indicator), Track (shift dots, rising tach band, timers, gauge bars, tyre pressures, matching B41), Sport, and two concepts |
+| Grab handle | B13, B21, B37, B16 | Brushed wing angled ~45 degrees off the stack's passenger edge, narrow at the top and widening downward, with a teardrop grab slot cut through it; the leather roll runs along its outer edge and turns rearward into the console bolster |
+| Control panel | B58, B21 | Every key is a raised 3 mm cap with its label on the cap top; round MENU key; a 3D chrome Y between the climate halves; temperature knob face reads LO inside a blue-to-red ring, fan knob shows the fan |
+| Driver dash | B21 | Driver outer vent and trim panel moved outboard so they clear the speedometer pod |
+
+Fixes found while checking: two boolean cutters were inside out (one listed clockwise, one extruded with a negative
+depth), so the slot and pod openings were not cut; knob labels were mis-oriented because revolved parts carry a node
+rotation. All three now verified in captures.
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

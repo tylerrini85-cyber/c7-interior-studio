@@ -65,38 +65,52 @@ def build_upper():
     return obj
 
 
+# cluster layout in the cluster face plane (u right, v up, metres from CLUSTER_CENTER), measured from B41 / B21 / B13:
+# two physical side gauges whose dial arcs wrap the outer edges, needles pivoting beside the centre display
+CL_DISPLAY = (0.0, 0.012, 0.178, 0.110)        # centre display opening (u, v, w, h)
+CL_PIVOT_L = (-0.128, -0.017)                  # speedometer pivot
+CL_PIVOT_R = (0.128, -0.012)                   # fuel / coolant pivot
+CL_POD_R = 0.066                               # radius of the side pod windows around their pivots
+CL_POD_EDGE = 0.092                            # |u| of the straight inner edge of the side pod windows
+CL_GLASS = (0.380, 0.170, -0.005)              # dial face / display plane (w, h, v centre); texture is 1140 x 510 px
+
+
+def _pod_outline(pivot, side):
+    """D-shaped window, counter-clockwise: the outer arc of a CL_POD_R circle around the pivot, closed by a straight
+    edge at |u| = CL_POD_EDGE on the display side."""
+    px, pv = pivot
+    a = math.acos(abs(side * CL_POD_EDGE - px) / CL_POD_R)
+    t0, t1 = (a, 2 * math.pi - a) if side < 0 else (math.pi + a, 3 * math.pi - a)
+    n = 32
+    return [Vector((px + CL_POD_R * math.cos(t0 + (t1 - t0) * i / n), pv + CL_POD_R * math.sin(t0 + (t1 - t0) * i / n))) for i in range(n + 1)]
+
+
 def build_cluster():
     cx, cy, cz = L.CLUSTER_CENTER
     tilt = L.CLUSTER_TILT
     u = Vector((1, 0, 0))
     v = Vector((0, math.sin(tilt), math.cos(tilt)))  # up vector of the cluster face, leaning back
-    nrm = u.cross(v)  # (0, -cos, sin): toward the occupant and slightly up
+    nrm = u.cross(v)  # toward the occupant and slightly up
     base = Vector((cx, cy, cz))
-    # bezel: rounded rectangle with a wider centre; depth backwards
-    bezel_prof = lib.rounded_rect2d(L.CLUSTER_W + 0.04, L.CLUSTER_H + 0.04, 0.035)
-    bezel = lib.extrude_profile('cluster.bezel', bezel_prof, base + nrm * 0.0, u, v, -0.05, material='plastic_black', bevel=0.004, bevel_segments=3)
+    # binnacle face: one dark moulding with three openings (left pod, display, right pod); the openings become
+    # short tunnels because the moulding is 45 mm deep
+    bezel = lib.extrude_profile('cluster.bezel', lib.rounded_rect2d(0.410, 0.190, 0.040), base + v * (-0.008), u, v, -0.045, material='plastic_black', bevel=0.004, bevel_segments=3)
+    du, dv, dw, dh = CL_DISPLAY
+    # cutters are extruded with a positive depth (a negative depth turns them inside out and the boolean does nothing)
+    cut = lib.extrude_profile('cluster.cut_display', lib.rounded_rect2d(dw, dh, 0.008, offset=(du, dv)), base - nrm * 0.08, u, v, 0.10)
+    lib.add_boolean(bezel, cut)
+    for side, pivot in ((-1, CL_PIVOT_L), (1, CL_PIVOT_R)):
+        c2 = lib.extrude_profile(f'cluster.cut_pod_{side}', _pod_outline(pivot, side), base - nrm * 0.08, u, v, 0.10)
+        lib.add_boolean(bezel, c2)
     lib.tag(bezel, 'cluster.bezel', 'cluster')
-    # (no separate visor: the hood brow is the dash pad itself plus the stitched welt, B21 / B13)
-    # glass face (slightly in front of the bezel)
-    glass = lib.extrude_profile('cluster.glass', lib.rounded_rect2d(L.CLUSTER_W, L.CLUSTER_H, 0.025), base - nrm * 0.002, u, v, -0.001, material='screen_off')
+    # dial faces and display: one textured plane at the back of the tunnels (the runtime draws all three gauges)
+    gw, gh, gv = CL_GLASS
+    glass = lib.extrude_profile('cluster.glass', lib.rounded_rect2d(gw, gh, 0.004), base + v * gv - nrm * 0.026, u, v, -0.001, material='screen_off')
     lib.tag(glass, 'cluster.glass', 'cluster', selectable=False)
-    # centre 8-inch LCD (0.177 x 0.100 active)
-    lcd = lib.extrude_profile('cluster.screen', lib.rounded_rect2d(0.177, 0.100, 0.004), base - nrm * 0.0035, u, v, -0.001, material='screen_off')
-    lib.tag(lcd, 'cluster.screen', 'cluster')
-    # three "tunnels": a ring around the speedometer, a frame around the LCD, a ring around the right gauges
-    for dx, r in ((-0.135, 0.056), (0.125, 0.040)):
-        ring = lib.revolve(f'cluster.tunnel_{int(dx * 1000)}', [(r, 0.0), (r + 0.006, 0.0), (r + 0.006, 0.022), (r, 0.022)], segments=40, material='plastic_black', origin=base - nrm * 0.022 + u * dx, direction=-nrm)
-        lib.tag(ring, f'cluster.tunnel.{int(dx * 1000)}', 'cluster', selectable=False)
-    frame = lib.extrude_profile('cluster.tunnel_center', lib.rounded_rect2d(0.19, 0.112, 0.008), base - nrm * 0.0, u, v, -0.022, material='plastic_black')
-    hole = lib.extrude_profile('cluster.tunnel_center_hole', lib.rounded_rect2d(0.182, 0.104, 0.006), base - nrm * 0.03, u, v, 0.06)
-    lib.add_boolean(frame, hole)
-    lib.tag(frame, 'cluster.tunnel.center', 'cluster', selectable=False)
-    # analog speedometer left, fuel + temp right
-    spd = lib.revolve('cluster.speedo', [(0.0, 0.0), (0.040, 0.0), (0.044, 0.004)], segments=36, material='screen_off', origin=base - nrm * 0.0035 + u * (-0.135), direction=-nrm)
-    lib.tag(spd, 'cluster.speedo', 'cluster')
-    for k, (dx, dz) in enumerate(((0.125, 0.030), (0.125, -0.030))):
-        g = lib.revolve(f'cluster.gauge_{k}', [(0.0, 0.0), (0.022, 0.0), (0.025, 0.004)], segments=28, material='screen_off', origin=base - nrm * 0.0035 + u * dx + v * dz, direction=-nrm)
-        lib.tag(g, 'cluster.fuel' if k == 0 else 'cluster.temp', 'cluster', selectable=False)
+    # needle hubs: small dark caps on the side pivots, standing just off the dial faces
+    for side, (px, pv) in ((-1, CL_PIVOT_L), (1, CL_PIVOT_R)):
+        hub = lib.revolve(f'cluster.hub_{side}', [(0.0, 0.0), (0.008, 0.0), (0.008, 0.004), (0.006, 0.006), (0.0, 0.006)], segments=24, material='plastic_black_gloss', origin=base + u * px + v * pv - nrm * 0.025, direction=nrm)
+        lib.tag(hub, f'cluster.hub.{side}', 'cluster', selectable=False)
 
 
 def build_column():
@@ -241,15 +255,34 @@ def build_center_stack():
     #   climate row B under the middle three: feet feet+defrost front-defrost; badge panel below.
     zc = 0.628
     _panel('console.hvac', 0.310, 0.122, cx, zc, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
-    zm = 0.666
-    for k, dx in enumerate((-0.128, 0.128)):
-        o, u, v, n = stack_frame(cx + dx, 0.650)
-        kn = lib.revolve(f'console.hvac_knob_{k}', [(0, 0), (0.021, 0), (0.021, 0.012), (0.019, 0.016), (0.0, 0.016)], segments=36, material='chrome', origin=o + n * 0.0015, direction=n)
+    # Everything below is placed in the panel's own frame (along-face mm from the panel centre), which is exactly how
+    # the runtime label texture (controlPanelTexture) maps onto the panel, so caps and labels line up.
+    po, pu, pv, pn = stack_frame(cx, zc)
+    PANEL_FRONT = 0.0012
+    CAP = 0.0030                                         # key travel above the panel face
+
+    def at(x_mm, z_mm, proud):
+        return po + pu * (x_mm / 1000) + pv * ((z_mm - 628) / 1000) + pn * proud
+    for k, x_mm in enumerate((-128, 128)):
+        c0 = at(x_mm, 650, 0.0015)
+        kn = lib.revolve(f'console.hvac_knob_{k}', [(0, 0), (0.021, 0), (0.021, 0.012), (0.019, 0.016), (0.0, 0.016)], segments=36, material='chrome', origin=c0, direction=pn)
         lib.tag(kn, f'console.hvac_knob.{"left" if k == 0 else "right"}', 'trim', selectable=False)
-        cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.0165, 0), (0.0165, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=o + n * 0.0175, direction=n)
+        cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.0165, 0), (0.0165, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=c0 + pn * 0.016, direction=pn)
         lib.tag(cap, f'console.hvac_knob_cap.{k}', 'console', selectable=False)
-    # the keys (RADIO MEDIA home MENU prev next BACK / A/C face face+feet rear-defrost SYNC / feet feet+defrost
-    # front-defrost) are drawn on the panel by the runtime label texture so they carry their icons and labels
+    # raised key caps (B58 / B21): media row RADIO MEDIA home (MENU) prev next BACK; two climate rows of six
+    keys = [(-78 + 26 * i, 666, 22, 13) for i in range(7) if i != 3]
+    keys += [((-79 + 26 * i) if i < 3 else (27 + 26 * (i - 3)), z, 22, 14) for z in (636, 613) for i in range(6)]
+    for j, (x_mm, z_mm, w_mm, h_mm) in enumerate(keys):
+        kc = lib.extrude_profile(f'console.key_{j}', lib.rounded_rect2d(w_mm / 1000, h_mm / 1000, 0.0025), at(x_mm, z_mm, PANEL_FRONT), pu, pv, CAP, material='plastic_black_gloss', bevel=0.0008, bevel_segments=2)
+        lib.tag(kc, f'console.key.{j}', 'console', selectable=False)
+    menu = lib.revolve('console.key_menu', [(0, 0), (0.012, 0), (0.012, CAP - 0.0006), (0.0112, CAP), (0.0, CAP)], segments=36, material='plastic_black_gloss', origin=at(0, 666, PANEL_FRONT), direction=pn)
+    lib.tag(menu, 'console.key.menu', 'console', selectable=False)
+    # chrome Y between the climate halves: arms rise toward the media row, stem drops below the second row
+    ypath = [at(-11, 650, PANEL_FRONT + 0.0016), at(0, 625, PANEL_FRONT + 0.0016), at(11, 650, PANEL_FRONT + 0.0016)]
+    y1 = lib.sweep_tube('console.climate_y_arms', ypath, 0.0017, n=10, cap=True, material='chrome', up_hint=pn)
+    lib.tag(y1, 'console.climate_y.arms', 'trim', selectable=False)
+    y2 = lib.sweep_tube('console.climate_y_stem', [at(0, 625, PANEL_FRONT + 0.0016), at(0, 600, PANEL_FRONT + 0.0016)], 0.0017, n=10, cap=True, material='chrome', up_hint=pn)
+    lib.tag(y2, 'console.climate_y.stem', 'trim', selectable=False)
     # CORVETTE badge plate left of centre and a small switch on the right, at the foot of the control panel
     _panel('console.badge_strip', 0.075, 0.011, cx - 0.045, 0.584, 0.0035, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.002)
     _panel('console.foot_switch', 0.030, 0.016, cx + 0.085, 0.584, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
@@ -303,7 +336,7 @@ def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.004, ring_component=None, lo
 
 
 def build_outer_vents():
-    _vent('dash.vents.driver', -0.60, 0.735)
+    _vent('dash.vents.driver', -0.652, 0.735)
     # passenger inner vent beside the stack is the tall one; the outer vent is shorter with the seat switches
     # directly under it inside the same bezel (IMG_4491 / IMG_4509)
     _vent('dash.vents.passenger_inner', 0.300, 0.735)
@@ -315,46 +348,82 @@ def build_outer_vents():
         lib.tag(b, f'dash.passenger_switch.{k}', 'dashboard', selectable=False)
 
 
-# passenger hoop centreline (x, y, z): from inside the dash top above the stack's passenger corner, standing out
-# from the stack edge with an open gap, bending rearward at the foot into the console's passenger side wall
-# (B49 / B37 / B38 / B13)
-HOOP_PATH = [
-    (0.196, 0.718, 0.846), (0.207, 0.670, 0.842), (0.222, 0.624, 0.826), (0.238, 0.586, 0.792), (0.250, 0.562, 0.742),
-    (0.252, 0.548, 0.690), (0.248, 0.534, 0.640), (0.236, 0.506, 0.600), (0.214, 0.458, 0.576), (0.190, 0.392, 0.566),
-    (0.166, 0.310, 0.563), (0.154, 0.200, 0.562), (0.150, 0.100, 0.564), (0.150, 0.030, 0.572), (0.150, -0.030, 0.584),
-]
+# ---------------------------------------------------------------------------
+# passenger grab wing (B13 / B21 / B37 / B16): a brushed wing angled ~45 degrees off the stack's passenger edge
+# toward the driver, narrow at the top and widening downward, with a long teardrop grab slot through its lower
+# half. Its outer edge is the leather roll of the cockpit wrap, which turns rearward at the foot into the
+# console's passenger bolster and runs into the armrest.
+# ---------------------------------------------------------------------------
+WING_DIR = Vector((1.0, -1.0, 0.0)).normalized()     # away from the stack edge: outboard and toward the occupants
+ROLL_R = 0.016                                       # half-size of the leather roll in the upright part
 
 
-def _hoop_profile(w=0.058, h=0.064, r=0.022):
+def _stack_edge(z):
+    x = STACK_CX + stack_half_w(z) - 0.002
+    return Vector((x, stack_y(x, z) + 0.004, z))
+
+
+def _wing_width(z):
+    """Brushed face width measured from the stack edge to the roll: ~22 mm at the top, ~58 mm at the slot."""
+    t = max(0.0, min(1.0, (0.850 - z) / 0.230))
+    return 0.028 + 0.040 * (t * t * (3 - 2 * t))
+
+
+WING_Z = [0.852, 0.836, 0.815, 0.790, 0.760, 0.730, 0.700, 0.670, 0.640, 0.612, 0.590, 0.576, 0.567]
+
+
+def _roll_path():
+    pts = [Vector((0.186, 0.735, 0.832)), Vector((0.194, 0.668, 0.850))]   # starts inside the dash top so no end shows
+    for z in WING_Z[1:]:
+        pts.append(_stack_edge(z) + WING_DIR * (_wing_width(z) + ROLL_R))
+    foot = pts[-1]
+    pts += [Vector((foot.x - 0.012, foot.y - 0.050, 0.574)), Vector((0.166, foot.y - 0.120, 0.566)), Vector((0.154, 0.260, 0.563)),
+            Vector((0.150, 0.150, 0.563)), Vector((0.150, 0.060, 0.566)), Vector((0.150, 0.000, 0.576)), Vector((0.150, -0.040, 0.586))]
+    return pts
+
+
+HOOP_PATH = [tuple(p) for p in _roll_path()]
+
+
+def _hoop_profile(w=0.032, h=0.040, r=0.013):
     return lib.rounded_rect2d(w, h, r, n_corner=6)
 
 
 def build_grab_handle():
-    """Passenger grab hoop: a wide leather band (about 46 x 58 mm) that leaves the dash top at the stack's passenger
-    corner, stands off the stack with an open gap behind it, and turns rearward at the foot to become the console's
-    passenger side bolster. A brushed strip runs down its inboard face (B49 / B37 / B38 / B13)."""
+    """Brushed grab wing with its teardrop slot, the leather roll along its outer edge, and the matching driver-side
+    console bolster (B13 / B21 / B37 / B16 / B38)."""
     path = lib.spline_through([Vector(p) for p in HOOP_PATH], n_per_seg=4, tension=0.5)
+
     def taper(t):
-        k = max(0.0, min(1.0, (t - 0.55) / 0.15)); k = k * k * (3 - 2 * k)
-        return (1.0 - 0.28 * k, 1.0 - 0.18 * k)
-    hoop = lib.sweep_profile('dash.grab', path, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=taper)
-    lib.add_bevel(hoop, 0.002, 2)
-    lib.tag(hoop, 'dash.grab', 'dashboard')
-    # inboard brushed face strip along the upright part (stops where the hoop turns into the console)
-    frames = lib.frame_along_path(path, Vector((1, 0, 0)))
-    pts, nrms = [], []
-    for (o, t, nrm, b) in frames:
-        if o.z < 0.585 or o.z > 0.860:
-            continue
-        inward = -nrm if nrm.x > 0 else nrm
-        pts.append(o + inward * 0.0295); nrms.append(inward)
-    strip = lib.ribbon('dash.grab_trim', pts, nrms, 0.030, 0.0025, material='metal_brushed', uv_scale=2.0)
-    lib.tag(strip, 'dash.grab_trim', 'dashboard')
-    # matching driver-side console bolster from the stack foot back to the armrest
-    dpath = [Vector((-x, y, z)) for (x, y, z) in HOOP_PATH if y < 0.46]
-    dpath = [Vector((-0.160, 0.470, 0.556)), Vector((-0.158, 0.430, 0.561))] + [p for p in dpath if p.y < 0.40]
+        k = max(0.0, min(1.0, (t - 0.58) / 0.14)); k = k * k * (3 - 2 * k)
+        return (1.0 + 0.25 * k, 1.0 + 0.25 * k)
+    roll = lib.sweep_profile('dash.grab', path, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=taper)
+    lib.add_bevel(roll, 0.002, 2)
+    lib.tag(roll, 'dash.grab', 'dashboard')
+    # brushed wing: ruled surface from the stack edge to the inner side of the roll, then given thickness
+    rings = []
+    for z in WING_Z:
+        a = _stack_edge(z)
+        b = a + WING_DIR * (_wing_width(z) + 0.002)
+        rings.append([a.lerp(b, k / 6) for k in range(7)])
+    wing = lib.loft_object('dash.grab_trim', rings, close_u=False, material='metal_brushed', uv_scale=2.0, flip=_loft_needs_flip(rings, (-1, -1, 0)))
+    lib.add_solidify(wing, 0.005, offset=0.0)
+    # teardrop grab slot through the lower half of the wing, nearer its outer edge
+    zc = 0.648
+    a = _stack_edge(zc); w = _wing_width(zc)
+    c = a + WING_DIR * (w * 0.58)
+    up = (_stack_edge(zc + 0.01) - _stack_edge(zc - 0.01)).normalized()
+    nrm = WING_DIR.cross(up).normalized()
+    # outline listed counter-clockwise (like every other cutter) so the boolean subtracts
+    slot = [Vector(p) for p in lib.spline_through([Vector(q) for q in reversed(((0.0, 0.052), (0.007, 0.024), (0.0125, -0.020), (0.0105, -0.040), (0.0, -0.047), (-0.0105, -0.040), (-0.0125, -0.020), (-0.007, 0.024)))], n_per_seg=4, closed=True, tension=0.5)]
+    cutter = lib.extrude_profile('dash.grab_slot_cut', slot, c - nrm * 0.03, WING_DIR, up, 0.06)
+    lib.add_boolean(wing, cutter)
+    lib.tag(wing, 'dash.grab_trim', 'dashboard')
+    # matching driver-side console bolster from the stack foot back into the armrest
+    dpath = [Vector((-0.160, 0.470, 0.556)), Vector((-0.158, 0.430, 0.561)), Vector((-0.156, 0.330, 0.563)), Vector((-0.152, 0.200, 0.563)),
+             Vector((-0.150, 0.100, 0.564)), Vector((-0.150, 0.030, 0.570)), Vector((-0.150, -0.030, 0.583))]
     dpath = lib.spline_through(dpath, n_per_seg=3, tension=0.5)
-    bol = lib.sweep_profile('console.bolster.driver', dpath, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=lambda t: (0.72, 0.82))
+    bol = lib.sweep_profile('console.bolster.driver', dpath, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=lambda t: (1.25, 1.25))
     lib.add_bevel(bol, 0.002, 2)
     lib.tag(bol, 'console.bolster.driver', 'console')
 
@@ -370,7 +439,7 @@ def build_trim_band():
     edges, bounded below by a stitched seam that sweeps up toward the door (IMG_4509 / IMG_4499 / IMG_4491)."""
     specs = (
         (0.215, 0.70, 'dash.trim.passenger', lambda s: 0.645 + 0.045 * s * s, lambda s: 0.790 + 0.025 * s),
-        (-0.70, -0.52, 'dash.trim.driver', lambda s: 0.665, lambda s: 0.795),
+        (-0.70, -0.605, 'dash.trim.driver', lambda s: 0.665, lambda s: 0.795),
     )
     for (x0, x1, cid, z_lo_s, z_hi_s) in specs:
         n = 24

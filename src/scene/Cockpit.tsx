@@ -6,7 +6,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useStore, selectRenderDoc, variantForSlot } from '../state/store';
 import { componentForNode, COMPONENT_MAP, VARIANTS, VARIANT_SLOT_NODES, type VariantSlot } from '../registry/components';
 import { buildMaterial, configKey, fixedMaterialFor, stitchOverlayMaterial, MATERIAL_PRESETS } from '../materials/engine';
-import { clusterTexture, controlPanelTexture, emblemTexture, infotainmentTexture, textTexture } from '../materials/textures';
+import { clusterTexture, controlPanelTexture, emblemTexture, infotainmentTexture, knobFaceTexture, textTexture } from '../materials/textures';
 import { MeshRegistry, RegistryContext, useRegistry } from './registry';
 import { SEATBACK_RECLINE } from './coords';
 import type { PartConfig, ProjectDoc } from '../project/schema';
@@ -113,7 +113,9 @@ function MaterialSync({ doc }: { doc: ProjectDoc }) {
         let decal2: THREE.Mesh | undefined;
         if (entry.nodeName === 'steering.hub') decal = makeEmblemDecal(mesh, 'hub');
         else if (entry.nodeName.endsWith('.headrest') && (!cfg.text || cfg.text.trim() === '' || cfg.text.trim() === 'C7')) decal = makeEmblemDecal(mesh, 'headrest');
-        else if (entry.nodeName === 'console.hvac') decal = makePanelDecal(mesh, controlPanelTexture());
+        // labels sit on the key tops: 3 mm caps above the panel face (tools/blender/parts/dashboard.py CAP)
+        else if (entry.nodeName === 'console.hvac') decal = makePanelDecal(mesh, controlPanelTexture(), 0.0030);
+        else if (entry.nodeName.startsWith('console.hvac_knob_cap.')) decal = makePanelDecal(mesh, knobFaceTexture(entry.nodeName.endsWith('.0') ? 'temp' : 'fan'), 0.0003, thinPartNormal(mesh.geometry));
         else if (cfg.text && cfg.text.trim() && entry.component) decal = makeTextDecal(mesh, entry.component, cfg.text, cfg.textColor ?? '#c0c0c4');
         if (entry.component?.startsWith('floor.mats')) decal2 = makeEmblemDecal(mesh, 'mat');
         applied.current.set(mesh, { key, overlay, decal, decal2 });
@@ -232,8 +234,30 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest' | 'mat'): T
 }
 
 /** Transparent label overlay fitted to the occupant-facing face of a thin panel (same plane finding as the screens). */
-function makePanelDecal(mesh: THREE.Mesh, tex: THREE.Texture): THREE.Mesh {
-  const geo = mesh.geometry;
+
+/** Normal of a thin flat part (a disc, a badge): the direction in which its vertices vary least (smallest eigenvector
+ *  of the position covariance, by power iteration), oriented toward the occupants (+z in three.js). */
+function thinPartNormal(geo: THREE.BufferGeometry): THREE.Vector3 {
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const m = new THREE.Vector3(); const p = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) m.add(p.fromBufferAttribute(pos, i));
+  m.divideScalar(Math.max(1, pos.count));
+  let xx = 0, xy = 0, xz = 0, yy = 0, yz = 0, zz = 0;
+  for (let i = 0; i < pos.count; i++) { p.fromBufferAttribute(pos, i).sub(m); xx += p.x * p.x; xy += p.x * p.y; xz += p.x * p.z; yy += p.y * p.y; yz += p.y * p.z; zz += p.z * p.z; }
+  const tr = xx + yy + zz;
+  // power iteration on (tr*I - C): its dominant eigenvector is C's smallest
+  let v = new THREE.Vector3(0.1, 0.2, 1).normalize();
+  for (let k = 0; k < 60; k++) {
+    const nx = (tr - xx) * v.x - xy * v.y - xz * v.z;
+    const ny = -xy * v.x + (tr - yy) * v.y - yz * v.z;
+    const nz = -xz * v.x - yz * v.y + (tr - zz) * v.z;
+    v = new THREE.Vector3(nx, ny, nz).normalize();
+  }
+  return v.z < 0 ? v.negate() : v;
+}
+
+/** Occupant-facing normal of a thin panel: area-weighted sum of its large forward-facing triangles. */
+function panelFrontNormal(geo: THREE.BufferGeometry): THREE.Vector3 {
   const pos = geo.getAttribute('position') as THREE.BufferAttribute;
   const N = new THREE.Vector3(0, 0, 0);
   {
@@ -251,8 +275,20 @@ function makePanelDecal(mesh: THREE.Mesh, tex: THREE.Texture): THREE.Mesh {
     for (const v of tris) if (v.length() > 0.2 * maxLen) N.add(v);
     if (N.lengthSq() < 1e-12) N.set(0, 0, 1);
   }
-  N.normalize();
-  const U = new THREE.Vector3(0, 1, 0).cross(N).normalize();
+  return N.normalize();
+}
+
+/** Transparent label overlay fitted to the occupant-facing face of a thin panel. `normal` overrides the face
+ *  direction for parts too small to find it reliably (the climate knob caps use the control panel's normal). */
+function makePanelDecal(mesh: THREE.Mesh, tex: THREE.Texture, lift = 0, normal?: THREE.Vector3): THREE.Mesh {
+  const geo = mesh.geometry;
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const N = (normal ? normal.clone() : panelFrontNormal(geo)).normalize();
+  // world "up" expressed in the mesh's own frame: parts built by revolving (knobs) carry a node rotation, so a
+  // local +Y would turn their labels sideways
+  mesh.updateWorldMatrix(true, false);
+  const upLocal = new THREE.Vector3(0, 1, 0).applyQuaternion(mesh.getWorldQuaternion(new THREE.Quaternion()).invert());
+  const U = upLocal.cross(N).normalize();
   const V = new THREE.Vector3().crossVectors(N, U).normalize();
   const p = new THREE.Vector3();
   let dmax = -Infinity;
@@ -267,7 +303,7 @@ function makePanelDecal(mesh: THREE.Mesh, tex: THREE.Texture): THREE.Mesh {
   const w = Math.max(0.01, maxU - minU), h = Math.max(0.01, maxV - minV);
   const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.6, metalness: 0.1, alphaTest: 0.02 });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
-  const center = new THREE.Vector3().addScaledVector(U, (minU + maxU) / 2).addScaledVector(V, (minV + maxV) / 2).addScaledVector(N, dmax + 0.0006);
+  const center = new THREE.Vector3().addScaledVector(U, (minU + maxU) / 2).addScaledVector(V, (minV + maxV) / 2).addScaledVector(N, dmax + 0.0006 + lift);
   plane.position.copy(center);
   const m = new THREE.Matrix4().makeBasis(U, V, N);
   plane.quaternion.setFromRotationMatrix(m);

@@ -308,70 +308,157 @@ export function stitchMap(pattern: 'single' | 'double' | 'diamond' | 'pleat' | '
 
 /** Instrument cluster face for a gauge theme (drawn once per theme/color). */
 export function clusterTexture(theme: string, color: string, brightness: number): THREE.Texture {
-  const w = 1024, h = 512;
-  const key = `cluster_${theme}_${color}_${brightness.toFixed(2)}`;
+  // Canvas covers the cluster dial plane: 0.380 x 0.170 m at 3000 px/m. u (m, right) and v (m, up) are measured
+  // from the cluster centre exactly as in tools/blender/parts/dashboard.py (CL_* constants), from B41 / B21 / B13.
+  const w = 1140, h = 510;
+  const key = `cluster2_${theme}_${color}_${brightness.toFixed(2)}`;
   const hit = cache.get(key); if (hit) return hit;
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const ctx = c.getContext('2d')!;
-  ctx.fillStyle = '#05060a'; ctx.fillRect(0, 0, w, h);
-  const glow = (x: number, y: number, r: number, col: string) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, 2 * r, 2 * r); };
-  ctx.globalAlpha = 0.4 + 0.6 * brightness;
-  const ticks = (cx: number, cy: number, r: number, n: number, a0: number, a1: number, major: number, col: string) => {
-    for (let i = 0; i <= n; i++) {
-      const a = a0 + (a1 - a0) * i / n; const big = i % major === 0;
-      ctx.strokeStyle = col; ctx.lineWidth = big ? 4 : 2;
-      ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * (r - (big ? 28 : 16)), cy + Math.sin(a) * (r - (big ? 28 : 16))); ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); ctx.stroke();
-    }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.flipY = false; cache.set(key, t);
+  const P = (u: number, v: number): [number, number] => [(u + 0.190) * 3000, (0.080 - v) * 3000];
+  const D = Math.PI / 180;
+  const font = (px: number, weight = 'bold', italic = true) => `${italic ? 'italic ' : ''}${weight} ${px}px "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+  const text = (s: string, x: number, y: number, px: number, col = '#f2f3f5', align: CanvasTextAlign = 'center', weight = 'bold', italic = true) => {
+    ctx.font = font(px, weight, italic); ctx.fillStyle = col; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
   };
-  const needle = (cx: number, cy: number, r: number, a: number, col: string) => { ctx.strokeStyle = col; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(cx - Math.cos(a) * 18, cy - Math.sin(a) * 18); ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); ctx.stroke(); ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(cx, cy, 14, 0, Math.PI * 2); ctx.fill(); };
-  const label = (t: string, x: number, y: number, s: number, col = '#e8e8ec', align: CanvasTextAlign = 'center') => { ctx.fillStyle = col; ctx.font = `${s}px "Segoe UI", Roboto, Helvetica, Arial, sans-serif`; ctx.textAlign = align; ctx.fillText(t, x, y); };
-  // analog speedometer (left): 0-200 mph
-  const sx = 170, sy = 256, sr = 150;
-  ctx.strokeStyle = '#2a2d36'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sx, sy, sr + 6, 0, Math.PI * 2); ctx.stroke();
-  ticks(sx, sy, sr, 40, Math.PI * 0.75, Math.PI * 2.25, 4, '#d0d2d8');
-  for (let i = 0; i <= 10; i++) { const a = Math.PI * 0.75 + (Math.PI * 1.5) * i / 10; label(String(i * 20), sx + Math.cos(a) * (sr - 52), sy + Math.sin(a) * (sr - 52) + 8, 22); }
-  label('MPH', sx, sy + 70, 18, '#9a9ca4');
-  needle(sx, sy, sr - 20, Math.PI * 0.75 + 0.02, color);
-  // centre 8-inch display area
-  const cx = 512, cy = 256;
-  ctx.fillStyle = '#070a12'; ctx.fillRect(cx - 230, cy - 140, 460, 280);
-  if (theme === 'sport' || theme === 'concept_neon') {
-    glow(cx, cy, 190, theme === 'concept_neon' ? color + '55' : '#2a0a0a88');
-    ticks(cx, cy, 180, 32, Math.PI * 0.75, Math.PI * 2.25, 4, '#e8e8ec');
-    for (let i = 0; i <= 8; i++) { const a = Math.PI * 0.75 + (Math.PI * 1.5) * i / 8; label(String(i), cx + Math.cos(a) * 140, cy + Math.sin(a) * 140 + 10, 26); }
-    ctx.strokeStyle = color; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(cx, cy, 196, Math.PI * 1.85, Math.PI * 2.25); ctx.stroke();
-    needle(cx, cy, 150, Math.PI * 0.75 + 0.25, color);
-    label('42', cx, cy + 20, 64, '#ffffff'); label('MPH', cx, cy + 48, 18, '#9a9ca4');
-    label('D', cx + 150, cy + 110, 36, color);
-  } else if (theme === 'track') {
-    // hockey-stick tach along the top with shift lights and large gear indicator
-    ctx.fillStyle = '#101320'; ctx.fillRect(cx - 220, cy - 128, 440, 46);
-    for (let i = 0; i < 20; i++) { ctx.fillStyle = i < 7 ? color : '#2a2d36'; ctx.fillRect(cx - 212 + i * 22, cy - 120, 18, 30); }
-    ctx.strokeStyle = '#e8e8ec'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - 220, cy - 60); ctx.lineTo(cx + 60, cy - 60); ctx.lineTo(cx + 220, cy - 100); ctx.stroke();
-    for (let i = 0; i <= 7; i++) label(String(i), cx - 210 + i * 56, cy - 36, 20);
-    label('3', cx, cy + 70, 120, '#ffffff'); label('GEAR', cx, cy + 110, 18, '#9a9ca4');
-    label('42 MPH', cx - 160, cy + 100, 28); label('OIL 210°', cx + 160, cy + 100, 20, '#9a9ca4');
-  } else if (theme === 'concept_minimal') {
-    label('42', cx, cy + 24, 110, '#ffffff'); label('mph', cx, cy + 60, 22, '#9a9ca4');
-    ctx.strokeStyle = color; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(cx - 200, cy + 100); ctx.lineTo(cx - 200 + 400 * 0.3, cy + 100); ctx.stroke();
-    ctx.strokeStyle = '#2a2d36'; ctx.beginPath(); ctx.moveTo(cx - 200 + 400 * 0.3, cy + 100); ctx.lineTo(cx + 200, cy + 100); ctx.stroke();
-    label('CONCEPT THEME', cx, cy - 100, 16, '#6a6c74');
-  } else {
-    // tour: modern layout with an arc tach, digital speed and infotainment info
-    ctx.strokeStyle = '#2a2d36'; ctx.lineWidth = 14; ctx.beginPath(); ctx.arc(cx, cy + 20, 150, Math.PI * 0.8, Math.PI * 2.2); ctx.stroke();
-    ctx.strokeStyle = color; ctx.beginPath(); ctx.arc(cx, cy + 20, 150, Math.PI * 0.8, Math.PI * 1.15); ctx.stroke();
-    for (let i = 0; i <= 7; i++) { const a = Math.PI * 0.8 + (Math.PI * 1.4) * i / 7; label(String(i), cx + Math.cos(a) * 120, cy + 20 + Math.sin(a) * 120 + 8, 20, '#c0c2c8'); }
-    label('42', cx, cy + 40, 72, '#ffffff'); label('MPH', cx, cy + 70, 18, '#9a9ca4');
-    label('D', cx + 165, cy + 125, 28, '#e8e8ec'); label('TOUR', cx - 165, cy + 125, 18, '#9a9ca4');
-    label('72°F  •  245 mi range', cx, cy - 110, 18, '#9a9ca4');
+  const glowOn = (col: string, blur: number) => { ctx.shadowColor = col; ctx.shadowBlur = blur; };
+  const glowOff = () => { ctx.shadowBlur = 0; };
+  const NEEDLE = '#ff4a1c';
+  ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = 0.45 + 0.55 * brightness;
+
+  // ---- left pod: speedometer 0-200 mph; arc runs from straight down (0) round the outer side to up-right (200)
+  {
+    const [px, py] = P(-0.128, -0.017);
+    const R = 150, ang = (mph: number) => (88 + (mph / 200) * 200) * D;
+    glowOn('rgba(255,255,255,0.55)', 6);
+    for (let mph = 0; mph <= 200; mph += 5) {
+      const a = ang(mph), major = mph % 20 === 0, mid = mph % 10 === 0;
+      const r0 = R - (major ? 26 : mid ? 18 : 12);
+      ctx.strokeStyle = '#f4f5f7'; ctx.lineWidth = major ? 5 : 3;
+      ctx.beginPath(); ctx.moveTo(px + Math.cos(a) * r0, py + Math.sin(a) * r0); ctx.lineTo(px + Math.cos(a) * R, py + Math.sin(a) * R); ctx.stroke();
+      if (major && mph > 0) { const rn = R - 46; text(String(mph), px + Math.cos(a) * rn, py + Math.sin(a) * rn, 21); }
+    }
+    text('0', px + Math.cos(ang(0)) * (R - 46) + 6, py + Math.sin(ang(0)) * (R - 46), 21);
+    text('MPH', px - 32, py + 58, 22);
+    glowOff();
+    // needle at rest (0 mph), physical orange-red pointer
+    glowOn(NEEDLE, 14); ctx.strokeStyle = NEEDLE; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    const a0 = ang(0); ctx.beginPath(); ctx.moveTo(px - Math.cos(a0) * 10, py - Math.sin(a0) * 10); ctx.lineTo(px + Math.cos(a0) * (R - 6), py + Math.sin(a0) * (R - 6)); ctx.stroke(); glowOff();
   }
-  // fuel and temp (right)
-  const gx = 880; 
-  ticks(gx, 160, 60, 8, Math.PI * 0.75, Math.PI * 1.75, 4, '#d0d2d8'); label('F', gx + 40, 120, 18); label('E', gx - 60, 200, 18); needle(gx, 160, 48, Math.PI * 1.0, color);
-  ticks(gx, 360, 60, 8, Math.PI * 0.75, Math.PI * 1.75, 4, '#d0d2d8'); label('H', gx + 40, 320, 18); label('C', gx - 60, 400, 18); needle(gx, 360, 48, Math.PI * 1.25, color);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.flipY = false;
-  cache.set(key, t);
+
+  // ---- right pod: fuel (upper arc, 1 at the top to 0 at the right) and coolant (lower arc, 260 down to 100 °F)
+  {
+    const [px, py] = P(0.128, -0.012);
+    const R = 143;
+    const arcTicks = (a0: number, a1: number, n: number, redFrom: number | null) => {
+      for (let i = 0; i <= n; i++) {
+        const a = (a0 + (a1 - a0) * i / n) * D, major = i % 2 === 0;
+        const red = redFrom !== null && i >= redFrom;
+        ctx.strokeStyle = red ? '#ff3b1f' : '#f4f5f7'; ctx.lineWidth = major ? 5 : 3;
+        const r0 = R - (major ? 24 : 14);
+        ctx.beginPath(); ctx.moveTo(px + Math.cos(a) * r0, py + Math.sin(a) * r0); ctx.lineTo(px + Math.cos(a) * R, py + Math.sin(a) * R); ctx.stroke();
+      }
+    };
+    glowOn('rgba(255,255,255,0.5)', 6);
+    arcTicks(-110, -15, 8, 7);
+    const lab = (s: string, deg: number, r = R - 44, px2 = 21) => text(s, px + Math.cos(deg * D) * r, py + Math.sin(deg * D) * r, px2);
+    lab('1', -110); lab('½', -62); lab('0', -15);
+    arcTicks(19, 97, 8, null);
+    ctx.strokeStyle = '#ff3b1f'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(px, py, R - 4, 12 * D, 22 * D); ctx.stroke();
+    lab('260', 22, R - 50, 19); lab('220', 57, R - 48, 19); lab('100', 97, R - 44, 19);
+    text('CORVETTE', px + 86, py + 3, 16, '#f4f5f7', 'center', 'bold', true);
+    // fuel pump and thermometer glyphs
+    ctx.strokeStyle = '#f4f5f7'; ctx.lineWidth = 3;
+    { const gx = px + 78, gy = py - 72; ctx.strokeRect(gx - 7, gy - 10, 12, 18); ctx.beginPath(); ctx.moveTo(gx + 5, gy - 6); ctx.lineTo(gx + 10, gy - 2); ctx.lineTo(gx + 10, gy + 8); ctx.stroke(); }
+    { const gx = px + 100, gy = py + 58; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(gx, gy - 9); ctx.lineTo(gx, gy + 3); ctx.stroke(); ctx.beginPath(); ctx.arc(gx, gy + 6, 4, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(gx - 7, gy + 12); ctx.quadraticCurveTo(gx, gy + 9, gx + 7, gy + 12); ctx.stroke(); ctx.lineWidth = 3; }
+    glowOff();
+    glowOn(NEEDLE, 14); ctx.strokeStyle = NEEDLE; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    for (const deg of [-57, 90]) { const a = deg * D; ctx.beginPath(); ctx.moveTo(px - Math.cos(a) * 8, py - Math.sin(a) * 8); ctx.lineTo(px + Math.cos(a) * (R - 8), py + Math.sin(a) * (R - 8)); ctx.stroke(); }
+    glowOff();
+  }
+
+  // ---- centre 8-inch display (clipped to its opening)
+  const [dx0, dy0] = P(-0.089, 0.067), [dx1, dy1] = P(0.089, -0.043);
+  const dcx = (dx0 + dx1) / 2, dcy = (dy0 + dy1) / 2, dw = dx1 - dx0, dh = dy1 - dy0;
+  ctx.save(); ctx.beginPath(); ctx.rect(dx0, dy0, dw, dh); ctx.clip();
+  const g = ctx.createLinearGradient(0, dy0, 0, dy1); g.addColorStop(0, '#0b0f18'); g.addColorStop(1, '#03050a');
+  ctx.fillStyle = g; ctx.fillRect(dx0, dy0, dw, dh);
+  if (theme === 'track') {
+    // Track (B41): shift-light dots, rising tach band, performance timers, gauge bars, tyre pressures
+    for (let i = 0; i < 11; i++) { ctx.fillStyle = '#2b3240'; ctx.beginPath(); ctx.arc(dcx - 105 + i * 21, dy0 + 22, 6, 0, Math.PI * 2); ctx.fill(); }
+    const bx0 = dx0 + 40, bx1 = dx1 - 20, by0 = dy0 + 220, by1 = dy0 + 60;
+    const curve = (k: number) => [bx0 + (bx1 - bx0) * k, by0 - (by0 - by1) * Math.pow(k, 0.45)] as [number, number];
+    for (let i = 0; i < 14; i++) {
+      const k0 = i / 14, k1 = (i + 1) / 14; const [x0, y0] = curve(k0), [x1, y1] = curve(k1);
+      ctx.fillStyle = k0 >= 0.86 ? '#ff4a4a' : '#202a44';
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x1, by0 + 8); ctx.lineTo(x0, by0 + 8); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#3a4466'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.strokeStyle = '#ff6a3a'; ctx.lineWidth = 3; ctx.beginPath(); for (let i = 0; i <= 40; i++) { const [x, y] = curve(i / 40); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); } ctx.stroke();
+    for (let n = 1; n <= 7; n++) { const [x, y] = curve(n / 7.6); text(String(n), x, y + 24, 22); }
+    text('Best', dx0 + 52, dy0 + 120, 13, '#f0c040'); text('0:00.0', dx0 + 52, dy0 + 136, 15, '#e8e8ec');
+    text('Previous', dx0 + 112, dy0 + 82, 13, '#f0c040'); text('0:00.0', dx0 + 112, dy0 + 98, 15, '#e8e8ec');
+    text('Current', dx0 + 182, dy0 + 54, 13, '#f0c040'); text('0:00.0', dx0 + 182, dy0 + 70, 15, '#e8e8ec');
+    ctx.strokeStyle = '#d8dbe0'; ctx.lineWidth = 2; ctx.strokeRect(dcx - 50, dy0 + 150, 100, 22); text('COOL', dcx, dy0 + 161, 15, '#f2f3f5', 'center', 'bold', false);
+    for (const [k, x] of [[0, dcx - 150], [1, dcx - 118], [2, dcx + 118], [3, dcx + 150]] as [number, number][]) { ctx.strokeStyle = '#b8bcc4'; ctx.strokeRect(x - 7, dy0 + 186, 14, 60); ctx.fillStyle = k === 3 ? '#e8e8ec' : '#f0c040'; ctx.fillRect(x - 5, dy0 + 216, 10, 28); }
+    ctx.fillStyle = '#e8e8ec'; ctx.beginPath(); ctx.ellipse(dcx, dy0 + 222, 13, 30, 0, 0, Math.PI * 2); ctx.fill();
+    for (const [x, y] of [[dcx - 46, dy0 + 196], [dcx + 46, dy0 + 196], [dcx - 46, dy0 + 238], [dcx + 46, dy0 + 238]]) { ctx.strokeStyle = '#d8dbe0'; ctx.strokeRect(x - 20, y - 11, 40, 22); text('32', x, y, 15, '#f2f3f5', 'center', 'bold', false); }
+    text('0', dx0 + 128, dy1 - 52, 46); text('MPH', dx0 + 170, dy1 - 46, 13);
+    text('412 mi', dx0 + 52, dy1 - 22, 16, '#e8e8ec', 'center', 'normal', false);
+    text('PARK', dcx + 44, dy1 - 22, 14, '#ff7a2a'); text('SW', dx1 - 28, dy1 - 22, 16, '#e8e8ec');
+  } else if (theme === 'sport') {
+    // Sport: tach as a wide arc across the top, big digital speed, gear in the centre
+    const cx0 = dcx, cy0 = dcy + 70, R = 190;
+    ctx.lineWidth = 16; ctx.strokeStyle = '#1c2230'; ctx.beginPath(); ctx.arc(cx0, cy0, R, 200 * D, 340 * D); ctx.stroke();
+    ctx.strokeStyle = color; ctx.beginPath(); ctx.arc(cx0, cy0, R, 200 * D, 230 * D); ctx.stroke();
+    ctx.strokeStyle = '#ff3b1f'; ctx.beginPath(); ctx.arc(cx0, cy0, R, 322 * D, 340 * D); ctx.stroke();
+    for (let n = 0; n <= 7; n++) { const a = (200 + n * 20) * D; text(String(n), cx0 + Math.cos(a) * (R - 34), cy0 + Math.sin(a) * (R - 34), 22); }
+    text('0', cx0, cy0 - 70, 70); text('MPH', cx0, cy0 - 26, 16, '#9aa0aa');
+    ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.strokeRect(cx0 - 22, cy0 + 4, 44, 44); text('P', cx0, cy0 + 27, 32, color);
+    text('SPORT', dx0 + 50, dy1 - 20, 14, '#9aa0aa'); text('412 mi', dx1 - 52, dy1 - 20, 14, '#9aa0aa', 'center', 'normal', false);
+  } else if (theme === 'concept_neon') {
+    const cx0 = dcx, cy0 = dcy;
+    const gg = ctx.createRadialGradient(cx0, cy0, 0, cx0, cy0, 170); gg.addColorStop(0, color + '55'); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.fillRect(dx0, dy0, dw, dh);
+    glowOn(color, 18); ctx.strokeStyle = color; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(cx0, cy0, 140, 135 * D, 405 * D); ctx.stroke(); glowOff();
+    text('0', cx0, cy0, 80); text('MPH', cx0, cy0 + 46, 16, '#9aa0aa'); text('CONCEPT', cx0, dy1 - 18, 12, '#6a6c74', 'center', 'normal', false);
+  } else if (theme === 'concept_minimal') {
+    text('0', dcx, dcy - 6, 110, '#ffffff', 'center', '300', false); text('mph', dcx, dcy + 60, 20, '#9aa0aa', 'center', 'normal', false);
+    ctx.strokeStyle = '#2a2d36'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(dcx - 200, dy1 - 40); ctx.lineTo(dcx + 200, dy1 - 40); ctx.stroke();
+    ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(dcx - 200, dy1 - 40); ctx.lineTo(dcx - 140, dy1 - 40); ctx.stroke();
+    text('CONCEPT', dcx, dy0 + 22, 12, '#6a6c74', 'center', 'normal', false);
+  } else {
+    // Tour (factory default, B21 / B13): round tachometer with a bright ring, numerals 0-7, redline, crossed flags
+    const cx0 = dcx, cy0 = dcy + 4, R = 152;
+    const ring = ctx.createLinearGradient(cx0 - R, cy0 - R, cx0 + R, cy0 + R); ring.addColorStop(0, '#dfe8f4'); ring.addColorStop(0.5, '#7d8da6'); ring.addColorStop(1, '#e8eef6');
+    ctx.strokeStyle = ring; ctx.lineWidth = 8; ctx.beginPath(); ctx.arc(cx0, cy0, R, 0, Math.PI * 2); ctx.stroke();
+    const tang = (k: number) => (128 + k * 35.3) * D;
+    ctx.strokeStyle = '#ff2a1a'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(cx0, cy0, R - 12, tang(6.3), tang(8)); ctx.stroke();
+    glowOn('rgba(255,255,255,0.5)', 5);
+    for (let i = 0; i <= 28; i++) { const k = i / 4, a = tang(k), major = i % 4 === 0; ctx.strokeStyle = k >= 6.5 ? '#ff4030' : '#f2f3f5'; ctx.lineWidth = major ? 5 : 2; const r0 = R - (major ? 34 : 24); ctx.beginPath(); ctx.moveTo(cx0 + Math.cos(a) * r0, cy0 + Math.sin(a) * r0); ctx.lineTo(cx0 + Math.cos(a) * (R - 16), cy0 + Math.sin(a) * (R - 16)); ctx.stroke(); }
+    for (let k = 0; k <= 7; k++) { const a = tang(k); text(String(k), cx0 + Math.cos(a) * (R - 60), cy0 + Math.sin(a) * (R - 60), 34); }
+    text('RPM x1000', cx0 - 70, cy0 + 70, 11, '#c8ccd2', 'center', 'normal', false);
+    glowOff();
+    // gear indicator and digital speed
+    ctx.strokeStyle = '#e8eef6'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx0 + 92, cy0 + 96, 20, 0, Math.PI * 2); ctx.stroke(); text('P', cx0 + 92, cy0 + 97, 26, '#ffffff');
+    text('0 MPH', cx0, cy0 + 112, 15, '#f0c040', 'center', 'bold', false);
+    // side scales (oil pressure left, oil temperature right)
+    for (const sx of [-1, 1]) { ctx.strokeStyle = '#c8ccd2'; ctx.lineWidth = 2; const ax = cx0 + sx * 228; ctx.beginPath(); ctx.arc(ax - sx * 40, cy0, 70, sx < 0 ? 150 * D : -30 * D, sx < 0 ? 210 * D : 30 * D); ctx.stroke(); for (let i = 0; i <= 4; i++) { const a = (sx < 0 ? 150 + i * 15 : -30 + i * 15) * D; ctx.beginPath(); ctx.moveTo(ax - sx * 40 + Math.cos(a) * 62, cy0 + Math.sin(a) * 62); ctx.lineTo(ax - sx * 40 + Math.cos(a) * 70, cy0 + Math.sin(a) * 70); ctx.stroke(); } }
+    // needle at idle
+    glowOn('#ff3010', 12); ctx.strokeStyle = '#ff3a1a'; ctx.lineWidth = 6; ctx.lineCap = 'round'; const na = tang(0.8); ctx.beginPath(); ctx.moveTo(cx0 - Math.cos(na) * 20, cy0 - Math.sin(na) * 20); ctx.lineTo(cx0 + Math.cos(na) * (R - 22), cy0 + Math.sin(na) * (R - 22)); ctx.stroke(); glowOff();
+    ctx.fillStyle = '#111317'; ctx.beginPath(); ctx.arc(cx0, cy0, 14, 0, Math.PI * 2); ctx.fill();
+    // crossed flags at the top of the dial
+    const img = new Image();
+    img.onload = () => {
+      ctx.save(); ctx.beginPath(); ctx.rect(dx0, dy0, dw, dh); ctx.clip(); ctx.globalAlpha = 0.45 + 0.55 * brightness;
+      const lw = 64, lh = lw * (img.height / img.width); ctx.drawImage(img, cx0 - lw / 2, cy0 - 78 - lh / 2, lw, lh); ctx.restore();
+      t.needsUpdate = true; (t as unknown as THREE.EventDispatcher<{ imageLoaded: object }>).dispatchEvent({ type: 'imageLoaded' });
+    };
+    img.src = `${import.meta.env.BASE_URL}branding/crossed-flags.png`;
+  }
+  ctx.restore();
+  t.needsUpdate = true;
   return t;
 }
 
@@ -504,19 +591,32 @@ export function controlPanelTexture(): THREE.Texture {
   key(cx(3), Y(zb), 22, 14, '', (x0, y0) => defrost(x0, y0 + 7, true));
   key(cx(4), Y(zb), 22, 14, '', (x0, y0) => recirc(x0, y0 + 7));
   key(cx(5), Y(zb), 22, 14, '', (x0, y0) => seat(x0, y0 + 7));
-  // chrome Y between the halves: arms rise to the media row, stem drops below row B
-  {
-    const g = ctx.createLinearGradient(X(-14), 0, X(14), 0); g.addColorStop(0, '#8a8e94'); g.addColorStop(0.5, '#f1f3f6'); g.addColorStop(1, '#8a8e94');
-    ctx.strokeStyle = g; ctx.lineWidth = 7; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath(); ctx.moveTo(X(-11), Y(650)); ctx.lineTo(X(0), Y(625)); ctx.lineTo(X(11), Y(650)); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(X(0), Y(625)); ctx.lineTo(X(0), Y(600)); ctx.stroke();
-  }
-  // AUTO / fan labels beside the knobs
-  ctx.fillStyle = '#b8bcc2'; ctx.font = 'bold 13px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('AUTO', X(-128), Y(624)); ctx.fillText('FAN', X(128), Y(624));
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true;  // default flipY: upright on a PlaneGeometry
   panelTex = t;
   return t;
+}
+
+const knobTex: Record<string, THREE.Texture> = {};
+/** Climate knob faces (B58): temperature knob shows "LO" inside a blue-to-red ring, fan knob shows the fan symbol. */
+export function knobFaceTexture(kind: 'temp' | 'fan'): THREE.Texture {
+  if (knobTex[kind]) return knobTex[kind];
+  const n = 256; const c = document.createElement('canvas'); c.width = n; c.height = n;
+  const ctx = c.getContext('2d')!;
+  ctx.clearRect(0, 0, n, n);
+  const m = n / 2;
+  ctx.fillStyle = '#0c0d10'; ctx.beginPath(); ctx.arc(m, m, m - 4, 0, Math.PI * 2); ctx.fill();
+  if (kind === 'temp') {
+    const g = ctx.createLinearGradient(0, n, n, 0); g.addColorStop(0, '#2f7bff'); g.addColorStop(1, '#ff3b30');
+    ctx.strokeStyle = g; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(m, m, m - 26, Math.PI * 0.75, Math.PI * 2.25); ctx.stroke();
+    ctx.fillStyle = '#f2f3f5'; ctx.font = 'bold 64px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('LO', m, m + 4);
+  } else {
+    ctx.strokeStyle = '#c8ccd2'; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(m, m, m - 26, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#f2f3f5';
+    for (let i = 0; i < 4; i++) { ctx.save(); ctx.translate(m, m); ctx.rotate(i * Math.PI / 2 + 0.3); ctx.beginPath(); ctx.ellipse(0, -26, 13, 24, 0.5, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+    ctx.beginPath(); ctx.arc(m, m, 9, 0, Math.PI * 2); ctx.fill();
+  }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true;
+  knobTex[kind] = t; return t;
 }
 
 let emblemTex: THREE.Texture | null = null;
