@@ -36,7 +36,7 @@ def rim_radius(variant, a):
     # thumb rests: thicker just above the horizontal spokes (10 and 2 o'clock)
     for ta in (math.radians(155), math.radians(25)):
         d = abs((a - ta + math.pi) % (2 * math.pi) - math.pi)
-        base += 0.0045 * max(0.0, 1 - d / math.radians(24))
+        base += 0.006 * max(0.0, 1 - d / math.radians(26))
     return base
 
 
@@ -67,7 +67,7 @@ def build_spokes_and_hub(variant, c, u, v, n):
     # arms rise from the hub to the rim at about 9:30 and 2:30 (IMG_4499/4516); pods sit at their outer ends
     arm_l = [(-0.040, 0.038), (-0.118, 0.052), (-0.150, 0.054), (-0.160, 0.034), (-0.148, 0.004), (-0.118, -0.008), (-0.040, -0.034)]
     arm_r = [(-x, y) for (x, y) in reversed(arm_l)]
-    stem = [(-0.032, -0.036), (0.032, -0.036), (0.020, bottom + 0.012), (-0.020, bottom + 0.012)]
+    stem = [(-0.030, -0.036), (0.030, -0.036), (0.017, bottom + 0.012), (-0.017, bottom + 0.012)]
     for cid, pts in (('steering.spoke.left', arm_l), ('steering.spoke.right', arm_r), ('steering.spoke.lower', stem)):
         pl = _plate(cid, pts, c, u, v, n, -0.018, 0.0, frame_mat)
         lib.tag(pl, cid, 'steering')

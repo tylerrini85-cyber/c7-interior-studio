@@ -198,7 +198,7 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest' | 'mat'): T
     const tilt = (24 * Math.PI) / 180;
     const up = new THREE.Vector3(0, Math.cos(tilt), -Math.sin(tilt));
     const nrm = new THREE.Vector3(0, Math.sin(tilt), Math.cos(tilt));
-    const hubCenter = new THREE.Vector3(-0.37, 0.645, -0.46);
+    const hubCenter = new THREE.Vector3(-0.37, 0.705, -0.45);   // = WHEEL_CENTER in tools/blender/layout.py
     plane.position.copy(hubCenter).addScaledVector(up, 0.006).addScaledVector(nrm, 0.0358);
     plane.lookAt(plane.position.clone().add(nrm));
     void c;

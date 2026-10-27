@@ -113,20 +113,22 @@ def build_column():
     tilt = L.WHEEL_TILT
     axis = Vector((0, math.cos(math.radians(16)), math.sin(math.radians(16))))  # column axis into the dash
     hub = Vector((wx, wy, wz))
-    prof_small = lib.rounded_rect2d(0.10, 0.075, 0.03)
-    prof_big = lib.rounded_rect2d(0.15, 0.115, 0.04)
+    # slim shroud tucked under the hub centre line so nothing shows above the airbag cover from the seat
+    prof_small = lib.rounded_rect2d(0.085, 0.060, 0.025)
+    prof_big = lib.rounded_rect2d(0.11, 0.07, 0.025)
     u = Vector((1, 0, 0))
     v = axis.cross(u).normalized() * -1  # up-ish
     rings = []
-    for s, prof, off, drop in ((0.0, prof_small, 0.055, 0.0), (0.45, prof_small, 0.13, 0.008), (1.0, prof_big, 0.25, 0.03)):
+    # kept under the sight line from the eye over the airbag cover (z <= 0.96 - 0.325 * (y + 0.12)) so it stays hidden
+    for s, prof, off, drop in ((0.0, prof_small, 0.085, 0.085), (0.45, prof_small, 0.15, 0.11), (1.0, prof_big, 0.26, 0.15)):
         rings.append(lib.place_profile(prof, hub + axis * off - v * drop, u, v))
     col = lib.loft_object('column.shroud', rings, close_u=True, cap_start=True, cap_end=True, material='plastic_black')
     lib.add_bevel(col, 0.012, 4)
     lib.tag(col, 'column.shroud', 'steering')
     # stalks: turn signal (left) and wiper (right)
     for side, cid in ((-1, 'column.stalk.left'), (1, 'column.stalk.right')):
-        o = hub + axis * 0.10
-        path = [o + u * (side * 0.05), o + u * (side * 0.12) + axis * 0.01, o + u * (side * 0.17) + axis * 0.03 - v * 0.005]
+        o = hub + axis * 0.12 - v * 0.085
+        path = [o + u * (side * 0.045), o + u * (side * 0.12) + axis * 0.01, o + u * (side * 0.17) + axis * 0.03 - v * 0.005]
         st = lib.sweep_tube(cid, path, 0.011, n=12, radius_fn=lambda t: 0.011 if t < 0.5 else 0.013, material='plastic_black')
         lib.tag(st, cid, 'steering', selectable=False)
 

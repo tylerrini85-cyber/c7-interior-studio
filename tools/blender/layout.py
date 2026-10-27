@@ -62,7 +62,7 @@ CLUSTER_H = 0.16
 KNEE_BOLSTER_Z = 0.50
 
 # steering
-WHEEL_CENTER = (-SEAT_X, 0.45, 0.685)
+WHEEL_CENTER = (-SEAT_X, 0.45, 0.705)
 WHEEL_TILT = math.radians(24)   # wheel plane tilted so the top is further from the driver
 WHEEL_RADIUS = 0.179            # 14.1 in diameter
 RIM_RADIUS = 0.0165
