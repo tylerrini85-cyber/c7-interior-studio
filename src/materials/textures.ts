@@ -109,7 +109,8 @@ function cellField(size: number, seed: number, cells: number): Float32Array {
 export function leatherNormal(variant: 'fine' | 'coarse' = 'fine'): THREE.Texture {
   const size = 512;
   return makeTexture(`leather_n_${variant}`, size, (ctx) => {
-    const cells = cellField(size, 11, variant === 'fine' ? 40 : 22);
+    // real napa grain is ~1 mm; at the material repeat below this gives 1-2 mm cells on the dash, doors and seats
+    const cells = cellField(size, 11, variant === 'fine' ? 72 : 40);
     const n = noiseField(size, 5, 4, 8);
     const h = new Float32Array(size * size);
     for (let i = 0; i < h.length; i++) h[i] = Math.pow(cells[i], 0.8) * 0.75 + n[i] * 0.25;
@@ -131,8 +132,9 @@ export function perforationMaps(): { normal: THREE.Texture; roughness: THREE.Tex
   const size = 256;
   const draw = (ctx: CanvasRenderingContext2D, mode: 'n' | 'r') => {
     const h = new Float32Array(size * size);
-    const cells = cellField(size, 11, 24);
-    for (let i = 0; i < h.length; i++) h[i] = Math.pow(cells[i], 0.8) * 0.5;
+    // fine grain under the holes (the old 24-cell field read as hammered metal up close)
+    const cells = cellField(size, 11, 64);
+    for (let i = 0; i < h.length; i++) h[i] = Math.pow(cells[i], 0.8) * 0.22;
     const pitch = size / 8; // 8 holes per tile
     for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
       const gx = ((x % pitch) - pitch / 2); const gy = ((y % pitch) - pitch / 2);
@@ -323,6 +325,20 @@ export function clusterTexture(theme: string, color: string, brightness: number)
     ctx.font = font(px, weight, italic); ctx.fillStyle = col; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y);
   };
   const glowOn = (col: string, blur: number) => { ctx.shadowColor = col; ctx.shadowBlur = blur; };
+  /** Gauge numerals: bold italic, slightly condensed like the C7 dial figures. */
+  const numeral = (s0: string, x: number, y: number, px: number) => {
+    ctx.save(); ctx.translate(x, y); ctx.scale(0.86, 1); text(s0, 0, 0, px); ctx.restore();
+  };
+  /** CORVETTE logotype: wide, thin-stroked, forward-slanted capitals spread to a fixed width (B41 / B21). */
+  const wordmark = (cx0: number, cy0: number, width: number) => {
+    const letters = 'CORVETTE'; const px = 15;
+    ctx.save(); ctx.translate(cx0, cy0); ctx.transform(1, 0, -0.32, 1, 0, 0);
+    ctx.font = `600 ${px}px "Avenir Next", "Futura", "Century Gothic", "Segoe UI", Helvetica, Arial, sans-serif`;
+    ctx.fillStyle = '#f4f5f7'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+    const step = width / letters.length;
+    for (let i = 0; i < letters.length; i++) { ctx.save(); ctx.translate(-width / 2 + step * (i + 0.5), 0); ctx.scale(1.45, 0.92); ctx.fillText(letters[i], 0, 0); ctx.restore(); }
+    ctx.restore();
+  };
   const glowOff = () => { ctx.shadowBlur = 0; };
   const NEEDLE = '#ff4a1c';
   ctx.fillStyle = '#000000'; ctx.fillRect(0, 0, w, h);
@@ -331,17 +347,17 @@ export function clusterTexture(theme: string, color: string, brightness: number)
   // ---- left pod: speedometer 0-200 mph; arc runs from straight down (0) round the outer side to up-right (200)
   {
     const [px, py] = P(-0.128, -0.017);
-    const R = 150, ang = (mph: number) => (88 + (mph / 200) * 200) * D;
+    const R = 172, ang = (mph: number) => (90 + (mph / 200) * 210) * D;   // ticks run out to the pod edge (B41)
     glowOn('rgba(255,255,255,0.55)', 6);
     for (let mph = 0; mph <= 200; mph += 5) {
       const a = ang(mph), major = mph % 20 === 0, mid = mph % 10 === 0;
       const r0 = R - (major ? 26 : mid ? 18 : 12);
       ctx.strokeStyle = '#f4f5f7'; ctx.lineWidth = major ? 5 : 3;
       ctx.beginPath(); ctx.moveTo(px + Math.cos(a) * r0, py + Math.sin(a) * r0); ctx.lineTo(px + Math.cos(a) * R, py + Math.sin(a) * R); ctx.stroke();
-      if (major && mph > 0) { const rn = R - 46; text(String(mph), px + Math.cos(a) * rn, py + Math.sin(a) * rn, 21); }
+      if (major && mph > 0) { const rn = R - 50; numeral(String(mph), px + Math.cos(a) * rn, py + Math.sin(a) * rn, 26); }
     }
-    text('0', px + Math.cos(ang(0)) * (R - 46) + 6, py + Math.sin(ang(0)) * (R - 46), 21);
-    text('MPH', px - 32, py + 58, 22);
+    numeral('0', px + 22, py + R - 46, 26);   // beside the resting needle, as on the car
+    text('MPH', px - 34, py + 46, 22);
     glowOff();
     // needle at rest (0 mph), physical orange-red pointer
     glowOn(NEEDLE, 14); ctx.strokeStyle = NEEDLE; ctx.lineWidth = 7; ctx.lineCap = 'round';
@@ -351,7 +367,7 @@ export function clusterTexture(theme: string, color: string, brightness: number)
   // ---- right pod: fuel (upper arc, 1 at the top to 0 at the right) and coolant (lower arc, 260 down to 100 °F)
   {
     const [px, py] = P(0.128, -0.012);
-    const R = 143;
+    const R = 160;
     const arcTicks = (a0: number, a1: number, n: number, redFrom: number | null) => {
       for (let i = 0; i <= n; i++) {
         const a = (a0 + (a1 - a0) * i / n) * D, major = i % 2 === 0;
@@ -363,19 +379,19 @@ export function clusterTexture(theme: string, color: string, brightness: number)
     };
     glowOn('rgba(255,255,255,0.5)', 6);
     arcTicks(-110, -15, 8, 7);
-    const lab = (s: string, deg: number, r = R - 44, px2 = 21) => text(s, px + Math.cos(deg * D) * r, py + Math.sin(deg * D) * r, px2);
-    lab('1', -110); lab('½', -62); lab('0', -15);
+    const lab = (s: string, deg: number, r = R - 48, px2 = 27) => numeral(s, px + Math.cos(deg * D) * r, py + Math.sin(deg * D) * r, px2);
+    lab('1', -112); lab('½', -66); lab('0', -17);
     arcTicks(19, 97, 8, null);
     ctx.strokeStyle = '#ff3b1f'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(px, py, R - 4, 12 * D, 22 * D); ctx.stroke();
-    lab('260', 22, R - 50, 19); lab('220', 57, R - 48, 19); lab('100', 97, R - 44, 19);
-    text('CORVETTE', px + 86, py + 3, 16, '#f4f5f7', 'center', 'bold', true);
+    lab('260', 25, R - 56, 25); lab('220', 58, R - 54, 25); lab('100', 104, R - 50, 25);
+    wordmark(px + 92, py + 2, 124);
     // fuel pump and thermometer glyphs
     ctx.strokeStyle = '#f4f5f7'; ctx.lineWidth = 3;
-    { const gx = px + 78, gy = py - 72; ctx.strokeRect(gx - 7, gy - 10, 12, 18); ctx.beginPath(); ctx.moveTo(gx + 5, gy - 6); ctx.lineTo(gx + 10, gy - 2); ctx.lineTo(gx + 10, gy + 8); ctx.stroke(); }
-    { const gx = px + 100, gy = py + 58; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(gx, gy - 9); ctx.lineTo(gx, gy + 3); ctx.stroke(); ctx.beginPath(); ctx.arc(gx, gy + 6, 4, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(gx - 7, gy + 12); ctx.quadraticCurveTo(gx, gy + 9, gx + 7, gy + 12); ctx.stroke(); ctx.lineWidth = 3; }
+    { const gx = px + 70, gy = py - 52; ctx.strokeRect(gx - 7, gy - 10, 12, 18); ctx.beginPath(); ctx.moveTo(gx + 5, gy - 6); ctx.lineTo(gx + 10, gy - 2); ctx.lineTo(gx + 10, gy + 8); ctx.stroke(); }
+    { const gx = px + 52, gy = py + 52; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(gx, gy - 9); ctx.lineTo(gx, gy + 3); ctx.stroke(); ctx.beginPath(); ctx.arc(gx, gy + 6, 4, 0, Math.PI * 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(gx - 7, gy + 12); ctx.quadraticCurveTo(gx, gy + 9, gx + 7, gy + 12); ctx.stroke(); ctx.lineWidth = 3; }
     glowOff();
     glowOn(NEEDLE, 14); ctx.strokeStyle = NEEDLE; ctx.lineWidth = 7; ctx.lineCap = 'round';
-    for (const deg of [-57, 90]) { const a = deg * D; ctx.beginPath(); ctx.moveTo(px - Math.cos(a) * 8, py - Math.sin(a) * 8); ctx.lineTo(px + Math.cos(a) * (R - 8), py + Math.sin(a) * (R - 8)); ctx.stroke(); }
+    for (const deg of [-40, 91]) { const a = deg * D; ctx.beginPath(); ctx.moveTo(px - Math.cos(a) * 8, py - Math.sin(a) * 8); ctx.lineTo(px + Math.cos(a) * (R - 8), py + Math.sin(a) * (R - 8)); ctx.stroke(); }
     glowOff();
   }
 

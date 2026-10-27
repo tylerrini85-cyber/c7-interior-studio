@@ -13,10 +13,10 @@ export interface MaterialPreset {
 }
 
 export const MATERIAL_PRESETS: Record<MaterialKind, MaterialPreset> = {
-  leather: { label: 'Smooth Napa leather', group: 'Leather', roughness: 0.58, metalness: 0, normalScale: 0.55, repeat: 2.5, maps: () => ({ normal: leatherNormal('fine'), roughness: leatherRoughness() }) },
-  leather_textured: { label: 'Textured leather', group: 'Leather', roughness: 0.7, metalness: 0, normalScale: 1.0, repeat: 2.0, maps: () => ({ normal: leatherNormal('coarse'), roughness: leatherRoughness() }) },
-  leather_perforated: { label: 'Perforated leather', group: 'Leather', roughness: 0.62, metalness: 0, normalScale: 0.9, repeat: 3.5, maps: () => ({ normal: perforationMaps().normal, roughness: perforationMaps().roughness }) },
-  leather_gloss: { label: 'Gloss-treated leather', group: 'Leather', roughness: 0.35, metalness: 0, clearcoat: 0.5, clearcoatRoughness: 0.25, normalScale: 0.5, repeat: 2.5, maps: () => ({ normal: leatherNormal('fine') }) },
+  leather: { label: 'Smooth Napa leather', group: 'Leather', roughness: 0.58, metalness: 0, normalScale: 0.30, repeat: 9, maps: () => ({ normal: leatherNormal('fine'), roughness: leatherRoughness() }) },
+  leather_textured: { label: 'Textured leather', group: 'Leather', roughness: 0.7, metalness: 0, normalScale: 0.6, repeat: 6, maps: () => ({ normal: leatherNormal('coarse'), roughness: leatherRoughness() }) },
+  leather_perforated: { label: 'Perforated leather', group: 'Leather', roughness: 0.62, metalness: 0, normalScale: 0.6, repeat: 3.5, maps: () => ({ normal: perforationMaps().normal, roughness: perforationMaps().roughness }) },
+  leather_gloss: { label: 'Gloss-treated leather', group: 'Leather', roughness: 0.35, metalness: 0, clearcoat: 0.5, clearcoatRoughness: 0.25, normalScale: 0.28, repeat: 9, maps: () => ({ normal: leatherNormal('fine') }) },
   alcantara: { label: 'Alcantara-style microfiber', group: 'Fabric & suede', roughness: 0.95, metalness: 0, sheen: 0.9, sheenRoughness: 0.8, normalScale: 0.6, repeat: 4, maps: () => ({ normal: alcantaraMaps().normal, roughness: alcantaraMaps().roughness }) },
   suede: { label: 'Suede', group: 'Fabric & suede', roughness: 0.98, metalness: 0, sheen: 0.7, sheenRoughness: 0.9, normalScale: 0.5, repeat: 4, maps: () => ({ normal: alcantaraMaps().normal }) },
   fabric: { label: 'Performance fabric', group: 'Fabric & suede', roughness: 0.9, metalness: 0, sheen: 0.4, normalScale: 0.8, repeat: 6, maps: () => ({ normal: fabricMaps().normal, roughness: fabricMaps().roughness }) },

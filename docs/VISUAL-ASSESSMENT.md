@@ -140,6 +140,18 @@ Fixes found while checking: two boolean cutters were inside out (one listed cloc
 depth), so the slot and pod openings were not cut; knob labels were mis-oriented because revolved parts carry a node
 rotation. All three now verified in captures.
 
+## Passenger bar and detail pass (B38 / B13 / B49 / B41 / B44)
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Passenger bar | A thin round tube with lumps at the bend, lying on top of the console like a pipe | One wide flat-faced leather band (46 x 26 mm) tucked over the brushed wing's outer edge, a single smooth bend at the foot (Bezier, evenly resampled), then a tall padded console side wall (300 mm deep) that runs into the armrest. The section changes continuously, so there are no seams. The wall continues forward under the stack to the dash lower on both sides, so the wrap colour covers the console sides as in B38 / B49 |
+| Cockpit brow | Thin cord | Flat-faced rolled edge (22 x 14 mm) over the hood and the stack top, ending in the band |
+| Gauge figures | Fuel and coolant numbers small; speedometer figures crowded; "0" hidden by the needle | Both side dials enlarged to the pod edge; speedometer spans 210 degrees like B41; condensed bold italic figures at the photo size; "0" beside the resting needle; fuel needle clear of "½" |
+| CORVETTE script | Plain italic text | Wide, thin-stroked, forward-slanted logotype spread to a fixed width |
+| Leather | About 1 cm grain cells with strong relief: read as hammered metal up close | About 1-2 mm grain (72 cells per tile, 9 tiles per metre) with softer relief; finer grain under the seat perforations |
+
+Checked with a colour-per-object render at the band's bend: the subdivided band pulled in slightly and exposed the
+lower wall's end; the wall is now subdivided and inset 2 mm.
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

@@ -355,7 +355,6 @@ def build_outer_vents():
 # console's passenger bolster and runs into the armrest.
 # ---------------------------------------------------------------------------
 WING_DIR = Vector((1.0, -1.0, 0.0)).normalized()     # away from the stack edge: outboard and toward the occupants
-ROLL_R = 0.016                                       # half-size of the leather roll in the upright part
 
 
 def _stack_edge(z):
@@ -369,49 +368,122 @@ def _wing_width(z):
     return 0.028 + 0.040 * (t * t * (3 - 2 * t))
 
 
-WING_Z = [0.852, 0.836, 0.815, 0.790, 0.760, 0.730, 0.700, 0.670, 0.640, 0.612, 0.590, 0.576, 0.567]
+WING_Z = [0.852, 0.836, 0.815, 0.790, 0.760, 0.730, 0.700, 0.670, 0.640, 0.612, 0.594, 0.582]
 
 
-def _roll_path():
-    pts = [Vector((0.186, 0.735, 0.832)), Vector((0.194, 0.668, 0.850))]   # starts inside the dash top so no end shows
-    for z in WING_Z[1:]:
-        pts.append(_stack_edge(z) + WING_DIR * (_wing_width(z) + ROLL_R))
-    foot = pts[-1]
-    pts += [Vector((foot.x - 0.012, foot.y - 0.050, 0.574)), Vector((0.166, foot.y - 0.120, 0.566)), Vector((0.154, 0.260, 0.563)),
-            Vector((0.150, 0.150, 0.563)), Vector((0.150, 0.060, 0.566)), Vector((0.150, 0.000, 0.576)), Vector((0.150, -0.040, 0.586))]
-    return pts
+# ---------------------------------------------------------------------------
+# Passenger bar (B38 / B13 / B49 / B37): a wide, flat-faced leather band. It starts inside the dash top, runs down
+# the stack's passenger edge tucked over the brushed wing's outer edge, bends rearward at the foot in one smooth
+# sweep, and becomes the tall padded passenger side of the console running into the armrest. The driver side of
+# the console carries the same bolster. All sections come from _band_ring so there are no seams or lumps.
+# ---------------------------------------------------------------------------
+BAND_UP = (0.023, 0.013)     # upright: half width along WING_DIR, half thickness toward the cabin
+BAND_CON = (0.150, 0.024)    # console: half height of the padded side wall, half width
+CON_TOP = 0.025              # console side wall rises this far above the band's centre line
+CON_X, CON_Z = 0.146, 0.558  # console bolster centre line
+BEND_Z0, BEND_Z1 = 0.612, 0.552
 
 
-HOOP_PATH = [tuple(p) for p in _roll_path()]
+def _sm(a, b, x):
+    t = max(0.0, min(1.0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
 
 
-def _hoop_profile(w=0.032, h=0.040, r=0.013):
-    return lib.rounded_rect2d(w, h, r, n_corner=6)
+def _band_centre_upright(z, ha):
+    e = _stack_edge(z)
+    return e + WING_DIR * (_wing_width(z) + ha - 0.005)
+
+
+def _band_path(side=1):
+    """Smooth centre line of the band (passenger, side=1) or of the driver console bolster (side=-1)."""
+    if side > 0:
+        ha_top = BAND_UP[0] * 0.80
+        top = _band_centre_upright(0.852, ha_top)
+        ctrl = [top + Vector((0, 0.070, 0.006)), top + Vector((0, 0.034, 0.012)), top + Vector((0, 0.008, 0.006))]
+        for z in (0.835, 0.80, 0.76, 0.72, 0.68, 0.645, BEND_Z0):
+            ctrl.append(_band_centre_upright(z, BAND_UP[0]))
+        p0 = ctrl[-1]
+        t0 = (ctrl[-1] - ctrl[-2]).normalized()
+        p3 = Vector((CON_X, p0.y - 0.150, CON_Z))
+        p1 = p0 + t0 * 0.045
+        p2 = p3 + Vector((0, 0.075, 0))
+        for k in range(1, 9):
+            u = k / 9
+            ctrl.append(p0 * (1 - u) ** 3 + p1 * 3 * u * (1 - u) ** 2 + p2 * 3 * u * u * (1 - u) + p3 * u ** 3)
+        ctrl.append(p3)
+        for y in (p3.y - 0.10, 0.12, 0.04, -0.012):
+            ctrl.append(Vector((CON_X, y, CON_Z)))
+    else:
+        # runs forward under the stack to the dash lower so no end face shows beside the footwell
+        ctrl = [Vector((-CON_X, y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.012)]
+    path = lib.spline_through(ctrl, n_per_seg=6, tension=0.5)
+    length = sum((path[i + 1] - path[i]).length for i in range(len(path) - 1))
+    return lib.resample_open(path, max(12, int(length / 0.006)))
+
+
+def _band_rings(path, side=1):
+    rings = []
+    n = len(path)
+    for i, c in enumerate(path):
+        t = (path[min(n - 1, i + 1)] - path[max(0, i - 1)]).normalized()
+        s = _sm(BEND_Z0, BEND_Z1, c.z) if side > 0 else 1.0
+        up_axis = Vector((side * WING_DIR.x, WING_DIR.y, 0)) if side > 0 else Vector((0, 0, 1))
+        a = (up_axis * (1 - s) + Vector((0, 0, 1)) * s)
+        a = (a - t * a.dot(t)).normalized()
+        b = t.cross(a).normalized()
+        if side < 0:
+            b = -b          # keep the flatter face toward the cabin centre on the driver side too
+        a = b.cross(t).normalized() if side > 0 else t.cross(b).normalized()
+        ha = BAND_UP[0] * (1 - s) + BAND_CON[0] * s
+        hb = BAND_UP[1] * (1 - s) + BAND_CON[1] * s
+        if side > 0 and c.z > 0.83:
+            ha *= 0.80 + 0.20 * _sm(0.865, 0.83, c.z)
+        # the console section is a tall padded side wall: its top sits CON_TOP above the centre line and it runs down
+        # the console side (offset along a), so the wrap colour covers the console sides as in B38
+        top = BAND_UP[0] * (1 - s) + CON_TOP * s
+        prof = lib.rounded_rect2d(2 * ha, 2 * hb, min(hb * 0.85, ha), n_corner=6, offset=(top - ha, 0.0))
+        rings.append([c + a * q.x + b * q.y for q in prof])
+    return rings
 
 
 def build_grab_handle():
-    """Brushed grab wing with its teardrop slot, the leather roll along its outer edge, and the matching driver-side
-    console bolster (B13 / B21 / B37 / B16 / B38)."""
-    path = lib.spline_through([Vector(p) for p in HOOP_PATH], n_per_seg=4, tension=0.5)
-
-    def taper(t):
-        k = max(0.0, min(1.0, (t - 0.58) / 0.14)); k = k * k * (3 - 2 * k)
-        return (1.0 + 0.25 * k, 1.0 + 0.25 * k)
-    roll = lib.sweep_profile('dash.grab', path, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=taper)
-    lib.add_bevel(roll, 0.002, 2)
-    lib.tag(roll, 'dash.grab', 'dashboard')
-    # brushed wing: ruled surface from the stack edge to the inner side of the roll, then given thickness
+    """Brushed grab wing with its teardrop slot, the wide leather band on its outer edge running into the console,
+    and the matching driver-side console bolster (B13 / B21 / B37 / B16 / B38)."""
+    for side, cid in ((1, 'dash.grab'), (-1, 'console.bolster.driver')):
+        path = _band_path(side)
+        rings = _band_rings(path, side)
+        band = lib.loft_object(cid, rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0)
+        lib.add_subsurf(band, 1)
+        lib.tag(band, cid, 'dashboard' if side > 0 else 'console')
+    # passenger console side under the stack: continues the padded wall forward to the dash lower, below the band's
+    # bend, so the side reads as one surface (B49 / B16)
+    rings = []
+    # top at 0.575 so it overlaps the band's bend (same colour) and leaves no seam; rear end reaches under the bend
+    # under the bend the wall follows the band outboard so no gap shows between them
+    bend_pts = [p for p in _band_path(1) if p.z < 0.605]
+    for y in [0.900 - 0.56 * k / 22 for k in range(23)]:
+        near = min(bend_pts, key=lambda p: abs(p.y - y))
+        xc = max(CON_X, near.x) if abs(near.y - y) < 0.02 else CON_X
+        hb = BAND_CON[1] + (xc - CON_X) * 0.55
+        c = Vector((xc - (xc - CON_X) * 0.45, y, 0.429))
+        # 2 mm inside the band's (subdivided) console wall so its rear end never shows
+        prof = lib.rounded_rect2d(2 * 0.144, 2 * (hb - 0.002), BAND_CON[1] * 0.85, n_corner=6)
+        rings.append([c + Vector((0, 0, 1)) * q.x + Vector((-1, 0, 0)) * q.y for q in prof])
+    low = lib.loft_object('dash.grab.lower', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0, flip=True)
+    lib.add_subsurf(low, 1)
+    lib.tag(low, 'dash.grab.lower', 'dashboard', selectable=False)
+    # brushed wing: ruled surface from the stack edge to just under the band, then given thickness
     rings = []
     for z in WING_Z:
         a = _stack_edge(z)
-        b = a + WING_DIR * (_wing_width(z) + 0.002)
+        b = a + WING_DIR * (_wing_width(z) + 0.004)
         rings.append([a.lerp(b, k / 6) for k in range(7)])
     wing = lib.loft_object('dash.grab_trim', rings, close_u=False, material='metal_brushed', uv_scale=2.0, flip=_loft_needs_flip(rings, (-1, -1, 0)))
     lib.add_solidify(wing, 0.005, offset=0.0)
     # teardrop grab slot through the lower half of the wing, nearer its outer edge
-    zc = 0.648
+    zc = 0.652
     a = _stack_edge(zc); w = _wing_width(zc)
-    c = a + WING_DIR * (w * 0.58)
+    c = a + WING_DIR * (w * 0.52)
     up = (_stack_edge(zc + 0.01) - _stack_edge(zc - 0.01)).normalized()
     nrm = WING_DIR.cross(up).normalized()
     # outline listed counter-clockwise (like every other cutter) so the boolean subtracts
@@ -419,13 +491,6 @@ def build_grab_handle():
     cutter = lib.extrude_profile('dash.grab_slot_cut', slot, c - nrm * 0.03, WING_DIR, up, 0.06)
     lib.add_boolean(wing, cutter)
     lib.tag(wing, 'dash.grab_trim', 'dashboard')
-    # matching driver-side console bolster from the stack foot back into the armrest
-    dpath = [Vector((-0.160, 0.470, 0.556)), Vector((-0.158, 0.430, 0.561)), Vector((-0.156, 0.330, 0.563)), Vector((-0.152, 0.200, 0.563)),
-             Vector((-0.150, 0.100, 0.564)), Vector((-0.150, 0.030, 0.570)), Vector((-0.150, -0.030, 0.583))]
-    dpath = lib.spline_through(dpath, n_per_seg=3, tension=0.5)
-    bol = lib.sweep_profile('console.bolster.driver', dpath, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=lambda t: (1.25, 1.25))
-    lib.add_bevel(bol, 0.002, 2)
-    lib.tag(bol, 'console.bolster.driver', 'console')
 
 
 def _loft_needs_flip(rings, outward):
@@ -483,8 +548,9 @@ def build_glovebox_and_switches():
 
 
 def build_welt():
-    """Stitched brow of the cockpit wrap: from the driver door along the instrument hood's rear edge, across the dash
-    lip above the centre stack, and into the top of the passenger hoop (B13 / B38 / B37)."""
+    """Rolled, stitched brow of the cockpit wrap: from the driver door along the instrument hood's rear edge, across
+    the dash lip above the centre stack, into the top of the passenger band (B13 / B38 / B37). Flat-faced (about
+    22 mm tall, 14 mm deep) rather than a thin cord."""
     path = []
     n = 22
     for i in range(n):
@@ -492,16 +558,18 @@ def build_welt():
         prof = lib.spline_through(profile_at(x), n_per_seg=3)
         rear = [p for p in prof if 0.55 < p.x < 0.70]
         pt = max(rear, key=lambda p: p.y) if rear else prof[5]
-        path.append(Vector((x, pt.x - 0.003, pt.y + 0.002)))
-    # across the stack top: follow the dash lip (rear-most top point of the profile) toward the hoop
-    for x in (-0.11, -0.06, 0.0, 0.06, 0.11, 0.15):
+        path.append(Vector((x, pt.x - 0.002, pt.y - 0.003)))
+    for x in (-0.11, -0.06, 0.0, 0.06, 0.11):
         prof = lib.spline_through(profile_at(x), n_per_seg=3)
         top = [p for p in prof if p.y > 0.845 and p.x < 0.72]
         pt = min(top, key=lambda p: p.x) if top else prof[4]
-        path.append(Vector((x, pt.x + 0.002, pt.y + 0.002)))
-    path.append(Vector(HOOP_PATH[1]) + Vector((0, 0, 0.004)))
-    path = lib.spline_through(path, n_per_seg=2)
-    welt = lib.sweep_tube('dash.welt', path, 0.0085, n=12, cap=True, material='leather_black', up_hint=Vector((0, 0, 1)), uv_scale=6.0)
+        path.append(Vector((x, pt.x + 0.004, pt.y - 0.003)))
+    band_top = _band_path(1)[6]
+    path.append(band_top)
+    path = lib.spline_through(path, n_per_seg=3, tension=0.5)
+    path = lib.resample_open(path, int(sum((path[i + 1] - path[i]).length for i in range(len(path) - 1)) / 0.006))
+    prof = lib.rounded_rect2d(0.022, 0.014, 0.0065, n_corner=5)
+    welt = lib.sweep_profile('dash.welt', path, prof, material='leather_black', up_hint=Vector((0, 0, 1)), uv_scale=6.0)
     lib.tag(welt, 'dash.welt', 'dashboard')
 
 
