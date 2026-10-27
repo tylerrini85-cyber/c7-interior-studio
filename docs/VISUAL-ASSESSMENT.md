@@ -101,6 +101,19 @@ the photos, fixed them in the layout constants and builders rather than by patch
 
 Verified after the pass: driver, passenger, overhead, rear and door-junction captures; unit tests 16/16; browser walkthrough 20/20.
 
+## Door and passenger dash pass (IMG_4509 / IMG_4499 / IMG_4516)
+New photos could not be downloaded in this session (the environment's network policy refuses image hosts), so this
+pass used the owner's existing set.
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Door handle | A boxy pull block plus a separate release lever in its own bezel | One satin fin rising from the front of the armrest to a wide head under the tweeter, with the release lever inside the head opening and a dark hand pocket behind it |
+| Door accent | Horizontal strip along the armrest, partly buried in the panel | Diagonal bright line from below the tweeter down and rearward across the upper pad, placed by ray-casting the smoothed door surface |
+| Door switches, tweeter | Switches mid-armrest; tiny flat sail | Two-switch pod at the root of the fin; larger rounded triangular tweeter sail with a thin bright rim |
+| Door speaker | Bright aluminium ring at knee height (not on the car) | Dark surround by default |
+| Passenger dash | A plank standing off the dash with bright edges; a glovebox outline (the C7 has no glovebox) | Flush leather panels with a stitched seam bead on a lower edge that sweeps up toward the door; glovebox removed; vents set nearly flush |
+| Stitch overlay | Tiled single-stitch texture drew dashed lines across the dash and doors | Off by default on the dash pad, door panels and door armrests (their seams are modelled); still selectable |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

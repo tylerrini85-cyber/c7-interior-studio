@@ -69,29 +69,48 @@ def build_door(side):
     arm = lib.loft_object(f'{prefix}.armrest', arm_rings, close_u=False, material='leather_black', uv_scale=2.0, flip=side < 0)
     lib.add_subsurf(arm, 1)
     lib.tag(arm, f'{prefix}.armrest', 'doors')
-    # pull handle: a sculpted grab at the front of the armrest (curved bar rising into the panel)
-    x_in = side * (L.CABIN_HALF_W_HIP - L.ARMREST_DOOR_PROTRUSION - 0.01)
-    # pull: sculpted aluminium V-handle rising from the armrest front into the panel, with the dark hand opening
-    # behind it and the release lever above (IMG_4509 / IMG_4499 / IMG_4516)
-    # armrest front edge at the handle station (y = 0.42), from the same bulge law as the panel section
-    s42 = (0.42 - L.DOOR_Y_REAR) / (L.DOOR_Y_FRONT - L.DOOR_Y_REAR)
-    arm_front = L.CABIN_HALF_W_HIP - L.ARMREST_DOOR_PROTRUSION * (0.30 + 0.70 * math.sin(math.pi * min(1.0, max(0.0, (s42 - 0.10) / 0.80))))
-    vpts = [(0.33, L.ARMREST_DOOR_Z + 0.012), (0.42, L.ARMREST_DOOR_Z + 0.012), (0.50, L.ARMREST_DOOR_Z + 0.09), (0.53, L.ARMREST_DOOR_Z + 0.15), (0.49, L.ARMREST_DOOR_Z + 0.155), (0.445, L.ARMREST_DOOR_Z + 0.085), (0.36, L.ARMREST_DOOR_Z + 0.075)]
-    vh = lib.extrude_profile(f'{prefix}.pull', [Vector(p) for p in vpts], (side * (arm_front - 0.002), 0, 0), (0, 1, 0), (0, 0, 1), side * 0.030, material='metal_brushed', bevel=0.004)
-    lib.tag(vh, f'{prefix}.pull', 'doors')
-    opening = lib.box(f'{prefix}.pull_recess', (0.05, 0.12, 0.05), (side * (arm_front + 0.027), 0.40, L.ARMREST_DOOR_Z + 0.045), material='plastic_black')
-    lib.tag(opening, f'{prefix}.pull_recess', 'doors', selectable=False)
-    # window / lock switch panel on top of the armrest
-    sw = lib.extrude_profile(f'{prefix}.switches', lib.rounded_rect2d(0.05, 0.11, 0.01), (x_in + side * 0.02, 0.05, L.ARMREST_DOOR_Z + 0.024), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black_gloss', bevel=0.002)
+    # ---- satin fin handle (IMG_4509 / IMG_4499 / IMG_4516): rises from the front of the armrest up and forward to a
+    # wide head under the tweeter; the door release sits in the opening of the head; a dark hand pocket behind it
+    # |x| of the visible (subdivided) door surface at (y, z): ray-cast against the evaluated panel and upper pad
+    import bpy
+    from mathutils.bvhtree import BVHTree
+    dg = bpy.context.evaluated_depsgraph_get()
+    trees = [BVHTree.FromObject(o, dg) for o in (panel, upper)]
+
+    def surf_x(y, z):
+        best = None
+        for t in trees:
+            hit = t.ray_cast(Vector((side * 0.30, y, z)), Vector((side, 0, 0)), 1.0)
+            if hit[0] is not None and (best is None or abs(hit[0].x) < best):
+                best = abs(hit[0].x)
+        if best is None:
+            sec = _panel_section(y, 1)
+            best = min(sec, key=lambda p: abs(p.z - z)).x
+        return best
+    fin_out = [(0.360, 0.598), (0.418, 0.598), (0.470, 0.640), (0.530, 0.690), (0.574, 0.716), (0.586, 0.740), (0.568, 0.756), (0.520, 0.756), (0.482, 0.738), (0.448, 0.700), (0.400, 0.640)]
+    fin_out = [Vector(p) for p in lib.spline_through([Vector(p) for p in fin_out], n_per_seg=4, closed=True, tension=0.5)]
+    hole = [Vector(p) for p in lib.spline_through([Vector(p) for p in ((0.506, 0.722), (0.552, 0.730), (0.562, 0.744), (0.522, 0.746))], n_per_seg=4, closed=True, tension=0.5)]
+    x0 = min(surf_x(0.40, 0.62), surf_x(0.47, 0.68), surf_x(0.55, 0.73)) - 0.002
+    fin = lib.extrude_profile(f'{prefix}.handle', fin_out, (side * x0, 0, 0), (0, 1, 0), (0, 0, 1), -side * 0.016, material='metal_brushed', bevel=0.003)
+    cut = lib.extrude_profile(f'{prefix}.handle_hole', hole, (side * (x0 + 0.02), 0, 0), (0, 1, 0), (0, 0, 1), -side * 0.06)
+    lib.add_boolean(fin, cut)
+    lib.tag(fin, f'{prefix}.handle', 'doors')
+    # release lever inside the head opening
+    rel = lib.extrude_profile(f'{prefix}.release', [Vector(p) for p in ((0.514, 0.727), (0.548, 0.733), (0.552, 0.741), (0.520, 0.741))], (side * (x0 - 0.002), 0, 0), (0, 1, 0), (0, 0, 1), -side * 0.010, material='plastic_black_gloss', bevel=0.001)
+    lib.tag(rel, f'{prefix}.release', 'doors', selectable=False)
+    # dark hand pocket behind the fin (slightly larger than the fin, sunk into the panel)
+    pocket_out = [Vector((p.x + (p.x - 0.47) * 0.08, p.y + (p.y - 0.68) * 0.10)) for p in fin_out]
+    pk = lib.extrude_profile(f'{prefix}.pull_recess', pocket_out, (side * (x0 + 0.003), 0, 0), (0, 1, 0), (0, 0, 1), -side * 0.002, material='plastic_black')
+    lib.tag(pk, f'{prefix}.pull_recess', 'doors', selectable=False)
+    # window / lock switch pod on the armrest just behind the fin root
+    s30 = (0.30 - L.DOOR_Y_REAR) / (L.DOOR_Y_FRONT - L.DOOR_Y_REAR)
+    arm_in30 = L.ARMREST_DOOR_PROTRUSION * (0.30 + 0.70 * math.sin(math.pi * min(1.0, max(0.0, (s30 - 0.10) / 0.80))))
+    xs = side * (L.CABIN_HALF_W_HIP - arm_in30 * 0.55 + 0.004)
+    sw = lib.extrude_profile(f'{prefix}.switches', lib.rounded_rect2d(0.044, 0.085, 0.010), (xs, 0.29, L.ARMREST_DOOR_Z + 0.020), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black_gloss', bevel=0.002)
     lib.tag(sw, f'{prefix}.switches', 'doors', selectable=False)
     for k in range(2):
-        b = lib.box(f'{prefix}.winsw_{k}', (0.022, 0.03, 0.01), (x_in + side * 0.02, 0.08 - 0.035 * k, L.ARMREST_DOOR_Z + 0.03), material='plastic_black', bevel=0.003)
+        b = lib.box(f'{prefix}.winsw_{k}', (0.020, 0.026, 0.009), (xs, 0.31 - 0.034 * k, L.ARMREST_DOOR_Z + 0.027), material='plastic_black', bevel=0.003)
         lib.tag(b, f'{prefix}.winsw.{k}', 'doors', selectable=False)
-    # door release handle: flush lever in the upper pad near the front
-    rel = lib.extrude_profile(f'{prefix}.handle', lib.rounded_rect2d(0.075, 0.022, 0.010), (side * (L.CABIN_HALF_W_SHOULDER - 0.03), 0.50, L.ARMREST_DOOR_Z + 0.185), (0, 1, 0), (0, 0, 1), side * -0.012, material='metal_brushed', bevel=0.003)
-    lib.tag(rel, f'{prefix}.handle', 'doors')
-    bezel = lib.extrude_profile(f'{prefix}.handle_bezel', lib.rounded_rect2d(0.10, 0.04, 0.016), (side * (L.CABIN_HALF_W_SHOULDER - 0.018), 0.50, L.ARMREST_DOOR_Z + 0.185), (0, 1, 0), (0, 0, 1), side * 0.03, material='plastic_black')
-    lib.tag(bezel, f'{prefix}.handle_bezel', 'doors', selectable=False)
     # speaker grille (round) low in the front of the door
     sy, sz = L.SPEAKER_CENTER
     spk = lib.revolve(f'{prefix}.speaker', [(0.0, 0.0), (0.085, 0.0), (0.09, 0.006), (0.0, 0.006)], segments=40, material='plastic_black', origin=(side * (L.CABIN_HALF_W_HIP + 0.02), sy, sz), direction=(-side, 0, 0))
@@ -99,19 +118,22 @@ def build_door(side):
     ring = lib.revolve(f'{prefix}.speaker_ring', [(0.085, 0.0), (0.095, 0.0), (0.095, 0.008), (0.085, 0.008)], segments=40, material='metal_brushed', origin=(side * (L.CABIN_HALF_W_HIP + 0.02), sy, sz), direction=(-side, 0, 0))
     lib.tag(ring, f'{prefix}.speaker_ring', 'trim', selectable=False)
     # tweeter sail near the mirror: triangular grille on the upper front of the door (IMG_4509)
-    sail = lib.extrude_profile(f'{prefix}.sail', [Vector((0.58, 0.80)), Vector((0.70, 0.80)), Vector((0.70, 0.70))], (side * (L.CABIN_HALF_W_SHOULDER - 0.02), 0, 0), (0, 1, 0), (0, 0, 1), side * -0.006, material='plastic_black')
+    tri = [Vector(p) for p in lib.spline_through([Vector(p) for p in ((0.600, 0.792), (0.700, 0.808), (0.760, 0.806), (0.758, 0.720), (0.700, 0.742))], n_per_seg=3, closed=True, tension=0.4)]
+    sail = lib.extrude_profile(f'{prefix}.sail', tri, (side * (surf_x(0.70, 0.77) + 0.004), 0, 0), (0, 1, 0), (0, 0, 1), -side * 0.010, material='plastic_black', bevel=0.003)
+    rim = lib.sweep_tube(f'{prefix}.sail_rim', [Vector((side * (surf_x(0.70, 0.77) - 0.006), p.x, p.y)) for p in tri] + [Vector((side * (surf_x(0.70, 0.77) - 0.006), tri[0].x, tri[0].y))], 0.0018, n=8, cap=True, material='metal_brushed', up_hint=Vector((side, 0, 0)))
+    lib.tag(rim, f'{prefix}.sail_rim', 'trim', selectable=False)
     lib.tag(sail, f'{prefix}.sail', 'doors', selectable=False)
     # map pocket: open bin along the lower door
     pocket = lib.box(f'{prefix}.pocket', (0.05, 0.45, 0.10), (side * (L.CABIN_HALF_W_HIP - 0.0), -0.12, 0.30), material='plastic_black', bevel=0.008)
     lib.tag(pocket, f'{prefix}.pocket', 'doors')
-    # trim band (brushed) running along the top of the armrest line toward the dash
-    band_rings = []
-    for y in (L.DOOR_Y_REAR + 0.05, -0.2, 0.1, 0.4, L.DOOR_Y_FRONT - 0.02):
-        r = _panel_section(y, side)
-        p = r[9]
-        band_rings.append([Vector((p.x - side * 0.004, p.y, p.z + 0.012)), Vector((p.x - side * 0.004, p.y, p.z - 0.012))])
-    band = lib.loft_object(f'{prefix}.trim', band_rings, close_u=False, material='metal_brushed', flip=side > 0)
-    lib.add_solidify(band, 0.004, offset=1.0)
+    # diagonal accent line (IMG_4516 / IMG_4509): from below the tweeter, down and rearward across the upper pad
+    pts, nrms = [], []
+    for i in range(16):
+        t = i / 15
+        y = 0.62 + (-0.42 - 0.62) * t
+        z = 0.765 + (0.640 - 0.765) * t
+        pts.append(Vector((side * (surf_x(y, z) - 0.0015), y, z))); nrms.append(Vector((-side, 0, 0)))
+    band = lib.ribbon(f'{prefix}.trim', pts, nrms, 0.010, 0.004, material='metal_brushed', uv_scale=2.0)
     lib.tag(band, f'{prefix}.trim', 'trim')
     # courtesy lamp near the bottom rear and the sill plate
     lamp = lib.box(f'{prefix}.lamp', (0.01, 0.04, 0.012), (side * (L.CABIN_HALF_W_HIP + 0.02), -0.40, 0.22), material='emissive_white')

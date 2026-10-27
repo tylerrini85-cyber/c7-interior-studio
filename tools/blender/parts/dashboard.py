@@ -290,7 +290,7 @@ def _dash_face_frame(x, z):
     return c, u, v, nrm
 
 
-def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.010, ring_component=None, louvre_h=None):
+def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.004, ring_component=None, louvre_h=None):
     """Tall rectangular C7 vent: dark louvre floor just proud of the trim band, three vanes and a slider knob in
     front of it, and a thin bright bezel. Everything sits within a few millimetres of the band so it reads as
     an inset vent rather than a block (IMG_4491 / IMG_4509). nrm points toward the occupant."""
@@ -319,7 +319,7 @@ def build_outer_vents():
     # the two seat switches sit in the lower part of the same bezel
     c, u, v, nrm = _dash_face_frame(0.585, 0.745)
     for k in range(2):
-        b = lib.extrude_profile(f'dash.passenger_switch_{k}', lib.rounded_rect2d(0.020, 0.018, 0.003), c + nrm * 0.0125 + u * (-0.014 + 0.028 * k) - v * 0.045, u, v, 0.002, material='plastic_black_gloss')
+        b = lib.extrude_profile(f'dash.passenger_switch_{k}', lib.rounded_rect2d(0.020, 0.018, 0.003), c + nrm * 0.0065 + u * (-0.014 + 0.028 * k) - v * 0.045, u, v, 0.002, material='plastic_black_gloss')
         lib.tag(b, f'dash.passenger_switch.{k}', 'dashboard', selectable=False)
 
 
@@ -353,43 +353,38 @@ def _loft_needs_flip(rings, outward):
 
 
 def build_trim_band():
-    """Mid-dash trim panels: a sculpted solid band carrying the vents, 6-9 mm proud of the dash pad with a thin
-    bright edge top and bottom (IMG_4509/4499: black on the stock car; IMG_4491/4496: carbon overlay). The
-    passenger band rises toward the door."""
-    for (x0, x1, cid, zb, zt) in ((0.215, 0.70, 'dash.trim.passenger', (0.660, 0.672), (0.790, 0.815)), (-0.70, -0.52, 'dash.trim.driver', (0.665, 0.665), (0.795, 0.795))):
-        n = 20
+    """Mid-dash panels that carry the vents. On the car they are part of the leather dash face: almost flush, no bright
+    edges, bounded below by a stitched seam that sweeps up toward the door (IMG_4509 / IMG_4499 / IMG_4491)."""
+    specs = (
+        (0.215, 0.70, 'dash.trim.passenger', lambda s: 0.645 + 0.045 * s * s, lambda s: 0.790 + 0.025 * s),
+        (-0.70, -0.52, 'dash.trim.driver', lambda s: 0.665, lambda s: 0.795),
+    )
+    for (x0, x1, cid, z_lo_s, z_hi_s) in specs:
+        n = 24
         xs = [x0 + (x1 - x0) * i / (n - 1) for i in range(n)]
-        z_lo = lambda x: zb[0] + (zb[1] - zb[0]) * (x - x0) / (x1 - x0)
-        z_hi = lambda x: zt[0] + (zt[1] - zt[0]) * (x - x0) / (x1 - x0)
+        sval = (lambda x: (x - x0) / (x1 - x0)) if x1 > 0 else (lambda x: (x1 - x) / (x1 - x0))
         rings = []
         for x in xs:
-            z0, z1 = z_lo(x), z_hi(x)
-            outer = []
+            s = sval(x); z0, z1 = z_lo_s(s), z_hi_s(s)
+            front = []
             for k in range(7):
-                t = k / 6
-                z = z0 + (z1 - z0) * t
-                outer.append(Vector((x, _surface_point(x, z) - 0.006 - 0.003 * math.sin(math.pi * t), z)))
-            inner = [Vector((x, _surface_point(x, p.z) + 0.004, p.z)) for p in reversed(outer)]
-            rings.append(outer + inner)
+                z = z0 + (z1 - z0) * k / 6
+                front.append(Vector((x, _surface_point(x, z) - 0.0018, z)))
+            back = [Vector((x, _surface_point(x, p.z) + 0.004, p.z)) for p in reversed(front)]
+            rings.append(front + back)
         band = lib.loft_object(cid, rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.5, flip=_loft_needs_flip(rings, (0, -1, 0)))
-        lib.add_bevel(band, 0.003, 2)
         lib.tag(band, cid, 'trim')
-        for edge_t, zf in ((0, z_lo), (1, z_hi)):
-            path = [Vector((x, _surface_point(x, zf(x)) - 0.0075, zf(x))) for x in xs]
-            edge = lib.sweep_tube(f'{cid}.edge{edge_t}', path, 0.0022, n=8, cap=True, material='metal_brushed', up_hint=Vector((0, 0, 1)))
-            lib.tag(edge, f'{cid}.edge{edge_t}', 'trim', selectable=False)
+        # stitched seam bead along the lower edge
+        path = []
+        for x in xs:
+            z = z_lo_s(sval(x))
+            path.append(Vector((x, _surface_point(x, z) - 0.0025, z)))
+        seam = lib.sweep_tube(f'{cid}.seam', path, 0.0018, n=8, cap=True, material='leather_black', up_hint=Vector((0, 0, 1)))
+        lib.tag(seam, f'{cid}.seam', 'dashboard', selectable=False)
 
 
 def build_glovebox_and_switches():
-    # glovebox door: a shallow seam groove around the door outline on the leather lower dash (IMG_4491)
-    for (za, zb_, xa, xb) in ((0.475, 0.475, 0.30, 0.66), (0.615, 0.615, 0.30, 0.66)):
-        path = [Vector((x, _surface_point(x, za) + 0.0015, za)) for x in [xa + (xb - xa) * i / 14 for i in range(15)]]
-        g = lib.sweep_tube(f'dash.glovebox_seam_{int(za * 1000)}', path, 0.0022, n=8, cap=True, material='plastic_black', up_hint=Vector((0, 0, 1)))
-        lib.tag(g, f'dash.glovebox.seam.{int(za * 1000)}', 'dashboard', selectable=False)
-    for x in (0.30, 0.66):
-        path = [Vector((x, _surface_point(x, z) + 0.0015, z)) for z in [0.475 + 0.14 * i / 10 for i in range(11)]]
-        g = lib.sweep_tube(f'dash.glovebox_seam_x{int(x * 1000)}', path, 0.0022, n=8, cap=True, material='plastic_black', up_hint=Vector((1, 0, 0)))
-        lib.tag(g, f'dash.glovebox.seam.x{int(x * 1000)}', 'dashboard', selectable=False)
+    # (the C7 has no glovebox in the dash: storage is behind the screen and in the console)
     # driver lower switch panel (headlamp rotary + two buttons)
     base = Vector((-0.615, 0.675, 0.56))
     nrm = Vector((0, -1, 0.25)).normalized()

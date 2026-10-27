@@ -146,8 +146,10 @@ export function newId(): string {
 /** Migrate any older document shape to the current schema. */
 const SUPERSEDED_DEFAULTS: Record<ComponentId, { material: MaterialKind; color: string }[]> = {
   'console.stack': [{ material: 'plastic_gloss', color: '#0e0e10' }],
-  'dash.trim.driver': [{ material: 'aluminum_brushed', color: '#8d9096' }],
-  'dash.trim.passenger': [{ material: 'aluminum_brushed', color: '#8d9096' }],
+  'dash.trim.driver': [{ material: 'aluminum_brushed', color: '#8d9096' }, { material: 'plastic_soft', color: '#141416' }],
+  'dash.trim.passenger': [{ material: 'aluminum_brushed', color: '#8d9096' }, { material: 'plastic_soft', color: '#141416' }],
+  'doors.driver.speaker': [{ material: 'aluminum_brushed', color: '#8d9096' }],
+  'doors.passenger.speaker': [{ material: 'aluminum_brushed', color: '#8d9096' }],
 };
 
 export function migrate(doc: unknown): ProjectDoc {
@@ -181,6 +183,10 @@ export function migrate(doc: unknown): ProjectDoc {
   // Parts the owner changed are left exactly as saved. Components added since the project was saved get factory values.
   const fresh = factoryParts(out.base.factoryColor);
   for (const id of ['floor.mats.driver', 'floor.mats.passenger']) { const m = out.parts[id]; if (m && !m.text) m.text = 'CORVETTE'; }
+  for (const id of ['dash.upper', 'doors.driver.panel', 'doors.passenger.panel', 'doors.driver.upper', 'doors.passenger.upper', 'doors.driver.armrest', 'doors.passenger.armrest']) {
+    const m = out.parts[id]; const f = fresh[id];
+    if (m && f && m.stitch?.pattern === 'single' && m.stitch.color === f.stitch?.color && !(m as { stitchEdited?: boolean }).stitchEdited) m.stitch = { ...m.stitch, pattern: 'none' };
+  }
   for (const [id, cfg] of Object.entries(fresh)) {
     const stored = out.parts[id];
     if (!stored) { out.parts[id] = cfg; continue; }
