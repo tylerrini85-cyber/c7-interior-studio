@@ -114,6 +114,20 @@ pass used the owner's existing set.
 | Passenger dash | A plank standing off the dash with bright edges; a glovebox outline (the C7 has no glovebox) | Flush leather panels with a stitched seam bead on a lower edge that sweeps up toward the door; glovebox removed; vents set nearly flush |
 | Stitch overlay | Tiled single-stitch texture drew dashed lines across the dash and doors | Off by default on the dash pad, door panels and door armrests (their seams are modelled); still selectable |
 
+## Batch 2 pass (66 owner photos in reference/batch2)
+The second batch shows the cabin from the angles the app uses (overhead from behind the seats, driver wide, driver
+door, wheel straight on, stack close-up). It revealed architecture that the first set did not show clearly.
+
+| Area | Photo evidence | What was wrong | Change made |
+|------|----------------|----------------|-------------|
+| Passenger grab handle | B49, B38, B37, B13 | A thin bar beside the stack | A wide leather hoop (about 58 x 64 mm) that leaves the dash top at the stack's passenger corner, stands off the stack with an open gap, and turns rearward into the console's passenger side wall and the armrest; brushed strip on its inboard face; matching driver-side console bolster |
+| Cockpit wrap | B13, B38, B37 | Stitched welt ran down the driver side of the stack; a visor plank floated above the cluster | Welt runs from the driver door along the hood edge, across the dash lip above the stack and into the hoop; floating visor removed. "Cockpit wrap & grab handle" is one customisable part (hoop, brow, console bolsters) so a contrast interior reads like the photos |
+| Stack top | B58, B21, B37 | Two vents with the hazard between | One wide vent across the left, PASS AIR BAG lamp and hazard in a pod on the right |
+| Climate block | B58, B21 | Buttons as five-over-three | Two rows of six split by a chrome Y (AUTO, A/C, face / face+feet, defrost, SYNC; seat, feet, feet+defrost / rear defrost, recirc, seat) |
+| Console | B37, B44, B38 | Plate centred with open cupholders | Brushed plate on the driver half carrying the shifter, drive-mode dial and EPB; long dark storage lid on the passenger half; small switch square front right; wider armrest that the bolsters run into |
+| Steering wheel | B21, B04, B17 | Two flat arm plates and a separate stem; pods buried; small airbag | One silver V frame: arms from 9 and 3 o'clock sweep down around the airbag into the lower spoke; pods proud of the frame; larger airbag shield |
+| Registry | | Parts list showed a glovebox and console side accents that no longer exist | Removed; console plate defaults to brushed aluminium; new "Console storage lid" part |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

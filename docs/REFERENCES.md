@@ -47,3 +47,8 @@ screenshots you have rights to use for private reference). Most valuable, in ord
 10. Rearward view from the driver seat.
 
 Reference files are for private comparison only and are not shipped in the built app.
+
+
+## Owner-supplied photo batch 2 (reference/batch2, 66 images)
+Collected by the owner from image search in October 2026 and committed to `reference/batch2`. Used for the batch 2
+accuracy pass (see VISUAL-ASSESSMENT.md). Personal reference only; not shipped with the app and not redistributed.

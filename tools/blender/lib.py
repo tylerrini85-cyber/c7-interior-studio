@@ -334,6 +334,19 @@ def ribbon(name, pts, normals, width, thick, material=None, collection='Cockpit'
     return obj
 
 
+def sweep_profile(name, path, profile2d, material=None, collection='Cockpit', up_hint=Vector((0, 0, 1)), cap=True, uv_scale=1.0, subsurf=0, scale_fn=None):
+    """Sweep a closed 2D profile (x along the frame normal, y along the binormal) along a 3D path using parallel
+    transport frames. scale_fn(t) -> (sx, sy) optionally scales the profile along the path (t in 0..1)."""
+    pts = [Vector(p) for p in path]
+    frames = frame_along_path(pts, up_hint)
+    rings = []
+    for i, (o, t, nrm, b) in enumerate(frames):
+        s = i / max(1, len(frames) - 1)
+        sx, sy = scale_fn(s) if scale_fn else (1.0, 1.0)
+        rings.append([o + nrm * (q.x * sx) + b * (q.y * sy) for q in profile2d])
+    return loft_object(name, rings, close_u=True, cap_start=cap, cap_end=cap, material=material, collection=collection, subsurf=subsurf, uv_scale=uv_scale)
+
+
 def extrude_profile(name, profile2d, origin, u_axis, v_axis, depth, material=None, collection='Cockpit', bevel=0.0, bevel_segments=3, subsurf=0, uv_scale=1.0, taper=1.0):
     """Extrude a closed 2D profile along the plane normal by depth. taper scales the far face."""
     u = Vector(u_axis).normalized(); v = Vector(v_axis).normalized(); nrm = u.cross(v).normalized()

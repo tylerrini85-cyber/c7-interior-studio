@@ -76,16 +76,7 @@ def build_cluster():
     bezel_prof = lib.rounded_rect2d(L.CLUSTER_W + 0.04, L.CLUSTER_H + 0.04, 0.035)
     bezel = lib.extrude_profile('cluster.bezel', bezel_prof, base + nrm * 0.0, u, v, -0.05, material='plastic_black', bevel=0.004, bevel_segments=3)
     lib.tag(bezel, 'cluster.bezel', 'cluster')
-    # hood lip over the cluster (visor), curved, plastic
-    hood_pts = []
-    for i in range(9):
-        s = i / 8
-        x = cx - (L.CLUSTER_W / 2 + 0.03) + (L.CLUSTER_W + 0.06) * s
-        hood_pts.append(Vector((x, cy - 0.10 + 0.02 * math.sin(math.pi * s), cz + L.CLUSTER_H / 2 + 0.045)))
-    rings = [[p + Vector((0, 0.0, 0.0)) for p in hood_pts], [p + Vector((0, 0.035, 0.012)) for p in hood_pts]]
-    visor = lib.loft_object('cluster.hood', rings, close_u=False, material='plastic_black', flip=True)
-    lib.add_solidify(visor, 0.006)
-    lib.tag(visor, 'cluster.hood', 'cluster')
+    # (no separate visor: the hood brow is the dash pad itself plus the stitched welt, B21 / B13)
     # glass face (slightly in front of the bezel)
     glass = lib.extrude_profile('cluster.glass', lib.rounded_rect2d(L.CLUSTER_W, L.CLUSTER_H, 0.025), base - nrm * 0.002, u, v, -0.001, material='screen_off')
     lib.tag(glass, 'cluster.glass', 'cluster', selectable=False)
@@ -215,26 +206,27 @@ def build_center_stack():
     lib.tag(body, 'console.stack', 'console')
     # ---- top strip: two slim centre vents with the hazard / passenger-airbag pod between (IMG_4506, 4493)
     zt = 0.838
-    for k, dx in enumerate((-0.088, 0.088)):
-        side = 'left' if k == 0 else 'right'
-        floor = _panel(f'dash.vent_center_{k}_floor', 0.092, 0.030, cx + dx, zt, 0.001, 0.004, 'plastic_black', 'dashboard', selectable=False, r=0.004)
-        lib.tag(floor, f'dash.vents.center.{side}.floor', 'dashboard', selectable=False)
-        o, u, v, n = stack_frame(cx + dx, zt)
-        for j in range(2):
-            vane = lib.extrude_profile(f'dash.vent_center_{k}_vane{j}', lib.rounded_rect2d(0.084, 0.004, 0.0015), o + v * (0.006 - 0.012 * j) + n * 0.0015, u, v, 0.003, material='plastic_black_gloss')
-            lib.tag(vane, f'dash.vents.center.{k}.vane{j}', 'dashboard', selectable=False)
-        knob = lib.box(f'dash.vent_center_{k}_knob', (0.012, 0.004, 0.006), o + n * 0.004, material='plastic_black_gloss')
-        lib.tag(knob, f'dash.vents.center.{k}.knob', 'dashboard', selectable=False)
-        ring = lib.extrude_profile(f'dash.vent_center_{k}', lib.rounded_rect2d(0.100, 0.036, 0.006), o - n * 0.002, u, v, 0.0045, material='metal_brushed')
-        hole = lib.extrude_profile(f'dash.vent_center_{k}_hole', lib.rounded_rect2d(0.092, 0.030, 0.004), o - n * 0.03, u, v, 0.06)
-        lib.add_boolean(ring, hole)
-        lib.tag(ring, f'dash.vents.center.{side}', 'dashboard')
-    pod = _panel('dash.hazard_pod', 0.046, 0.026, cx, zt, 0.0025, 0.004, 'plastic_black_gloss', 'dashboard', selectable=False, r=0.005)
-    o, u, v, n = stack_frame(cx, zt)
-    hz = lib.extrude_profile('dash.hazard', [Vector((-0.007, -0.005)), Vector((0.007, -0.005)), Vector((0.0, 0.006))], o + n * 0.0025 + u * 0.012, u, v, 0.001, material='emblem')
-    lib.tag(hz, 'dash.hazard', 'dashboard', selectable=False)
-    ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.016, 0.009, 0.002), o + n * 0.0025 - u * 0.010, u, v, 0.001, material='screen_off')
+    # one wide vent across the left of the stack top, PASS AIR BAG lamp and hazard in a pod on the right (B58 / B21)
+    vx, vw, vh = cx - 0.038, 0.190, 0.034
+    floor = _panel('dash.vent_center_floor', vw - 0.008, vh - 0.008, vx, zt, 0.001, 0.004, 'plastic_black', 'dashboard', selectable=False, r=0.004)
+    lib.tag(floor, 'dash.vents.center.floor', 'dashboard', selectable=False)
+    o, u, v, n = stack_frame(vx, zt)
+    for j in range(3):
+        vane = lib.extrude_profile(f'dash.vent_center_vane{j}', lib.rounded_rect2d(vw - 0.016, 0.0035, 0.0015), o + v * (0.009 - 0.009 * j) + n * 0.0015, u, v, 0.003, material='plastic_black_gloss')
+        lib.tag(vane, f'dash.vents.center.vane{j}', 'dashboard', selectable=False)
+    knob = lib.box('dash.vent_center_knob', (0.016, 0.005, 0.007), o + n * 0.0045 + u * 0.035, material='plastic_black_gloss')
+    lib.tag(knob, 'dash.vents.center.knob', 'dashboard', selectable=False)
+    ring = lib.extrude_profile('dash.vent_center', lib.rounded_rect2d(vw, vh, 0.006), o - n * 0.002, u, v, 0.0045, material='metal_brushed')
+    hole = lib.extrude_profile('dash.vent_center_hole', lib.rounded_rect2d(vw - 0.008, vh - 0.008, 0.004), o - n * 0.03, u, v, 0.06)
+    lib.add_boolean(ring, hole)
+    lib.tag(ring, 'dash.vents.center.left', 'dashboard')
+    px = cx + 0.112
+    pod = _panel('dash.hazard_pod', 0.070, 0.030, px, zt, 0.0025, 0.004, 'plastic_black_gloss', 'dashboard', selectable=False, r=0.005)
+    o, u, v, n = stack_frame(px, zt)
+    ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.030, 0.016, 0.002), o + n * 0.0025 - u * 0.014, u, v, 0.001, material='screen_off')
     lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
+    hz = lib.extrude_profile('dash.hazard', [Vector((-0.007, -0.005)), Vector((0.007, -0.005)), Vector((0.0, 0.006))], o + n * 0.0025 + u * 0.020, u, v, 0.001, material='emblem')
+    lib.tag(hz, 'dash.hazard', 'dashboard', selectable=False)
     # ---- infotainment: gloss surround (wider on the left for the volume knob + SCREEN button), 8-inch screen
     zs_scr = 0.752
     bez = _panel('console.screen_bezel', 0.218, 0.126, cx + 0.028, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
@@ -323,27 +315,48 @@ def build_outer_vents():
         lib.tag(b, f'dash.passenger_switch.{k}', 'dashboard', selectable=False)
 
 
+# passenger hoop centreline (x, y, z): from inside the dash top above the stack's passenger corner, standing out
+# from the stack edge with an open gap, bending rearward at the foot into the console's passenger side wall
+# (B49 / B37 / B38 / B13)
+HOOP_PATH = [
+    (0.196, 0.718, 0.846), (0.207, 0.670, 0.842), (0.222, 0.624, 0.826), (0.238, 0.586, 0.792), (0.250, 0.562, 0.742),
+    (0.252, 0.548, 0.690), (0.248, 0.534, 0.640), (0.236, 0.506, 0.600), (0.214, 0.458, 0.576), (0.190, 0.392, 0.566),
+    (0.166, 0.310, 0.563), (0.154, 0.200, 0.562), (0.150, 0.100, 0.564), (0.150, 0.030, 0.572), (0.150, -0.030, 0.584),
+]
+
+
+def _hoop_profile(w=0.058, h=0.064, r=0.022):
+    return lib.rounded_rect2d(w, h, r, n_corner=6)
+
+
 def build_grab_handle():
-    """Passenger grab blade: a thin aluminium ribbon that runs from the dash top down the passenger edge of the
-    stack and continues as the passenger edge of the console plate (IMG_4499 / IMG_4506 / IMG_4513)."""
-    cx = STACK_CX
-    # straight bar parallel to the flat stack face, 40 mm off it, from the dash lip down past the foot
-    o_top, u, v, n_top = stack_frame(cx + stack_half_w(0.85) + 0.012, 0.85)
-    o_mid, u, v, n_mid = stack_frame(cx + stack_half_w(0.64) + 0.012, 0.64)
-    a = o_top + n_top * 0.012
-    b = o_mid + n_mid * 0.075
-    d = (b - a).normalized()
-    length = (0.85 - 0.575) / -d.z
+    """Passenger grab hoop: a wide leather band (about 46 x 58 mm) that leaves the dash top at the stack's passenger
+    corner, stands off the stack with an open gap behind it, and turns rearward at the foot to become the console's
+    passenger side bolster. A brushed strip runs down its inboard face (B49 / B37 / B38 / B13)."""
+    path = lib.spline_through([Vector(p) for p in HOOP_PATH], n_per_seg=4, tension=0.5)
+    def taper(t):
+        k = max(0.0, min(1.0, (t - 0.55) / 0.15)); k = k * k * (3 - 2 * k)
+        return (1.0 - 0.28 * k, 1.0 - 0.18 * k)
+    hoop = lib.sweep_profile('dash.grab', path, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=taper)
+    lib.add_bevel(hoop, 0.002, 2)
+    lib.tag(hoop, 'dash.grab', 'dashboard')
+    # inboard brushed face strip along the upright part (stops where the hoop turns into the console)
+    frames = lib.frame_along_path(path, Vector((1, 0, 0)))
     pts, nrms = [], []
-    for i in range(8):
-        t = i / 7
-        pts.append(a + d * (length * t)); nrms.append(n_mid)
-    foot = pts[-1]
-    # bend onto the console plate edge and run rearward to the armrest
-    for (x, y, z) in ((0.150, foot.y - 0.06, 0.569), (0.128, foot.y - 0.14, 0.569), (0.118, 0.20, 0.569), (0.118, 0.0, 0.569), (0.118, -0.20, 0.569), (0.118, -0.32, 0.569)):
-        pts.append(Vector((x, y, z))); nrms.append(Vector((0, 0, 1)))
-    blade = lib.ribbon('dash.grab_trim', pts, nrms, 0.036, 0.014, material='metal_brushed', uv_scale=2.0, bevel=0.003)
-    lib.tag(blade, 'dash.grab_trim', 'dashboard')
+    for (o, t, nrm, b) in frames:
+        if o.z < 0.585 or o.z > 0.860:
+            continue
+        inward = -nrm if nrm.x > 0 else nrm
+        pts.append(o + inward * 0.0295); nrms.append(inward)
+    strip = lib.ribbon('dash.grab_trim', pts, nrms, 0.030, 0.0025, material='metal_brushed', uv_scale=2.0)
+    lib.tag(strip, 'dash.grab_trim', 'dashboard')
+    # matching driver-side console bolster from the stack foot back to the armrest
+    dpath = [Vector((-x, y, z)) for (x, y, z) in HOOP_PATH if y < 0.46]
+    dpath = [Vector((-0.160, 0.470, 0.556)), Vector((-0.158, 0.430, 0.561))] + [p for p in dpath if p.y < 0.40]
+    dpath = lib.spline_through(dpath, n_per_seg=3, tension=0.5)
+    bol = lib.sweep_profile('console.bolster.driver', dpath, _hoop_profile(), material='leather_black', up_hint=Vector((1, 0, 0)), uv_scale=3.0, scale_fn=lambda t: (0.72, 0.82))
+    lib.add_bevel(bol, 0.002, 2)
+    lib.tag(bol, 'console.bolster.driver', 'console')
 
 
 def _loft_needs_flip(rings, outward):
@@ -401,24 +414,25 @@ def build_glovebox_and_switches():
 
 
 def build_welt():
-    """Raised, stitched seam that wraps the driver cockpit: door end -> around the instrument hood -> down the
-    driver side of the centre stack to the console."""
+    """Stitched brow of the cockpit wrap: from the driver door along the instrument hood's rear edge, across the dash
+    lip above the centre stack, and into the top of the passenger hoop (B13 / B38 / B37)."""
     path = []
-    # along the hood rear edge (profile point 5 = rear edge crest) from the driver door to the stack
     n = 22
     for i in range(n):
-        x = -0.69 + (STACK_X0 - 0.01 + 0.69) * i / (n - 1)
+        x = -0.69 + (STACK_X0 + 0.02 + 0.69) * i / (n - 1)
         prof = lib.spline_through(profile_at(x), n_per_seg=3)
-        # crest point: max z in the rear half of the top surface
         rear = [p for p in prof if 0.55 < p.x < 0.70]
         pt = max(rear, key=lambda p: p.y) if rear else prof[5]
-        path.append(Vector((x, pt.x - 0.003, pt.y + 0.001)))
-    # down the driver edge of the stack body
-    for z in (0.848, 0.80, 0.74, 0.68, 0.62, 0.575):
-        x = STACK_CX - stack_half_w(z) - 0.004
-        path.append(Vector((x, stack_y(x + 0.03, z) + 0.006, z)))
+        path.append(Vector((x, pt.x - 0.003, pt.y + 0.002)))
+    # across the stack top: follow the dash lip (rear-most top point of the profile) toward the hoop
+    for x in (-0.11, -0.06, 0.0, 0.06, 0.11, 0.15):
+        prof = lib.spline_through(profile_at(x), n_per_seg=3)
+        top = [p for p in prof if p.y > 0.845 and p.x < 0.72]
+        pt = min(top, key=lambda p: p.x) if top else prof[4]
+        path.append(Vector((x, pt.x + 0.002, pt.y + 0.002)))
+    path.append(Vector(HOOP_PATH[1]) + Vector((0, 0, 0.004)))
     path = lib.spline_through(path, n_per_seg=2)
-    welt = lib.sweep_tube('dash.welt', path, 0.0055, n=10, cap=True, material='leather_black', up_hint=Vector((0, 0, 1)), uv_scale=6.0)
+    welt = lib.sweep_tube('dash.welt', path, 0.0085, n=12, cap=True, material='leather_black', up_hint=Vector((0, 0, 1)), uv_scale=6.0)
     lib.tag(welt, 'dash.welt', 'dashboard')
 
 

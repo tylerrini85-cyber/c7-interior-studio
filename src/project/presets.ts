@@ -52,7 +52,7 @@ export const PRESETS: Preset[] = [
   { id: 'carbon', name: 'Carbon Edition', description: 'Gloss twill carbon trim everywhere with gray stitching', apply: (doc) => {
     doc.parts = factoryParts('jet_black');
     setAll(doc, isTrim, { material: 'carbon_gloss', color: '#141416' });
-    setAll(doc, (id) => ['dash.glovebox', 'console.stack', 'console.trim', 'roof.panel', 'steering.hub'].includes(id), { material: 'carbon_gloss', color: '#141416' });
+    setAll(doc, (id) => ['console.stack', 'console.trim', 'roof.panel', 'steering.hub'].includes(id), { material: 'carbon_gloss', color: '#141416' });
     setAll(doc, isSoft, { stitch: { color: '#8a8a8e', pattern: 'single' } });
   } },
   { id: 'luxury_tan', name: 'Luxury Tan', description: 'Kalahari leather, diamond-stitched inserts, polished aluminum', apply: (doc) => {
@@ -93,7 +93,7 @@ export const PRESETS: Preset[] = [
   { id: 'forged', name: 'Forged Carbon Edition', description: 'Forged carbon trim, two-tone black and gray leather', apply: (doc) => {
     doc.parts = factoryParts('jet_black');
     setAll(doc, isTrim, { material: 'carbon_forged', color: '#17181a' });
-    setAll(doc, (id) => ['dash.glovebox', 'console.stack', 'console.trim', 'roof.panel', 'steering.hub', 'console.screen_bezel', 'cluster.bezel'].includes(id), { material: 'carbon_forged', color: '#17181a' });
+    setAll(doc, (id) => ['console.stack', 'console.trim', 'roof.panel', 'steering.hub', 'console.screen_bezel', 'cluster.bezel'].includes(id), { material: 'carbon_forged', color: '#17181a' });
     setAll(doc, isSeatInsert, { material: 'leather_perforated', color: '#5c5e61', stitch: { color: '#9a9a9e', pattern: 'pleat' } });
     setAll(doc, (id) => isSeat(id) && !isSeatInsert(id) && isSoft(id), { color: '#141416', stitch: { color: '#9a9a9e', pattern: 'single' } });
   } },

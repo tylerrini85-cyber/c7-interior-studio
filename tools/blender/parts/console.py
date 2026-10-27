@@ -30,18 +30,17 @@ def build_body():
     body = lib.loft_object('console.main', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.5)
     lib.add_subsurf(body, 1)
     lib.tag(body, 'console.main', 'console')
-    # gloss trim plate on top around the shifter (waterfall continues from the stack)
-    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.23, 0.47, 0.02), (0.0, 0.215, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
+    # brushed plate on the driver half: carries the shifter, the drive-mode dial and the EPB (B37 / B44 / B38)
+    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.122, 0.340, 0.018), (-0.052, 0.300, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
     lib.tag(plate, 'console.trim', 'console')
-    # side accent strips (brushed) along the top edges of the console
-    for side in (-1, 1):
-        strip = lib.box(f'console.side_trim_{side}', (0.006, 0.47, 0.009), (side * 0.118, 0.215, L.CONSOLE_TOP_Z + 0.0045), material='metal_brushed', bevel=0.001)
-        lib.tag(strip, f'console.side_trim.{"driver" if side < 0 else "passenger"}', 'trim', selectable=False)
+    # small switch square at the front of the passenger half, beside the shifter
+    sq = lib.extrude_profile('console.small_switches', lib.rounded_rect2d(0.050, 0.042, 0.006), (0.058, 0.420, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    lib.tag(sq, 'console.small_switches', 'console', selectable=False)
 
 
 def build_shifter(variant='automatic'):
     y = L.SHIFTER_Y
-    base = Vector((0.0, y, L.CONSOLE_TOP_Z + 0.01))
+    base = Vector((L.SHIFTER_X, y, L.CONSOLE_TOP_Z + 0.01))
     if variant == 'automatic':
         # leather boot: low truncated pyramid with a soft collar (about 95 x 110 mm at the plate, 38 mm tall)
         rings = []
@@ -60,7 +59,7 @@ def build_shifter(variant='automatic'):
         ring = lib.revolve('console.shifter.ring', [(0.016, 0.0), (0.0205, 0.0), (0.0205, 0.009), (0.016, 0.009)], segments=32, material='chrome', origin=top - Vector((0, 0, 0.006)), direction=(0, -0.16, 1))
         lib.tag(ring, 'console.shifter.ring', 'trim', selectable=False)
         # PRNDL indicator strip beside the boot
-        ind = lib.extrude_profile('console.shifter.indicator', lib.rounded_rect2d(0.012, 0.10, 0.003), base + Vector((-0.070, 0.0, 0.0)), (1, 0, 0), (0, 1, 0), 0.001, material='screen_off')
+        ind = lib.extrude_profile('console.shifter.indicator', lib.rounded_rect2d(0.010, 0.085, 0.003), base + Vector((-0.050, 0.0, 0.0)), (1, 0, 0), (0, 1, 0), 0.001, material='screen_off')
         lib.tag(ind, 'console.shifter.indicator', 'electronics', selectable=False)
     else:
         # manual: round boot and taller lever with a spherical knob
@@ -79,40 +78,26 @@ def build_shifter(variant='automatic'):
 
 
 def build_dial_and_switches():
-    # drive mode selector dial (left of / behind the shifter)
-    c = Vector((-0.085, L.DIAL_Y + 0.02, L.CONSOLE_TOP_Z + 0.01))
-    dial = lib.revolve('console.drive_mode_dial', [(0.0, 0.0), (0.028, 0.0), (0.03, 0.014), (0.027, 0.02), (0.012, 0.022), (0.0, 0.022)], segments=36, material='metal_satin_dark', origin=c, direction=(0, 0, 1))
+    # drive-mode selector dial and the EPB switch behind the shifter, side by side on the brushed plate (B37 / B44)
+    c = Vector((-0.080, L.DIAL_Y, L.CONSOLE_TOP_Z + 0.010))
+    dial = lib.revolve('console.drive_mode_dial', [(0.0, 0.0), (0.026, 0.0), (0.028, 0.014), (0.025, 0.020), (0.011, 0.022), (0.0, 0.022)], segments=36, material='metal_satin_dark', origin=c, direction=(0, 0, 1))
     lib.tag(dial, 'console.drive_mode_dial', 'console')
-    base = lib.revolve('console.drive_mode_base', [(0.0, 0.0), (0.036, 0.0), (0.038, 0.004), (0.0, 0.004)], segments=36, material='plastic_black', origin=c - Vector((0, 0, 0.003)), direction=(0, 0, 1))
+    base = lib.revolve('console.drive_mode_base', [(0.0, 0.0), (0.034, 0.0), (0.036, 0.004), (0.0, 0.004)], segments=36, material='plastic_black', origin=c - Vector((0, 0, 0.003)), direction=(0, 0, 1))
     lib.tag(base, 'console.drive_mode_base', 'console', selectable=False)
-    # electronic parking brake switch and two buttons on the right
-    epb = lib.extrude_profile('console.epb', lib.rounded_rect2d(0.03, 0.045, 0.006), (0.085, L.DIAL_Y + 0.03, L.CONSOLE_TOP_Z + 0.01), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black', bevel=0.002)
+    epb = lib.extrude_profile('console.epb', lib.rounded_rect2d(0.026, 0.040, 0.005), (-0.025, L.DIAL_Y, L.CONSOLE_TOP_Z + 0.010), (1, 0, 0), (0, 1, 0), 0.007, material='plastic_black', bevel=0.002)
     lib.tag(epb, 'console.epb', 'console', selectable=False)
-    for k in range(2):
-        b = lib.extrude_profile(f'console.btn_{k}', lib.rounded_rect2d(0.03, 0.018, 0.004), (0.085, L.DIAL_Y - 0.015 - 0.024 * k, L.CONSOLE_TOP_Z + 0.01), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
-        lib.tag(b, f'console.btn.{k}', 'console', selectable=False)
 
 
 def build_cupholders_and_armrest():
-    # cupholder recess: two holes in tandem cut into a plate; sliding cover modelled closed over the rear one
-    plate = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.11, 0.19, 0.03), (0.0, 0.085, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
-    lib.tag(plate, 'console.cupholder_plate', 'console')
-    for k, y in enumerate((0.135, 0.045)):
-        cutter = lib.revolve(f'cup_cutter_{k}', [(0.0, -0.1), (0.04, -0.1), (0.04, 0.1), (0.0, 0.1)], segments=32, origin=(0, y, L.CONSOLE_TOP_Z), direction=(0, 0, 1))
-        lib.add_boolean(plate, cutter)
-        # cup well (dark cylinder below)
-        well = lib.revolve(f'console.cupholder_{k}', [(0.0, 0.0), (0.038, 0.0), (0.038, 0.07), (0.041, 0.07)], segments=32, material='rubber', origin=(0, y, L.CONSOLE_TOP_Z - 0.068), direction=(0, 0, 1))
-        lib.tag(well, f'console.cupholder.{k}', 'console', selectable=False)
-    # tambour cover slid partly open (slats)
-    for k in range(5):
-        slat = lib.box(f'console.cup_cover_{k}', (0.105, 0.014, 0.004), (0.0, 0.0 - k * 0.015, L.CONSOLE_TOP_Z + 0.009), material='plastic_black_gloss', bevel=0.001)
-        lib.tag(slat, f'console.cup_cover.{k}', 'console', selectable=False)
+    # long closed storage / cupholder lid on the passenger half, from beside the shifter back to the armrest
+    lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.098, 0.330, 0.016), (0.058, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    lib.tag(lid, 'console.cupholder_plate', 'console')
     # armrest lid: padded leather pad with rounded edges and a stitched seam
     lid_c = (0.0, (L.ARMREST_Y0 + L.ARMREST_Y1) / 2, L.ARMREST_Z + 0.015)
-    lid = lib.box('console.armrest', (0.24, L.ARMREST_Y1 - L.ARMREST_Y0, 0.045), lid_c, material='leather_black', bevel=0.018, bevel_segments=6)
+    lid = lib.box('console.armrest', (0.34, L.ARMREST_Y1 - L.ARMREST_Y0, 0.048), lid_c, material='leather_black', bevel=0.020, bevel_segments=6)
     lib.tag(lid, 'console.armrest', 'console')
     # storage bin front wall under the lid (dark)
-    bin_ = lib.box('console.armrest_bin', (0.23, L.ARMREST_Y1 - L.ARMREST_Y0 - 0.02, 0.03), (0.0, lid_c[1], L.ARMREST_Z - 0.02), material='plastic_black')
+    bin_ = lib.box('console.armrest_bin', (0.30, L.ARMREST_Y1 - L.ARMREST_Y0 - 0.02, 0.03), (0.0, lid_c[1], L.ARMREST_Z - 0.02), material='plastic_black')
     lib.tag(bin_, 'console.armrest_bin', 'console', selectable=False)
 
 

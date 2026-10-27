@@ -64,20 +64,22 @@ def build_spokes_and_hub(variant, c, u, v, n):
     frame_mat = 'carbon' if thin else 'metal_brushed'
     bottom = rim_centerline(variant, -math.pi / 2).y
     # ---- silver Y frame: left arm, right arm, lower stem (one visual piece, three meshes sharing the component)
-    # arms rise from the hub to the rim at about 9:30 and 2:30 (IMG_4499/4516); pods sit at their outer ends
-    arm_l = [(-0.040, 0.038), (-0.118, 0.052), (-0.150, 0.054), (-0.160, 0.034), (-0.148, 0.004), (-0.118, -0.008), (-0.040, -0.034)]
+    # one silver V frame (B21 / B04 / B17): arms leave the rim at 9 and 3 o'clock, sweep down and in to hug the
+    # bottom of the airbag and converge into the lower spoke; split into three meshes for the registry
+    arm_l = [(0.0, 0.018), (-0.060, 0.018), (-0.105, 0.030), (-0.163, 0.046), (-0.163, -0.020), (-0.122, -0.040),
+             (-0.078, -0.068), (-0.042, -0.096), (-0.022, -0.110), (0.0, -0.110)]
     arm_r = [(-x, y) for (x, y) in reversed(arm_l)]
-    stem = [(-0.030, -0.036), (0.030, -0.036), (0.017, bottom + 0.012), (-0.017, bottom + 0.012)]
+    stem = [(-0.022, -0.108), (0.022, -0.108), (0.017, bottom + 0.012), (-0.017, bottom + 0.012)]
     for cid, pts in (('steering.spoke.left', arm_l), ('steering.spoke.right', arm_r), ('steering.spoke.lower', stem)):
         pl = _plate(cid, pts, c, u, v, n, -0.018, 0.0, frame_mat)
         lib.tag(pl, cid, 'steering')
     # ---- black switch pods inset into the outer ends of the arms
     for side, cid in ((-1, 'steering.spoke.left'), (1, 'steering.spoke.right')):
-        pc = c + u * (side * 0.120) + v * 0.023
-        pod = lib.extrude_profile(cid + '.pod', lib.rounded_rect2d(0.038, 0.050, 0.008), pc - n * 0.001, u, v, -0.006, material='plastic_black')
+        pc = c + u * (side * 0.112) + v * 0.004
+        pod = lib.extrude_profile(cid + '.pod', lib.rounded_rect2d(0.040, 0.046, 0.008), pc + n * 0.003, u, v, -0.006, material='plastic_black')
         lib.tag(pod, cid + '.pod', 'steering', selectable=False)
         for r in range(3):
-            b = lib.extrude_profile(f'{cid}.btn{r}', lib.rounded_rect2d(0.026, 0.012, 0.003), pc + v * (0.015 - 0.015 * r) - n * 0.0015, u, v, -0.0025, material='plastic_black_gloss')
+            b = lib.extrude_profile(f'{cid}.btn{r}', lib.rounded_rect2d(0.026, 0.012, 0.003), pc + v * (0.014 - 0.014 * r) + n * 0.0045, u, v, -0.0025, material='plastic_black_gloss')
             lib.tag(b, f'{cid}.btn{r}', 'steering', selectable=False)
         # paddle shifter behind the rim (A8): thin blade behind the arm, reachable from the rim
         pad = lib.extrude_profile(cid + '.paddle', lib.rounded_rect2d(0.078, 0.044, 0.012), c + u * (side * 0.128) + v * 0.020 - n * 0.030, u, v, -0.004, material='metal_satin_dark', bevel=0.0015)
@@ -94,8 +96,8 @@ def build_spokes_and_hub(variant, c, u, v, n):
         t = i / 48
         a = 2 * math.pi * t
         # superellipse-ish shield: wider at top, pointed bottom
-        rx = 0.066 * (1.0 if math.sin(a) > 0 else 0.88)
-        ry = 0.048 if math.sin(a) > 0 else 0.066
+        rx = 0.074 * (1.0 if math.sin(a) > 0 else 0.88)
+        ry = 0.054 if math.sin(a) > 0 else 0.072
         x = rx * math.copysign(abs(math.cos(a)) ** 0.9, math.cos(a))
         y = ry * math.copysign(abs(math.sin(a)) ** (1.0 if math.sin(a) > 0 else 1.25), math.sin(a))
         shield.append(Vector((x, y)))

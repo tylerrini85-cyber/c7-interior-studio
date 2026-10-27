@@ -148,6 +148,7 @@ const SUPERSEDED_DEFAULTS: Record<ComponentId, { material: MaterialKind; color: 
   'console.stack': [{ material: 'plastic_gloss', color: '#0e0e10' }],
   'dash.trim.driver': [{ material: 'aluminum_brushed', color: '#8d9096' }, { material: 'plastic_soft', color: '#141416' }],
   'dash.trim.passenger': [{ material: 'aluminum_brushed', color: '#8d9096' }, { material: 'plastic_soft', color: '#141416' }],
+  'console.trim': [{ material: 'plastic_gloss', color: '#0e0e10' }],
   'doors.driver.speaker': [{ material: 'aluminum_brushed', color: '#8d9096' }],
   'doors.passenger.speaker': [{ material: 'aluminum_brushed', color: '#8d9096' }],
 };

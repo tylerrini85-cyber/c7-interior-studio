@@ -27,8 +27,8 @@ const ZONE_STRIPS: Record<ZoneId, StripDef[]> = {
     { pos: b2t(0.672, 0.47, 0.675), size: [0.004, 0.004, 0.12], light: b2t(0.62, 0.47, 0.68), lightDist: 0.4 },
   ],
   cupholders: [
-    { pos: b2t(0.0, 0.055, 0.565), size: [0.085, 0.003, 0.085], light: b2t(0.0, 0.055, 0.60), lightDist: 0.35 },
-    { pos: b2t(0.0, -0.03, 0.565), size: [0.085, 0.003, 0.085], light: b2t(0.0, -0.03, 0.60), lightDist: 0.35 },
+    { pos: b2t(0.058, 0.205, 0.5675), size: [0.004, 0.004, 0.33], light: b2t(0.058, 0.205, 0.60), lightDist: 0.35 },
+    { pos: b2t(0.058, 0.205, 0.5675), size: [0.10, 0.004, 0.004], light: b2t(0.058, 0.205, 0.60), lightDist: 0.01 },
   ],
   seats: [
     { pos: b2t(-0.37, 0.0, 0.085), size: [0.40, 0.004, 0.50], light: b2t(-0.37, 0.0, 0.06), lightDist: 0.9 },
