@@ -152,6 +152,15 @@ rotation. All three now verified in captures.
 Checked with a colour-per-object render at the band's bend: the subdivided band pulled in slightly and exposed the
 lower wall's end; the wall is now subdivided and inset 2 mm.
 
+Follow-up on the bar (B38 / B49):
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Bend | The section grew into the tall console wall inside the bend and folded over itself | The section only grows once the path has left the bend |
+| Console side under the stack | Faces were inside out, so the carpet showed through as dark triangles; it bulged outboard under the bend and left a vertical crease; it was in the wrap colour | Winding fixed (checked with horizontal ray casts: outer faces now point out); flush with the band's console wall, so the band's loop stands off it as in B49; dark console trim (part of "Console body") as in B38 |
+| Wall bottoms | A fixed depth: the toe board and tunnel poked through near the front | The bottom of every console side wall follows the carpet height (tunnel hump plus toe board) and sits 8 mm into it |
+| Driver console bolster | Inside out (mirrored frame) | Winding reversed |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

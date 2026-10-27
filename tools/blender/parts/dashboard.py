@@ -378,10 +378,29 @@ WING_Z = [0.852, 0.836, 0.815, 0.790, 0.760, 0.730, 0.700, 0.670, 0.640, 0.612, 
 # the console carries the same bolster. All sections come from _band_ring so there are no seams or lumps.
 # ---------------------------------------------------------------------------
 BAND_UP = (0.023, 0.013)     # upright: half width along WING_DIR, half thickness toward the cabin
-BAND_CON = (0.150, 0.024)    # console: half height of the padded side wall, half width
+BAND_CON = (0.2115, 0.024)   # console: nominal half height of the padded side wall (its bottom follows the carpet), half width
 CON_TOP = 0.025              # console side wall rises this far above the band's centre line
 CON_X, CON_Z = 0.146, 0.558  # console bolster centre line
 BEND_Z0, BEND_Z1 = 0.612, 0.552
+
+
+def _floor_z(x, y):
+    """Carpet height at (x, y): the cabin floor section with its tunnel hump, lifted by the toe board (cabin.py)."""
+    zb = 0.0 if y <= L.TOEBOARD_Y0 else L.TOEBOARD_Z1 * min(1.0, (y - L.TOEBOARD_Y0) / (L.TOEBOARD_Y1 - L.TOEBOARD_Y0)) ** 1.4
+    t, tz = L.TUNNEL_HALF_W, L.TUNNEL_Z + zb
+    prof = [(0.0, tz + 0.01), (t - 0.03, tz), (t, tz - 0.06), (t + 0.03, zb + 0.03), (t + 0.10, zb)]
+    ax = abs(x)
+    if ax >= prof[-1][0]:
+        return zb
+    for (x0, z0), (x1, z1) in zip(prof, prof[1:]):
+        if ax <= x1:
+            return z0 + (z1 - z0) * (ax - x0) / (x1 - x0)
+    return zb
+
+
+def _wall_bottom(x_out, y):
+    """Bottom of a console side wall whose outer face is at x_out: just into the carpet so no floor shows through."""
+    return _floor_z(x_out, y) - 0.008
 
 
 def _sm(a, b, x):
@@ -424,6 +443,12 @@ def _band_path(side=1):
 def _band_rings(path, side=1):
     rings = []
     n = len(path)
+    # the section only grows into the tall console wall once the path has finished bending (growing it inside the
+    # bend folds the inner side over itself); the lower wall fills the space under the bend
+    i3 = next((k for k, p in enumerate(path) if p.z <= CON_Z + 0.0015), 0) if side > 0 else 0
+    along = [0.0]
+    for k in range(1, n):
+        along.append(along[-1] + (path[k] - path[k - 1]).length)
     for i, c in enumerate(path):
         t = (path[min(n - 1, i + 1)] - path[max(0, i - 1)]).normalized()
         s = _sm(BEND_Z0, BEND_Z1, c.z) if side > 0 else 1.0
@@ -434,13 +459,15 @@ def _band_rings(path, side=1):
         if side < 0:
             b = -b          # keep the flatter face toward the cabin centre on the driver side too
         a = b.cross(t).normalized() if side > 0 else t.cross(b).normalized()
-        ha = BAND_UP[0] * (1 - s) + BAND_CON[0] * s
-        hb = BAND_UP[1] * (1 - s) + BAND_CON[1] * s
+        g = _sm(0.0, 0.09, along[i] - along[i3]) if (side > 0 and i >= i3) else (0.0 if side > 0 else 1.0)
+        ha_con = (CON_Z + CON_TOP - _wall_bottom(c.x + side * BAND_CON[1], c.y)) / 2 if g > 0 else BAND_CON[0]
+        ha = BAND_UP[0] * (1 - g) + ha_con * g
+        hb = BAND_UP[1] * (1 - g) + BAND_CON[1] * g
         if side > 0 and c.z > 0.83:
             ha *= 0.80 + 0.20 * _sm(0.865, 0.83, c.z)
         # the console section is a tall padded side wall: its top sits CON_TOP above the centre line and it runs down
         # the console side (offset along a), so the wrap colour covers the console sides as in B38
-        top = BAND_UP[0] * (1 - s) + CON_TOP * s
+        top = BAND_UP[0] * (1 - g) + CON_TOP * g
         prof = lib.rounded_rect2d(2 * ha, 2 * hb, min(hb * 0.85, ha), n_corner=6, offset=(top - ha, 0.0))
         rings.append([c + a * q.x + b * q.y for q in prof])
     return rings
@@ -452,26 +479,24 @@ def build_grab_handle():
     for side, cid in ((1, 'dash.grab'), (-1, 'console.bolster.driver')):
         path = _band_path(side)
         rings = _band_rings(path, side)
-        band = lib.loft_object(cid, rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0)
+        # the driver bolster's frame is mirrored, so its winding is reversed to keep the normals pointing out
+        band = lib.loft_object(cid, rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0, flip=side < 0)
         lib.add_subsurf(band, 1)
         lib.tag(band, cid, 'dashboard' if side > 0 else 'console')
-    # passenger console side under the stack: continues the padded wall forward to the dash lower, below the band's
-    # bend, so the side reads as one surface (B49 / B16)
+    # passenger console side under the stack (B38 / B49): the dark lower side of the console, flush with the band's
+    # console wall and running forward to the toe board. The band's bend stands off outboard of it, so the side shows
+    # under the loop as on the car; at the rear it runs on inside the band's console wall so no end face shows.
     rings = []
-    # top at 0.575 so it overlaps the band's bend (same colour) and leaves no seam; rear end reaches under the bend
-    # under the bend the wall follows the band outboard so no gap shows between them
-    bend_pts = [p for p in _band_path(1) if p.z < 0.605]
-    for y in [0.900 - 0.56 * k / 22 for k in range(23)]:
-        near = min(bend_pts, key=lambda p: abs(p.y - y))
-        xc = max(CON_X, near.x) if abs(near.y - y) < 0.02 else CON_X
-        hb = BAND_CON[1] + (xc - CON_X) * 0.55
-        c = Vector((xc - (xc - CON_X) * 0.45, y, 0.429))
-        # 2 mm inside the band's (subdivided) console wall so its rear end never shows
-        prof = lib.rounded_rect2d(2 * 0.144, 2 * (hb - 0.002), BAND_CON[1] * 0.85, n_corner=6)
+    hb = BAND_CON[1] - 0.002         # 2 mm inside the band's (subdivided) console wall
+    for y in [0.900 - 0.64 * k / 32 for k in range(33)]:
+        # top just under the band's centre line; bottom just into the carpet, which climbs the toe board here
+        z_top, z_bot = 0.573, _wall_bottom(CON_X + hb, y)
+        c = Vector((CON_X, y, (z_top + z_bot) / 2))
+        prof = lib.rounded_rect2d(z_top - z_bot, 2 * hb, BAND_CON[1] * 0.85, n_corner=6)
         rings.append([c + Vector((0, 0, 1)) * q.x + Vector((-1, 0, 0)) * q.y for q in prof])
-    low = lib.loft_object('dash.grab.lower', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0, flip=True)
+    low = lib.loft_object('dash.grab.lower', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0)
     lib.add_subsurf(low, 1)
-    lib.tag(low, 'dash.grab.lower', 'dashboard', selectable=False)
+    lib.tag(low, 'dash.grab.lower', 'console', selectable=False)
     # brushed wing: ruled surface from the stack edge to just under the band, then given thickness
     rings = []
     for z in WING_Z:
