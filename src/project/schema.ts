@@ -151,6 +151,7 @@ const SUPERSEDED_DEFAULTS: Record<ComponentId, { material: MaterialKind; color: 
   'console.trim': [{ material: 'plastic_gloss', color: '#0e0e10' }],
   'doors.driver.speaker': [{ material: 'aluminum_brushed', color: '#8d9096' }],
   'doors.passenger.speaker': [{ material: 'aluminum_brushed', color: '#8d9096' }],
+  'dash.vents': [{ material: 'aluminum_brushed', color: '#3a3c40' }],
 };
 
 export function migrate(doc: unknown): ProjectDoc {

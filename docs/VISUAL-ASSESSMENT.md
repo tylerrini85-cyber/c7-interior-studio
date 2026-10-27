@@ -170,6 +170,17 @@ Second follow-up on the bar (owner photo of the slot / B38):
 | Console and armrest | Passenger edge at 0.155 m: too narrow to meet the band | Passenger side widened to 0.195 m with the top kept flat out under the band (no trench); armrest widened on that side; storage lid moved out with it |
 | Band width on the console | Grew to about twice its stack width right after the bend (a visible shoulder) | Same thickness all the way, so it reads as one even strip from above |
 
+## Passenger dash and vents (B37 / B38 / B60 / B66 / B58)
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Passenger pad | A thin flat strip laid on the dash face, starting 5 cm short of the grab band | One sculpted pad from behind the band to the door: starts at the crease where the black dash top ends, stands proud with its face tilted up toward the occupant, rolls under into a shelf over the dark knee area, and eases into the dash at the door end |
+| Vents | Housings with no back (the pad showed through between the louvres as red wedges); the outer vent crowded the door | Openings cut through the pad, each with a dark lined pocket, four tipped louvres and a slider, and a bezel standing 1.5 mm proud |
+| Inner vent | A plain rectangle | A rounded trapezoid (about 96 x 60 mm) whose stack-side edge leans toward the door, as in B37 / B66 / B58 |
+| Outer vent | Switches under the vent | A taller rounded square (78 x 104 mm) with the louvres in the top and the two seat switches, with light indicators, on a dark plate inside the bottom of the same bezel |
+| Vent bezels | Dark grey by default | Bright satin silver as in the photos (the old default is migrated) |
+| Colour of cut parts | Parts with a boolean cut load as a group of meshes; their component id was on the group only, so colour changes never reached them (also the fin's leather back) | The loader falls back to the parent's component id |
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

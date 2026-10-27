@@ -337,15 +337,7 @@ def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.004, ring_component=None, lo
 
 def build_outer_vents():
     _vent('dash.vents.driver', -0.652, 0.735)
-    # passenger inner vent beside the stack is the tall one; the outer vent is shorter with the seat switches
-    # directly under it inside the same bezel (IMG_4491 / IMG_4509)
-    _vent('dash.vents.passenger_inner', 0.300, 0.735)
-    _vent('dash.vents.passenger', 0.585, 0.745, h=0.128, louvre_h=0.070)
-    # the two seat switches sit in the lower part of the same bezel
-    c, u, v, nrm = _dash_face_frame(0.585, 0.745)
-    for k in range(2):
-        b = lib.extrude_profile(f'dash.passenger_switch_{k}', lib.rounded_rect2d(0.020, 0.018, 0.003), c + nrm * 0.0065 + u * (-0.014 + 0.028 * k) - v * 0.045, u, v, 0.002, material='plastic_black_gloss')
-        lib.tag(b, f'dash.passenger_switch.{k}', 'dashboard', selectable=False)
+    # the passenger vents are recessed into the passenger pad (build_passenger_pad)
 
 
 # ---------------------------------------------------------------------------
@@ -554,7 +546,6 @@ def build_trim_band():
     """Mid-dash panels that carry the vents. On the car they are part of the leather dash face: almost flush, no bright
     edges, bounded below by a stitched seam that sweeps up toward the door (IMG_4509 / IMG_4499 / IMG_4491)."""
     specs = (
-        (0.215, 0.70, 'dash.trim.passenger', lambda s: 0.645 + 0.045 * s * s, lambda s: 0.790 + 0.025 * s),
         (-0.70, -0.605, 'dash.trim.driver', lambda s: 0.665, lambda s: 0.795),
     )
     for (x0, x1, cid, z_lo_s, z_hi_s) in specs:
@@ -579,6 +570,162 @@ def build_trim_band():
             path.append(Vector((x, _surface_point(x, z) - 0.0025, z)))
         seam = lib.sweep_tube(f'{cid}.seam', path, 0.0018, n=8, cap=True, material='leather_black', up_hint=Vector((0, 0, 1)))
         lib.tag(seam, f'{cid}.seam', 'dashboard', selectable=False)
+
+
+# ---------------------------------------------------------------------------
+# Passenger dash pad (B37 / B38 / B60 / B66 / B13): one long sculpted pad in the wrap colour from behind the grab
+# band to the door. It starts at the crease where the black dash top ends, stands proud with its face tilted up
+# toward the occupant, and rolls under at the bottom into a shelf over the dark knee area. Two vents are recessed
+# into it: a rounded trapezoid near the stack and a taller rounded square at the door end with the two seat
+# switches inside the bottom of its bezel.
+# ---------------------------------------------------------------------------
+PAD_X0, PAD_X1 = 0.178, 0.692
+PAD_ZT, PAD_ZB = 0.836, 0.660        # crease at the dash top / underside of the shelf
+
+
+def _pad_front(x, z):
+    """y of the pad's occupant-facing surface at (x, z) (the face only, between the top roll and the bottom roll)."""
+    ys = _surface_point(x, PAD_ZT)
+    return ys - 0.014 - (0.815 - z) * 0.20
+
+
+def _pad_section(x):
+    """Closed (y, z) section of the pad at x, starting at the crease and running down the face, under the shelf and
+    back up just inside the dash surface. Toward the door end it eases back into the dash."""
+    e = 1.0 - smoothstep(PAD_X1 - 0.030, PAD_X1, x)
+    ys = _surface_point(x, PAD_ZT)
+    yb = _pad_front(x, 0.682)
+    front = [(ys, PAD_ZT), (ys - 0.006, 0.832), (ys - 0.011, 0.826)]
+    front += [(_pad_front(x, z), z) for z in (0.815, 0.795, 0.775, 0.755, 0.735, 0.715, 0.70, 0.69, 0.682)]
+    front += [(yb + 0.0015, 0.675), (yb + 0.006, 0.668), (yb + 0.015, 0.6635), (yb + 0.028, 0.661)]
+    pts = []
+    for y, z in front:
+        s = _surface_point(x, z) - 0.004
+        pts.append(Vector((x, s + (y - s) * e, z)))
+    # underside forward to the dash face, then back up inside the dash surface
+    zb = PAD_ZB + (1 - e) * 0.03
+    pts.append(Vector((x, _surface_point(x, zb) + 0.004, zb)))
+    for z in (0.685, 0.72, 0.76, 0.80, 0.825):
+        pts.append(Vector((x, _surface_point(x, z) + 0.004, z)))
+    return pts
+
+
+def _pad_frame(x, z):
+    """(centre, u, v, nrm) on the pad face: u toward the door, v up the face, nrm toward the occupant."""
+    c = Vector((x, _pad_front(x, z), z))
+    u = Vector((1, 0, 0))
+    v = Vector((0, _pad_front(x, z + 0.01) - _pad_front(x, z - 0.01), 0.02)).normalized()
+    return c, u, v, u.cross(v).normalized()
+
+
+def _rounded_poly(corners, r, n=6):
+    """Counter-clockwise convex polygon with every corner filleted at radius r (2D Vectors)."""
+    m = len(corners)
+    out = []
+    for i in range(m):
+        p, a, b = corners[i], corners[i - 1], corners[(i + 1) % m]
+        e1, e2 = (a - p).normalized(), (b - p).normalized()
+        th = math.acos(max(-1.0, min(1.0, e1.dot(e2))))
+        t = r / math.tan(th / 2)
+        bis = (e1 + e2).normalized()
+        cen = p + bis * (r / math.sin(th / 2))
+        t1, t2 = p + e1 * t, p + e2 * t
+        a1 = math.atan2(t1.y - cen.y, t1.x - cen.x)
+        a2 = math.atan2(t2.y - cen.y, t2.x - cen.x)
+        while a2 < a1:
+            a2 += 2 * math.pi
+        for k in range(n + 1):
+            ang = a1 + (a2 - a1) * k / n
+            out.append(Vector((cen.x + r * math.cos(ang), cen.y + r * math.sin(ang))))
+    return out
+
+
+def _offset_poly(corners, d):
+    """Convex counter-clockwise polygon moved inward by d (outward when d < 0)."""
+    m = len(corners)
+    lines = []
+    for i in range(m):
+        a, b = corners[i], corners[(i + 1) % m]
+        t = (b - a).normalized()
+        n = Vector((-t.y, t.x))          # inward for a counter-clockwise polygon
+        lines.append((a + n * d, t))
+    out = []
+    for i in range(m):
+        (p1, t1), (p2, t2) = lines[i - 1], lines[i]
+        den = t1.x * t2.y - t1.y * t2.x
+        k = ((p2.x - p1.x) * t2.y - (p2.y - p1.y) * t2.x) / den
+        out.append(p1 + t1 * k)
+    return out
+
+
+def _pad_vent(cid, x, z, corners, r, louvre_top, louvre_bot, ring_component, switches=0):
+    """Vent recessed into the pad: an opening cut through the pad, a dark lined pocket behind it, horizontal vanes
+    and a slider inside, and a chrome bezel standing 1.5 mm proud of the face. Returns the cutter for the pad."""
+    c, u, v, nrm = _pad_frame(x, z)
+    hole = _rounded_poly(corners, r)
+    cutter = lib.extrude_profile(f'{cid}.cut', hole, c - nrm * 0.05, u, v, 0.08)
+    # pocket liner: walls 0.5 mm inside the cut, facing the opening, closed by a dark floor 30 mm deep
+    liner = _rounded_poly(_offset_poly(corners, 0.0005), max(0.002, r - 0.0005))
+    front = [c + u * p.x + v * p.y + nrm * 0.001 for p in liner]
+    back = [c + u * p.x + v * p.y - nrm * 0.030 for p in liner]
+    walls = lib.loft_object(cid, [front, back], close_u=True, cap_end=True, material='plastic_black', flip=_loft_needs_flip([front, back], c - front[0]))
+    lib.tag(walls, cid, 'dashboard')
+    # vanes across the louvre band (clipped to the opening's width at their height), slightly tipped down
+    def width_at(vv):
+        xs = []
+        for i in range(len(hole)):
+            a, b = hole[i], hole[(i + 1) % len(hole)]
+            if (a.y - vv) * (b.y - vv) <= 0 and a.y != b.y:
+                xs.append(a.x + (b.x - a.x) * (vv - a.y) / (b.y - a.y))
+        return (min(xs), max(xs)) if len(xs) >= 2 else (0.0, 0.0)
+    nv = 4
+    for j in range(nv):
+        vv = louvre_top - (louvre_top - louvre_bot) * (j + 0.5) / nv
+        x0, x1 = width_at(vv)
+        if x1 - x0 < 0.01:
+            continue
+        o = c + u * ((x0 + x1) / 2) + v * vv - nrm * 0.007
+        vane = lib.extrude_profile(f'{cid}.vane{j}', lib.rounded_rect2d(x1 - x0 - 0.002, 0.0035, 0.0012), o, u, (v * 0.94 + nrm * 0.34).normalized(), 0.0018, material='plastic_black_gloss')
+        lib.tag(vane, f'{cid}.vane{j}', 'dashboard', selectable=False)
+    vv = (louvre_top + louvre_bot) / 2
+    knob = lib.extrude_profile(f'{cid}.knob', lib.rounded_rect2d(0.014, 0.007, 0.002), c + v * vv - nrm * 0.0035, u, v, 0.004, material='plastic_black_gloss')
+    lib.tag(knob, f'{cid}.knob', 'dashboard', selectable=False)
+    # chrome bezel: 4 mm wide outside the opening, covering the liner's front edge
+    outer = _rounded_poly(_offset_poly(corners, -0.004), r + 0.004)
+    inner = _rounded_poly(_offset_poly(corners, 0.0012), max(0.002, r - 0.0012))
+    ring = lib.extrude_profile(f'{cid}.ring', outer, c - nrm * 0.004, u, v, 0.0055, material='metal_brushed')
+    ring_cut = lib.extrude_profile(f'{cid}.ring_cut', inner, c - nrm * 0.03, u, v, 0.06)
+    lib.add_boolean(ring, ring_cut)
+    lib.tag(ring, ring_component, 'trim', selectable=False)
+    # seat heat / vent switches in the lower part of the opening, on a dark plate across it
+    if switches:
+        x0, x1 = width_at(louvre_bot - 0.020)
+        plate = lib.extrude_profile(f'{cid}.switch_plate', lib.rounded_rect2d(x1 - x0 + 0.004, 0.026, 0.003), c + u * ((x0 + x1) / 2) + v * (louvre_bot - 0.020) - nrm * 0.006, u, v, 0.005, material='plastic_black')
+        lib.tag(plate, f'{cid}.switch_plate', 'dashboard', selectable=False)
+        for k in range(switches):
+            o = c + u * ((x0 + x1) / 2 + (k - (switches - 1) / 2) * 0.026) + v * (louvre_bot - 0.020) - nrm * 0.0015
+            b = lib.extrude_profile(f'dash.passenger_switch_{k}', lib.rounded_rect2d(0.020, 0.016, 0.003), o, u, v, 0.003, material='plastic_black_gloss', bevel=0.0008)
+            lib.tag(b, f'dash.passenger_switch.{k}', 'dashboard', selectable=False)
+            # light seat icon / indicator on the key top
+            mark = lib.extrude_profile(f'dash.passenger_switch_mark_{k}', lib.rounded_rect2d(0.007, 0.006, 0.0015), o + v * 0.001 + nrm * 0.0028, u, v, 0.0006, material='stitch_grey')
+            lib.tag(mark, f'dash.passenger_switch.mark{k}', 'dashboard', selectable=False)
+    return cutter
+
+
+def build_passenger_pad():
+    n = 64
+    rings = [_pad_section(PAD_X0 + (PAD_X1 - PAD_X0) * k / (n - 1)) for k in range(n)]
+    pad = lib.loft_object('dash.trim.passenger', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=2.0, flip=_loft_needs_flip(rings, (0, -0.6, 0.8)))
+    # inner vent: a rounded trapezoid whose stack-side edge leans toward the door at the top (B37 / B66 / B58)
+    V = lambda pts: [Vector(p) for p in pts]
+    inner = V([(-0.050, -0.030), (0.046, -0.030), (0.046, 0.030), (-0.030, 0.030)])
+    cut1 = _pad_vent('dash.vents.passenger_inner', 0.305, 0.770, inner, 0.012, 0.024, -0.024, 'dash.vents.passenger_inner.ring')
+    # outer vent: taller rounded square at the door end; louvres in the top, the two seat switches below (B66 / B37)
+    outer = V([(-0.039, -0.052), (0.039, -0.052), (0.039, 0.052), (-0.039, 0.052)])
+    cut2 = _pad_vent('dash.vents.passenger', 0.604, 0.752, outer, 0.013, 0.044, -0.010, 'dash.vents.passenger.ring', switches=2)
+    lib.add_boolean(pad, cut1)
+    lib.add_boolean(pad, cut2)
+    lib.tag(pad, 'dash.trim.passenger', 'trim')
 
 
 def build_glovebox_and_switches():
@@ -633,4 +780,5 @@ def build():
     build_outer_vents()
     build_grab_handle()
     build_trim_band()
+    build_passenger_pad()
     build_glovebox_and_switches()

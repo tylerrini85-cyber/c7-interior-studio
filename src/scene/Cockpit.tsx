@@ -31,8 +31,9 @@ function GlbGroup({ url, source, hidePrefixes: hideProp, children }: { url: stri
     s.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) {
         const m = o as THREE.Mesh;
-        // three's GLTFLoader strips dots from node names; the Blender pipeline stores the id in extras
-        const id = (m.userData?.ct_component as string | undefined) || m.name;
+        // three's GLTFLoader strips dots from node names; the Blender pipeline stores the id in extras. A node whose
+        // mesh has several primitives (e.g. after a boolean cut) loads as a group of meshes with the extras on the group
+        const id = (m.userData?.ct_component as string | undefined) || (m.parent?.userData?.ct_component as string | undefined) || m.name;
         m.name = id;
         m.castShadow = !m.name.startsWith('glass.');
         m.receiveShadow = true;
