@@ -433,6 +433,79 @@ export function textTexture(text: string, color: string, bg = 'rgba(0,0,0,0)'): 
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; cache.set(key, t); return t;
 }
 
+
+let panelTex: THREE.Texture | null = null;
+/** Transparent overlay for the centre-stack control panel: key outlines, icons and labels laid out from the
+ *  reference photo. Panel is 310 x 122 mm; the texture is 1240 x 488 px (4 px per mm). Centre of the panel is
+ *  at stack height 0.628; the knob openings are left clear at x = +-128 mm. */
+export function controlPanelTexture(): THREE.Texture {
+  if (panelTex) return panelTex;
+  const w = 1240, h = 488, ppm = 4;
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d')!;
+  ctx.clearRect(0, 0, w, h);
+  const X = (mm: number) => w / 2 + mm * ppm;              // mm from the panel centre, right positive
+  const Y = (zmm: number) => h / 2 - (zmm - 628) * ppm;     // stack height in mm -> canvas row
+  const key = (x: number, y: number, wmm: number, hmm: number, label: string, glyph?: (cx: number, cy: number) => void) => {
+    const kw = wmm * ppm, kh = hmm * ppm, r = 6;
+    ctx.beginPath(); ctx.roundRect(x - kw / 2, y - kh / 2, kw, kh, r);
+    ctx.fillStyle = 'rgba(28,28,31,0.96)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(80,80,86,0.9)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#e6e8ea'; ctx.strokeStyle = '#e6e8ea';
+    if (glyph) { glyph(x, y - (label ? 7 : 0)); }
+    if (label) { ctx.font = `${glyph ? 'bold 15px' : 'bold 19px'} "Segoe UI", Roboto, Helvetica, Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, x, y + (glyph ? 18 : 0)); }
+  };
+  const person = (cx: number, cy: number, arrows: 'face' | 'both' | 'feet') => {
+    ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(cx - 10, cy - 12, 6, 0, Math.PI * 2); ctx.stroke();           // head
+    ctx.beginPath(); ctx.moveTo(cx - 10, cy - 6); ctx.lineTo(cx - 10, cy + 8); ctx.lineTo(cx - 2, cy + 16); ctx.stroke(); // body / thigh
+    const arrow = (y: number) => { ctx.beginPath(); ctx.moveTo(cx + 2, y); ctx.lineTo(cx + 16, y); ctx.moveTo(cx + 10, y - 5); ctx.lineTo(cx + 16, y); ctx.lineTo(cx + 10, y + 5); ctx.stroke(); };
+    if (arrows !== 'feet') arrow(cy - 12);
+    if (arrows !== 'face') arrow(cy + 14);
+  };
+  const defrost = (cx: number, cy: number, rear: boolean) => {
+    ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath();
+    if (rear) ctx.roundRect(cx - 16, cy - 12, 32, 24, 4); else { ctx.moveTo(cx - 18, cy + 12); ctx.quadraticCurveTo(cx - 14, cy - 12, cx + 2, cy - 12); ctx.lineTo(cx + 18, cy - 12); }
+    ctx.stroke();
+    for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx + i * 9, cy + 8); ctx.quadraticCurveTo(cx + i * 9 + 4, cy, cx + i * 9, cy - 8); ctx.stroke(); }
+  };
+  const tri = (cx: number, cy: number, dir: 1 | -1, bar: boolean) => {
+    ctx.beginPath(); ctx.moveTo(cx - 6 * dir, cy - 8); ctx.lineTo(cx + 6 * dir, cy); ctx.lineTo(cx - 6 * dir, cy + 8); ctx.closePath(); ctx.fill();
+    if (bar) ctx.fillRect(cx + 7 * dir - 1, cy - 8, 2, 16);
+  };
+  // media row (z 666 mm): RADIO MEDIA home MENU prev next BACK at 26 mm pitch from -78 mm
+  const zm = 666;
+  const mx = (i: number) => X(-78 + 26 * i);
+  key(mx(0), Y(zm), 22, 13, 'RADIO');
+  key(mx(1), Y(zm), 22, 13, 'MEDIA');
+  key(mx(2), Y(zm), 22, 13, '', (cx, cy) => { ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - 12, cy + 2); ctx.lineTo(cx, cy - 9); ctx.lineTo(cx + 12, cy + 2); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx - 8, cy + 10); ctx.lineTo(cx + 8, cy + 10); ctx.lineTo(cx + 8, cy); ctx.stroke(); });
+  // round MENU in the middle
+  { const cx = mx(3), cy = Y(zm); ctx.beginPath(); ctx.arc(cx, cy, 12 * ppm, 0, Math.PI * 2); ctx.fillStyle = 'rgba(24,24,27,0.97)'; ctx.fill(); ctx.strokeStyle = 'rgba(120,120,128,0.9)'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#e6e8ea'; ctx.font = 'bold 15px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('MENU', cx, cy); }
+  key(mx(4), Y(zm), 22, 13, '', (cx, cy) => { tri(cx - 4, cy + 7, -1, true); tri(cx + 8, cy + 7, -1, false); });
+  key(mx(5), Y(zm), 22, 13, '', (cx, cy) => { tri(cx - 8, cy + 7, 1, false); tri(cx + 4, cy + 7, 1, true); });
+  key(mx(6), Y(zm), 22, 13, 'BACK');
+  // climate row A (z 634): A/C face face+feet rear-defrost SYNC at 33 mm pitch
+  const za = 634;
+  const ax = (i: number) => X(-66 + 33 * i);
+  key(ax(0), Y(za), 28, 15, 'A/C');
+  key(ax(1), Y(za), 28, 15, '', (cx, cy) => person(cx, cy + 7, 'face'));
+  key(ax(2), Y(za), 28, 15, '', (cx, cy) => person(cx, cy + 7, 'both'));
+  key(ax(3), Y(za), 28, 15, '', (cx, cy) => defrost(cx, cy + 7, true));
+  key(ax(4), Y(za), 28, 15, 'SYNC');
+  // climate row B (z 610): feet, feet+defrost, front defrost under the middle three
+  const zb = 610;
+  key(ax(1), Y(zb), 28, 15, '', (cx, cy) => person(cx, cy + 7, 'feet'));
+  key(ax(2), Y(zb), 28, 15, '', (cx, cy) => { person(cx - 6, cy + 7, 'feet'); defrost(cx + 12, cy + 7, false); });
+  key(ax(3), Y(zb), 28, 15, '', (cx, cy) => defrost(cx, cy + 7, false));
+  // AUTO / fan labels beside the knobs
+  ctx.fillStyle = '#b8bcc2'; ctx.font = 'bold 13px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('AUTO', X(-128), Y(624)); ctx.fillText('FAN', X(128), Y(624));
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true;  // default flipY: upright on a PlaneGeometry
+  panelTex = t;
+  return t;
+}
+
 let emblemTex: THREE.Texture | null = null;
 /** Crossed-flags artwork supplied by the owner (public/branding/crossed-flags.png). */
 export function emblemTexture(): THREE.Texture {

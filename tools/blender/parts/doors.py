@@ -15,6 +15,9 @@ def _panel_section(y, side):
     arm_z = L.ARMREST_DOOR_Z
     bulge = math.sin(math.pi * min(1.0, max(0.0, (s - 0.10) / 0.80)))
     arm_in = L.ARMREST_DOOR_PROTRUSION * (0.30 + 0.70 * bulge)
+    # the top bolster rises toward the front so the door meets the dash top at the A-pillar (sail area)
+    t_rise = max(0.0, min(1.0, (s - 0.80) / 0.20))
+    rise = 0.045 * t_rise * t_rise * (3 - 2 * t_rise)
     pts = [
         (x_hip + 0.03, L.ROCKER_TOP_Z + 0.02),
         (x_hip + 0.028, 0.30),
@@ -26,10 +29,10 @@ def _panel_section(y, side):
         (x_hip - arm_in * 0.55, arm_z + 0.018),       # flat padded top
         (x_hip - 0.012, arm_z + 0.022),
         (x_hip - 0.006, arm_z + 0.06),                # upper pad, slightly concave
-        (x_hip - 0.0, 0.72),
-        (x_sh - 0.03, 0.765),                         # rolled top bolster
-        (x_sh - 0.045, L.SILL_Z - 0.02),
-        (x_sh - 0.02, L.SILL_Z + 0.004),
+        (x_hip - 0.0, 0.72 + rise),
+        (x_sh - 0.03, 0.765 + rise),                  # rolled top bolster
+        (x_sh - 0.045, L.SILL_Z - 0.02 + rise),
+        (x_sh - 0.02, L.SILL_Z + 0.004 + rise),
         (x_sh + 0.03, L.SILL_Z + 0.004),
     ]
     return [Vector((side * x, y, z)) for x, z in pts]

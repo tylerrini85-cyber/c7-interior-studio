@@ -34,10 +34,19 @@ const ZONE_STRIPS: Record<ZoneId, StripDef[]> = {
     { pos: b2t(-0.37, 0.0, 0.085), size: [0.40, 0.004, 0.50], light: b2t(-0.37, 0.0, 0.06), lightDist: 0.9 },
     { pos: b2t(0.37, 0.0, 0.085), size: [0.40, 0.004, 0.50], light: b2t(0.37, 0.0, 0.06), lightDist: 0.9 },
   ],
-  storage: [{ pos: b2t(0.0, -0.27, 0.575), size: [0.20, 0.003, 0.30], light: b2t(0.0, -0.27, 0.62), lightDist: 0.5 }],
+  storage: [{ pos: b2t(0.0, -0.23, 0.575), size: [0.20, 0.003, 0.30], light: b2t(0.0, -0.23, 0.62), lightDist: 0.5 }],
+  // glow along the long edges of each floor mat, just above the carpet
+  mats: [
+    { pos: b2t(-0.38 - 0.205, 0.36, 0.014), size: [0.006, 0.006, 0.50], light: b2t(-0.38, 0.36, 0.08), lightDist: 0.8 },
+    { pos: b2t(-0.38 + 0.205, 0.36, 0.014), size: [0.006, 0.006, 0.50], light: b2t(-0.38, 0.36, 0.08), lightDist: 0.01 },
+    { pos: b2t(-0.38, 0.22, 0.014), size: [0.40, 0.006, 0.006], light: b2t(-0.38, 0.36, 0.08), lightDist: 0.01 },
+    { pos: b2t(0.38 - 0.205, 0.36, 0.014), size: [0.006, 0.006, 0.50], light: b2t(0.38, 0.36, 0.08), lightDist: 0.8 },
+    { pos: b2t(0.38 + 0.205, 0.36, 0.014), size: [0.006, 0.006, 0.50], light: b2t(0.38, 0.36, 0.08), lightDist: 0.01 },
+    { pos: b2t(0.38, 0.22, 0.014), size: [0.40, 0.006, 0.006], light: b2t(0.38, 0.36, 0.08), lightDist: 0.01 },
+  ],
 };
 
-const ZONE_ORDER: Record<ZoneId, number> = { dash: 0, console: 1, 'footwell.driver': 2, 'footwell.passenger': 3, 'door.driver': 4, 'door.passenger': 5, handles: 6, cupholders: 7, seats: 8, storage: 9 };
+const ZONE_ORDER: Record<ZoneId, number> = { dash: 0, console: 1, 'footwell.driver': 2, 'footwell.passenger': 3, 'door.driver': 4, 'door.passenger': 5, handles: 6, cupholders: 7, seats: 8, storage: 9, mats: 10 };
 
 function animate(mode: LightMode, t: number, base: THREE.Color, idx: number, speed: number, out: THREE.Color): number {
   const hsl = { h: 0, s: 0, l: 0 };

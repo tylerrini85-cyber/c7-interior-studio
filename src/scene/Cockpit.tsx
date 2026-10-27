@@ -6,7 +6,7 @@ import { useThree, type ThreeEvent } from '@react-three/fiber';
 import { useStore, selectRenderDoc, variantForSlot } from '../state/store';
 import { componentForNode, COMPONENT_MAP, VARIANTS, VARIANT_SLOT_NODES, type VariantSlot } from '../registry/components';
 import { buildMaterial, configKey, fixedMaterialFor, stitchOverlayMaterial, MATERIAL_PRESETS } from '../materials/engine';
-import { clusterTexture, emblemTexture, infotainmentTexture, textTexture } from '../materials/textures';
+import { clusterTexture, controlPanelTexture, emblemTexture, infotainmentTexture, textTexture } from '../materials/textures';
 import { MeshRegistry, RegistryContext, useRegistry } from './registry';
 import { SEATBACK_RECLINE } from './coords';
 import type { PartConfig, ProjectDoc } from '../project/schema';
@@ -63,7 +63,7 @@ function GlbGroup({ url, source, hidePrefixes: hideProp, children }: { url: stri
 function MaterialSync({ doc }: { doc: ProjectDoc }) {
   const registry = useRegistry();
   const quality = useStore((s) => s.settings.quality);
-  const applied = useRef(new Map<THREE.Mesh, { key: string; overlay?: THREE.Mesh; decal?: THREE.Mesh }>());
+  const applied = useRef(new Map<THREE.Mesh, { key: string; overlay?: THREE.Mesh; decal?: THREE.Mesh; decal2?: THREE.Mesh }>());
   const versionRef = useRef(-1);
   const lowQ = quality === 'mobile';
 
@@ -102,6 +102,7 @@ function MaterialSync({ doc }: { doc: ProjectDoc }) {
         // stitch overlay (soft trims only)
         prev?.overlay?.removeFromParent(); prev?.overlay?.geometry && (prev.overlay.material as THREE.Material).dispose();
         prev?.decal?.removeFromParent();
+        prev?.decal2?.removeFromParent();
         let overlay: THREE.Mesh | undefined;
         const preset = MATERIAL_PRESETS[cfg.material];
         if (allowStitch && cfg.stitch && cfg.stitch.pattern !== 'none' && (preset.group === 'Leather' || preset.group === 'Fabric & suede' || preset.group === 'Other')) {
@@ -109,10 +110,13 @@ function MaterialSync({ doc }: { doc: ProjectDoc }) {
           if (om) { overlay = new THREE.Mesh(mesh.geometry, om); overlay.name = '__stitch'; overlay.raycast = () => {}; mesh.add(overlay); }
         }
         let decal: THREE.Mesh | undefined;
+        let decal2: THREE.Mesh | undefined;
         if (entry.nodeName === 'steering.hub') decal = makeEmblemDecal(mesh, 'hub');
         else if (entry.nodeName.endsWith('.headrest') && (!cfg.text || cfg.text.trim() === '' || cfg.text.trim() === 'C7')) decal = makeEmblemDecal(mesh, 'headrest');
+        else if (entry.nodeName === 'console.hvac') decal = makePanelDecal(mesh, controlPanelTexture());
         else if (cfg.text && cfg.text.trim() && entry.component) decal = makeTextDecal(mesh, entry.component, cfg.text, cfg.textColor ?? '#c0c0c4');
-        applied.current.set(mesh, { key, overlay, decal });
+        if (entry.component?.startsWith('floor.mats')) decal2 = makeEmblemDecal(mesh, 'mat');
+        applied.current.set(mesh, { key, overlay, decal, decal2 });
       }
     };
     run();
@@ -180,7 +184,7 @@ function screenMaterial(mesh: THREE.Mesh, tex: THREE.Texture, brightness: number
   return m;
 }
 
-function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mesh {
+function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest' | 'mat'): THREE.Mesh {
   mesh.geometry.computeBoundingBox();
   const bb = mesh.geometry.boundingBox!;
   const c = bb.getCenter(new THREE.Vector3());
@@ -198,6 +202,11 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mes
     plane.position.copy(hubCenter).addScaledVector(up, 0.006).addScaledVector(nrm, 0.0358);
     plane.lookAt(plane.position.clone().add(nrm));
     void c;
+  } else if (where === 'mat') {
+    // embroidered flags on the mat, ahead of the CORVETTE wordmark (heel end is +z in three.js)
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.07), mat);
+    plane.position.set(c.x, bb.max.y + 0.0012, bb.max.z - 0.17);
+    plane.rotation.set(-Math.PI / 2, 0, 0);
   } else {
     // flags badge at the bottom centre of the stitched headrest pad (IMG_4500): the pad leans back with the seat,
     // so step down along the pad and out along its normal from the pad's centre
@@ -222,6 +231,52 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest'): THREE.Mes
   return plane;
 }
 
+/** Transparent label overlay fitted to the occupant-facing face of a thin panel (same plane finding as the screens). */
+function makePanelDecal(mesh: THREE.Mesh, tex: THREE.Texture): THREE.Mesh {
+  const geo = mesh.geometry;
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const N = new THREE.Vector3(0, 0, 0);
+  {
+    const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), fn = new THREE.Vector3();
+    const tris: THREE.Vector3[] = [];
+    const index = geo.index;
+    const triCount = index ? index.count / 3 : pos.count / 3;
+    for (let t = 0; t < triCount; t++) {
+      const i0 = index ? index.getX(t * 3) : t * 3, i1 = index ? index.getX(t * 3 + 1) : t * 3 + 1, i2 = index ? index.getX(t * 3 + 2) : t * 3 + 2;
+      a.fromBufferAttribute(pos, i0); b.fromBufferAttribute(pos, i1); c.fromBufferAttribute(pos, i2);
+      fn.copy(b).sub(a).cross(c.clone().sub(a));
+      if (fn.z > 0) tris.push(fn.clone());
+    }
+    const maxLen = tris.reduce((m, v) => Math.max(m, v.length()), 0);
+    for (const v of tris) if (v.length() > 0.2 * maxLen) N.add(v);
+    if (N.lengthSq() < 1e-12) N.set(0, 0, 1);
+  }
+  N.normalize();
+  const U = new THREE.Vector3(0, 1, 0).cross(N).normalize();
+  const V = new THREE.Vector3().crossVectors(N, U).normalize();
+  const p = new THREE.Vector3();
+  let dmax = -Infinity;
+  for (let i = 0; i < pos.count; i++) { p.fromBufferAttribute(pos, i); dmax = Math.max(dmax, p.dot(N)); }
+  let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    p.fromBufferAttribute(pos, i);
+    if (p.dot(N) < dmax - 0.0025) continue;
+    const u = p.dot(U), v = p.dot(V);
+    minU = Math.min(minU, u); maxU = Math.max(maxU, u); minV = Math.min(minV, v); maxV = Math.max(maxV, v);
+  }
+  const w = Math.max(0.01, maxU - minU), h = Math.max(0.01, maxV - minV);
+  const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.6, metalness: 0.1, alphaTest: 0.02 });
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  const center = new THREE.Vector3().addScaledVector(U, (minU + maxU) / 2).addScaledVector(V, (minV + maxV) / 2).addScaledVector(N, dmax + 0.0006);
+  plane.position.copy(center);
+  const m = new THREE.Matrix4().makeBasis(U, V, N);
+  plane.quaternion.setFromRotationMatrix(m);
+  plane.name = '__decal';
+  plane.raycast = () => {};
+  mesh.add(plane);
+  return plane;
+}
+
 function makeTextDecal(mesh: THREE.Mesh, component: string, text: string, color: string): THREE.Mesh | undefined {
   mesh.geometry.computeBoundingBox();
   const bb = mesh.geometry.boundingBox!;
@@ -236,9 +291,9 @@ function makeTextDecal(mesh: THREE.Mesh, component: string, text: string, color:
     plane.rotation.set(-SEATBACK_RECLINE, Math.PI, 0);
     plane.rotateY(0);
   } else if (component.startsWith('floor.mats')) {
-    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.055), mat);
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.065), mat);
     const c = bb.getCenter(new THREE.Vector3());
-    plane.position.set(c.x, bb.max.y + 0.001, bb.max.z - 0.07);
+    plane.position.set(c.x, bb.max.y + 0.0012, bb.max.z - 0.075);
     plane.rotation.set(-Math.PI / 2, 0, 0);
   } else if (component === 'sills') {
     plane = new THREE.Mesh(new THREE.PlaneGeometry(0.30, 0.05), mat);

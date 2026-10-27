@@ -7,11 +7,12 @@ import type { MeshRegistry } from '../scene/registry';
 import type { StarlightConfig } from '../project/schema';
 
 const HEADLINER_NODES = ['roof.panel', 'roof.header', 'roof.rear_strip', 'roof.rail.driver', 'roof.rail.passenger'];
+const MAT_NODES = ['floor.mats.driver', 'floor.mats.passenger'];
 
 function mulberry(seed: number) { let a = seed >>> 0; return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 
 /** Sample N points on the given meshes according to the chosen pattern. Points are pushed 1.5 mm below the surface. */
-function samplePoints(meshes: THREE.Mesh[], cfg: StarlightConfig): Float32Array {
+function samplePoints(meshes: THREE.Mesh[], cfg: StarlightConfig, surface: 'ceiling' | 'floor' = 'ceiling'): Float32Array {
   const r = mulberry(cfg.seed + cfg.count);
   const tris: { a: THREE.Vector3; b: THREE.Vector3; c: THREE.Vector3; area: number }[] = [];
   const bb = new THREE.Box3();
@@ -24,19 +25,23 @@ function samplePoints(meshes: THREE.Mesh[], cfg: StarlightConfig): Float32Array 
       const a = new THREE.Vector3().fromBufferAttribute(pos, ia).applyMatrix4(m.matrixWorld);
       const b = new THREE.Vector3().fromBufferAttribute(pos, ib).applyMatrix4(m.matrixWorld);
       const c = new THREE.Vector3().fromBufferAttribute(pos, ic).applyMatrix4(m.matrixWorld);
-      const area = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a)).length() / 2;
-      tris.push({ a, b, c, area }); bb.expandByPoint(a).expandByPoint(b).expandByPoint(c);
+      const nrm = new THREE.Vector3().subVectors(b, a).cross(new THREE.Vector3().subVectors(c, a));
+      const area = nrm.length() / 2;
+      bb.expandByPoint(a).expandByPoint(b).expandByPoint(c);
+      if (surface === 'floor' ? nrm.y <= 0 : nrm.y >= 0) continue;   // keep the faces that look into the cabin
+      tris.push({ a, b, c, area });
     }
   }
   const out = new Float32Array(cfg.count * 3);
   if (!tris.length) return out;
   const total = tris.reduce((s, t) => s + t.area, 0);
   const ray = new THREE.Raycaster();
-  const up = new THREE.Vector3(0, 1, 0);
+  const up = new THREE.Vector3(0, surface === 'ceiling' ? 1 : -1, 0);
   const project = (x: number, z: number, i: number) => {
-    ray.set(new THREE.Vector3(x, bb.min.y - 0.2, z), up);
+    // ceiling: cast upward from below and tuck the point just under the surface; floor: cast downward from above
+    ray.set(new THREE.Vector3(x, surface === 'ceiling' ? bb.min.y - 0.2 : bb.max.y + 0.2, z), up);
     const hit = ray.intersectObjects(meshes, false)[0];
-    if (hit) { out[i * 3] = hit.point.x; out[i * 3 + 1] = hit.point.y - 0.0015; out[i * 3 + 2] = hit.point.z; return true; }
+    if (hit) { out[i * 3] = hit.point.x; out[i * 3 + 1] = surface === 'ceiling' ? hit.point.y - 0.0015 : Math.max(hit.point.y, bb.max.y) + 0.001; out[i * 3 + 2] = hit.point.z; return true; }
     return false;
   };
   const w = bb.max.x - bb.min.x, d = bb.max.z - bb.min.z;
@@ -63,12 +68,12 @@ function samplePoints(meshes: THREE.Mesh[], cfg: StarlightConfig): Float32Array 
       const spread = i < anchors ? 0 : 0.12;
       ok = project(ax + (r() - 0.5) * spread, az + (r() - 0.5) * spread, i);
     } else {
-      // uniform by area
+      // uniform by area over the triangles that face the cabin (down-facing for the headliner, up-facing for mats)
       let pick = r() * total; let tri = tris[tris.length - 1];
       for (const t of tris) { pick -= t.area; if (pick <= 0) { tri = t; break; } }
       let u = r(), v = r(); if (u + v > 1) { u = 1 - u; v = 1 - v; }
       const p = tri.a.clone().multiplyScalar(1 - u - v).add(tri.b.clone().multiplyScalar(u)).add(tri.c.clone().multiplyScalar(v));
-      out[i * 3] = p.x; out[i * 3 + 1] = p.y - 0.0015; out[i * 3 + 2] = p.z; ok = true;
+      ok = project(p.x, p.z, i);
     }
     if (ok) i++;
   }
@@ -93,17 +98,19 @@ varying vec3 vColor; varying float vAlpha;
 void main(){ vec2 c = gl_PointCoord - 0.5; float d = length(c); if (d > 0.5) discard; float a = smoothstep(0.5, 0.0, d); a = pow(a, 1.6);
   gl_FragColor = vec4(vColor * (1.0 + 0.8 * (1.0 - d * 2.0)), a * vAlpha); }`;
 
-export function Starlight({ registry }: { registry: MeshRegistry }) {
+export function Starlight({ registry, target = 'headliner' }: { registry: MeshRegistry; target?: 'headliner' | 'mats' }) {
   const doc = useStore(selectRenderDoc);
-  const cfg = doc?.lighting.starlight;
+  const cfg = target === 'mats' ? doc?.lighting.matSparkle : doc?.lighting.starlight;
+  const nodes = target === 'mats' ? MAT_NODES : HEADLINER_NODES;
+  const surface: 'ceiling' | 'floor' = target === 'mats' ? 'floor' : 'ceiling';
   const [version, setVersion] = useState(0);
   useEffect(() => registry.subscribe(() => setVersion((v) => v + 1)), [registry]);
-  const meshes = useMemo(() => HEADLINER_NODES.map((n) => registry.byNode.get(n)).filter(Boolean) as THREE.Mesh[], [registry, version]);
+  const meshes = useMemo(() => nodes.map((n) => registry.byNode.get(n)).filter(Boolean) as THREE.Mesh[], [registry, version, nodes]);
 
-  const key = cfg ? `${cfg.count}|${cfg.pattern}|${cfg.seed}|${cfg.colors.join(',')}|${cfg.size}|${meshes.length}` : '';
+  const key = cfg ? `${target}|${cfg.count}|${cfg.pattern}|${cfg.seed}|${cfg.colors.join(',')}|${cfg.size}|${meshes.length}` : '';
   const geo = useMemo(() => {
     if (!cfg || !meshes.length) return null;
-    const positions = samplePoints(meshes, cfg);
+    const positions = samplePoints(meshes, cfg, surface);
     const n = cfg.count; const r = mulberry(cfg.seed + 99);
     const phase = new Float32Array(n), size = new Float32Array(n), color = new Float32Array(n * 3);
     const cols = cfg.colors.map((c) => new THREE.Color(c));
@@ -146,7 +153,7 @@ export function Starlight({ registry }: { registry: MeshRegistry }) {
 
   if (!cfg?.enabled || !geo) return null;
   return (
-    <group name="starlight">
+    <group name={target === 'mats' ? 'mat-sparkle' : 'starlight'}>
       <points geometry={geo} material={mat} raycast={() => {}} frustumCulled={false} />
       <mesh ref={shoot} visible={false} raycast={() => {}}>
         <sphereGeometry args={[0.004, 6, 6]} />

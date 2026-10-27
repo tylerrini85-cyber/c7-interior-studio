@@ -16,7 +16,7 @@ import { useStore } from '../state/store';
 import { DRIVER_EYE } from './coords';
 
 function FrameCounter({ registry }: { registry: MeshRegistry }) {
-  useFrame((state) => { const w = window as unknown as { __c7frames?: number; __c7scene?: unknown; __c7registry?: unknown; __c7gl?: unknown }; w.__c7frames = (w.__c7frames ?? 0) + 1; w.__c7scene = state.scene; w.__c7registry = registry; w.__c7gl = state.gl; });
+  useFrame((state) => { const w = window as unknown as { __c7frames?: number; __c7scene?: unknown; __c7registry?: unknown; __c7gl?: unknown }; w.__c7frames = (w.__c7frames ?? 0) + 1; w.__c7scene = state.scene; w.__c7registry = registry; w.__c7gl = state.gl; (w as { __c7three?: unknown }).__c7three = THREE; });
   return null;
 }
 
@@ -58,6 +58,7 @@ export function Studio3D() {
         <Cockpit registry={registry} />
         <LightingZones />
         <Starlight registry={registry} />
+        <Starlight registry={registry} target="mats" />
       </Suspense>
       <CameraRig registry={registry} />
       <Effects registry={registry} />

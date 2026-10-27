@@ -7,7 +7,7 @@ import layout as L
 
 # profile templates: 13 control points (y, z) from cowl to under-dash bottom edge
 T_DRIVER_OUTER = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.64, 0.86), (0.60, 0.83), (0.60, 0.78), (0.63, 0.72), (0.66, 0.66), (0.69, 0.60), (0.72, 0.54), (0.76, 0.46), (0.82, 0.41)]
-T_HOOD = [(1.08, 0.82), (0.96, 0.855), (0.84, 0.895), (0.72, 0.915), (0.63, 0.915), (0.585, 0.895), (0.60, 0.86), (0.73, 0.85), (0.82, 0.76), (0.80, 0.66), (0.72, 0.56), (0.75, 0.46), (0.82, 0.41)]
+T_HOOD = [(1.08, 0.82), (0.96, 0.85), (0.84, 0.875), (0.72, 0.885), (0.63, 0.885), (0.59, 0.87), (0.60, 0.845), (0.73, 0.84), (0.82, 0.76), (0.80, 0.66), (0.72, 0.56), (0.75, 0.46), (0.82, 0.41)]
 T_STACK = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.68, 0.862), (0.66, 0.856), (0.655, 0.838), (0.65, 0.77), (0.645, 0.71), (0.64, 0.65), (0.63, 0.61), (0.60, 0.57), (0.55, 0.51)]
 T_PASS = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.64, 0.86), (0.615, 0.835), (0.61, 0.79), (0.625, 0.73), (0.64, 0.68), (0.66, 0.60), (0.69, 0.52), (0.74, 0.45), (0.82, 0.41)]
 
@@ -46,7 +46,7 @@ def build_upper():
     stations = []
     n = 56
     for k in range(n):
-        x = -0.735 + 1.47 * k / (n - 1)
+        x = -0.70 + 1.40 * k / (n - 1)
         prof = lib.spline_through(profile_at(x), n_per_seg=3, tension=0.5)
         stations.append([Vector((x, p.x, p.y)) for p in prof])
     obj = lib.loft_object('dash.upper', stations, close_u=False, material='leather_black', uv_scale=1.0, flip=True)
@@ -81,8 +81,8 @@ def build_cluster():
     for i in range(9):
         s = i / 8
         x = cx - (L.CLUSTER_W / 2 + 0.03) + (L.CLUSTER_W + 0.06) * s
-        hood_pts.append(Vector((x, cy - 0.11 + 0.02 * math.sin(math.pi * s), cz + L.CLUSTER_H / 2 + 0.06)))
-    rings = [[p + Vector((0, 0.0, 0.0)) for p in hood_pts], [p + Vector((0, 0.09, 0.015)) for p in hood_pts]]
+        hood_pts.append(Vector((x, cy - 0.10 + 0.02 * math.sin(math.pi * s), cz + L.CLUSTER_H / 2 + 0.045)))
+    rings = [[p + Vector((0, 0.0, 0.0)) for p in hood_pts], [p + Vector((0, 0.035, 0.012)) for p in hood_pts]]
     visor = lib.loft_object('cluster.hood', rings, close_u=False, material='plastic_black', flip=True)
     lib.add_solidify(visor, 0.006)
     lib.tag(visor, 'cluster.hood', 'cluster')
@@ -235,12 +235,12 @@ def build_center_stack():
     lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
     # ---- infotainment: gloss surround (wider on the left for the volume knob + SCREEN button), 8-inch screen
     zs_scr = 0.752
-    bez = _panel('console.screen_bezel', 0.262, 0.140, cx + 0.020, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
-    scr = _panel('console.screen', 0.236, 0.122, cx + 0.020, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
-    _panel('console.screen_strip', 0.040, 0.140, cx - 0.135, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
-    _knob('console.volume_knob', cx - 0.135, zs_scr + 0.030, 0.014, 0.012, proud=0.0015)
-    _panel('console.screen_btn', 0.026, 0.014, cx - 0.135, zs_scr - 0.010, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    _panel('console.screen_btn2', 0.026, 0.014, cx - 0.135, zs_scr - 0.034, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    bez = _panel('console.screen_bezel', 0.218, 0.126, cx + 0.028, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
+    scr = _panel('console.screen', 0.190, 0.107, cx + 0.028, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
+    _panel('console.screen_strip', 0.040, 0.126, cx - 0.105, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
+    _knob('console.volume_knob', cx - 0.105, zs_scr + 0.028, 0.013, 0.012, proud=0.0015)
+    _panel('console.screen_btn', 0.026, 0.014, cx - 0.105, zs_scr - 0.012, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    _panel('console.screen_btn2', 0.026, 0.014, cx - 0.105, zs_scr - 0.036, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- control block under the screen, laid out from the reference photo:
     #   media row tight under the bezel: RADIO MEDIA home (MENU) prev next BACK, two large knobs at the panel sides
     #   spanning the media row and the first climate row; climate row A: A/C face face+feet rear-defrost SYNC;
@@ -254,21 +254,8 @@ def build_center_stack():
         lib.tag(kn, f'console.hvac_knob.{"left" if k == 0 else "right"}', 'trim', selectable=False)
         cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.0165, 0), (0.0165, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=o + n * 0.0175, direction=n)
         lib.tag(cap, f'console.hvac_knob_cap.{k}', 'console', selectable=False)
-    xs = [cx - 0.078 + 0.026 * i for i in range(7)]
-    for i, x in enumerate(xs):
-        if i == 3:
-            o, u, v, n = stack_frame(x, zm)
-            b = lib.revolve('console.media_menu', [(0, 0), (0.012, 0), (0.012, 0.004), (0.0105, 0.005), (0.0, 0.005)], segments=28, material='plastic_black_gloss', origin=o + n * 0.0015, direction=n)
-            lib.tag(b, 'console.media_btn.menu', 'console', selectable=False)
-        else:
-            _panel(f'console.media_btn_{i}', 0.022, 0.013, x, zm, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    za = 0.634
-    for i, x in enumerate([cx - 0.066, cx - 0.033, cx, cx + 0.033, cx + 0.066]):
-        _panel(f'console.hvac_btn_a{i}', 0.028, 0.015, x, za, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    zb = 0.610
-    for i, x in enumerate([cx - 0.033, cx, cx + 0.033]):
-        _panel(f'console.hvac_btn_b{i}', 0.028, 0.015, x, zb, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    # badge panel: black plate across the foot with the CORVETTE badge left of centre and a small switch on the right
+    # the keys (RADIO MEDIA home MENU prev next BACK / A/C face face+feet rear-defrost SYNC / feet feet+defrost
+    # front-defrost) are drawn on the panel by the runtime label texture so they carry their icons and labels
     # CORVETTE badge plate left of centre and a small switch on the right, at the foot of the control panel
     _panel('console.badge_strip', 0.075, 0.011, cx - 0.045, 0.584, 0.0035, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.002)
     _panel('console.foot_switch', 0.030, 0.016, cx + 0.085, 0.584, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
@@ -301,17 +288,19 @@ def _dash_face_frame(x, z):
     return c, u, v, nrm
 
 
-def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.010, ring_component=None):
+def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.010, ring_component=None, louvre_h=None):
     """Tall rectangular C7 vent: dark louvre floor just proud of the trim band, three vanes and a slider knob in
     front of it, and a thin bright bezel. Everything sits within a few millimetres of the band so it reads as
     an inset vent rather than a block (IMG_4491 / IMG_4509). nrm points toward the occupant."""
     c, u, v, nrm = _dash_face_frame(x, z)
     floor = lib.extrude_profile(cid, lib.rounded_rect2d(w - 0.010, h - 0.010, 0.006), c + nrm * (base_proud - 0.0005), u, v, 0.001, material='plastic_black')
     lib.tag(floor, cid, 'dashboard')
+    top = (h / 2 - 0.012) if louvre_h is None else (h / 2 - 0.012)
+    pitch = 0.028 if louvre_h is None else (louvre_h - 0.014) / 2
     for j in range(3):
-        vane = lib.extrude_profile(f'{cid}.vane{j}', lib.rounded_rect2d(w - 0.016, 0.0045, 0.0015), c + v * (0.028 - 0.028 * j) + nrm * (base_proud + 0.001), u, v, 0.0025, material='plastic_black_gloss')
+        vane = lib.extrude_profile(f'{cid}.vane{j}', lib.rounded_rect2d(w - 0.016, 0.0045, 0.0015), c + v * (top - 0.014 - pitch * j) + nrm * (base_proud + 0.001), u, v, 0.0025, material='plastic_black_gloss')
         lib.tag(vane, f'{cid}.vane{j}', 'dashboard', selectable=False)
-    knob = lib.box(f'{cid}.knob', (0.016, 0.005, 0.007), c + nrm * (base_proud + 0.0045), material='plastic_black_gloss')
+    knob = lib.box(f'{cid}.knob', (0.016, 0.005, 0.007), c + nrm * (base_proud + 0.0045) + (v * (top - 0.014 - pitch) if louvre_h is not None else Vector((0, 0, 0))), material='plastic_black_gloss')
     lib.tag(knob, f'{cid}.knob', 'dashboard', selectable=False)
     ring = lib.extrude_profile(f'{cid}.ring', lib.rounded_rect2d(w, h, 0.010), c + nrm * (base_proud - 0.004), u, v, 0.0065, material='metal_brushed')
     hole = lib.extrude_profile(f'{cid}.hole', lib.rounded_rect2d(w - 0.010, h - 0.010, 0.006), c - nrm * 0.03, u, v, 0.06)
@@ -320,21 +309,16 @@ def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.010, ring_component=None):
 
 
 def build_outer_vents():
-    _vent('dash.vents.driver', -0.63, 0.735)
+    _vent('dash.vents.driver', -0.60, 0.735)
     # passenger inner vent beside the stack is the tall one; the outer vent is shorter with the seat switches
     # directly under it inside the same bezel (IMG_4491 / IMG_4509)
     _vent('dash.vents.passenger_inner', 0.300, 0.735)
-    _vent('dash.vents.passenger', 0.645, 0.752, h=0.078)
-    c, u, v, nrm = _dash_face_frame(0.645, 0.695)
-    sw = lib.extrude_profile('dash.passenger_switches', lib.rounded_rect2d(0.058, 0.030, 0.004), c + nrm * 0.010, u, v, 0.003, material='plastic_black', bevel=0.001)
-    lib.tag(sw, 'dash.passenger_switches', 'dashboard', selectable=False)
+    _vent('dash.vents.passenger', 0.585, 0.745, h=0.128, louvre_h=0.070)
+    # the two seat switches sit in the lower part of the same bezel
+    c, u, v, nrm = _dash_face_frame(0.585, 0.745)
     for k in range(2):
-        b = lib.extrude_profile(f'dash.passenger_switch_{k}', lib.rounded_rect2d(0.020, 0.018, 0.003), c + nrm * 0.013 + u * (-0.014 + 0.028 * k), u, v, 0.002, material='plastic_black_gloss')
+        b = lib.extrude_profile(f'dash.passenger_switch_{k}', lib.rounded_rect2d(0.020, 0.018, 0.003), c + nrm * 0.0125 + u * (-0.014 + 0.028 * k) - v * 0.045, u, v, 0.002, material='plastic_black_gloss')
         lib.tag(b, f'dash.passenger_switch.{k}', 'dashboard', selectable=False)
-    ring = lib.extrude_profile('dash.passenger_switches.ring', lib.rounded_rect2d(0.068, 0.040, 0.008), c + nrm * 0.0095, u, v, 0.003, material='metal_brushed')
-    hole = lib.extrude_profile('dash.passenger_switches.hole', lib.rounded_rect2d(0.058, 0.030, 0.004), c - nrm * 0.03, u, v, 0.06)
-    lib.add_boolean(ring, hole)
-    lib.tag(ring, 'dash.passenger_switches.ring', 'trim', selectable=False)
 
 
 def build_grab_handle():
@@ -370,7 +354,7 @@ def build_trim_band():
     """Mid-dash trim panels: a sculpted solid band carrying the vents, 6-9 mm proud of the dash pad with a thin
     bright edge top and bottom (IMG_4509/4499: black on the stock car; IMG_4491/4496: carbon overlay). The
     passenger band rises toward the door."""
-    for (x0, x1, cid, zb, zt) in ((0.215, 0.735, 'dash.trim.passenger', (0.660, 0.672), (0.790, 0.815)), (-0.735, -0.555, 'dash.trim.driver', (0.665, 0.665), (0.795, 0.795))):
+    for (x0, x1, cid, zb, zt) in ((0.215, 0.70, 'dash.trim.passenger', (0.660, 0.672), (0.790, 0.815)), (-0.70, -0.52, 'dash.trim.driver', (0.665, 0.665), (0.795, 0.795))):
         n = 20
         xs = [x0 + (x1 - x0) * i / (n - 1) for i in range(n)]
         z_lo = lambda x: zb[0] + (zb[1] - zb[0]) * (x - x0) / (x1 - x0)
@@ -395,20 +379,15 @@ def build_trim_band():
 
 
 def build_glovebox_and_switches():
-    # glovebox door outline on the passenger lower dash: a slightly proud panel
-    n = 12
-    rings = []
-    for z in (0.47, 0.50, 0.55, 0.60, 0.64):
-        ring = []
-        for i in range(n):
-            x = 0.30 + 0.38 * i / (n - 1)
-            prof = lib.spline_through(profile_at(x), n_per_seg=3)
-            cand = min(prof, key=lambda p: abs(p.y - z))
-            ring.append(Vector((x, cand.x - 0.004, z)))
-        rings.append(ring)
-    gb = lib.loft_object('dash.glovebox', rings, close_u=False, material='leather_black', flip=False)
-    lib.add_solidify(gb, 0.004, offset=1.0)
-    lib.tag(gb, 'dash.glovebox', 'dashboard')
+    # glovebox door: a shallow seam groove around the door outline on the leather lower dash (IMG_4491)
+    for (za, zb_, xa, xb) in ((0.475, 0.475, 0.30, 0.66), (0.615, 0.615, 0.30, 0.66)):
+        path = [Vector((x, _surface_point(x, za) + 0.0015, za)) for x in [xa + (xb - xa) * i / 14 for i in range(15)]]
+        g = lib.sweep_tube(f'dash.glovebox_seam_{int(za * 1000)}', path, 0.0022, n=8, cap=True, material='plastic_black', up_hint=Vector((0, 0, 1)))
+        lib.tag(g, f'dash.glovebox.seam.{int(za * 1000)}', 'dashboard', selectable=False)
+    for x in (0.30, 0.66):
+        path = [Vector((x, _surface_point(x, z) + 0.0015, z)) for z in [0.475 + 0.14 * i / 10 for i in range(11)]]
+        g = lib.sweep_tube(f'dash.glovebox_seam_x{int(x * 1000)}', path, 0.0022, n=8, cap=True, material='plastic_black', up_hint=Vector((1, 0, 0)))
+        lib.tag(g, f'dash.glovebox.seam.x{int(x * 1000)}', 'dashboard', selectable=False)
     # driver lower switch panel (headlamp rotary + two buttons)
     base = Vector((-0.615, 0.675, 0.56))
     nrm = Vector((0, -1, 0.25)).normalized()
@@ -431,7 +410,7 @@ def build_welt():
     # along the hood rear edge (profile point 5 = rear edge crest) from the driver door to the stack
     n = 22
     for i in range(n):
-        x = -0.725 + (STACK_X0 - 0.01 + 0.725) * i / (n - 1)
+        x = -0.69 + (STACK_X0 - 0.01 + 0.69) * i / (n - 1)
         prof = lib.spline_through(profile_at(x), n_per_seg=3)
         # crest point: max z in the rear half of the top surface
         rear = [p for p in prof if 0.55 < p.x < 0.70]

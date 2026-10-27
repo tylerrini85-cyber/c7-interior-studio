@@ -25,17 +25,17 @@ def _console_section(y):
 
 
 def build_body():
-    ys = [0.60, 0.55, 0.50, 0.46, 0.42, 0.36, 0.28, 0.20, 0.12, 0.04, -0.04, -0.10, -0.2, -0.3, -0.4, -0.47, -0.55, L.REAR_BULKHEAD_Y + 0.02]
+    ys = [0.60, 0.55, 0.50, 0.46, 0.42, 0.36, 0.28, 0.20, 0.12, 0.04, -0.04, -0.10, -0.2, -0.3, -0.38, -0.44, -0.48, -0.50]
     rings = [_console_section(y) for y in ys]
     body = lib.loft_object('console.main', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.5)
     lib.add_subsurf(body, 1)
     lib.tag(body, 'console.main', 'console')
     # gloss trim plate on top around the shifter (waterfall continues from the stack)
-    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.23, 0.60, 0.02), (0.0, 0.15, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
+    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.23, 0.47, 0.02), (0.0, 0.215, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
     lib.tag(plate, 'console.trim', 'console')
     # side accent strips (brushed) along the top edges of the console
     for side in (-1, 1):
-        strip = lib.box(f'console.side_trim_{side}', (0.006, 0.60, 0.009), (side * 0.118, 0.15, L.CONSOLE_TOP_Z + 0.0045), material='metal_brushed', bevel=0.001)
+        strip = lib.box(f'console.side_trim_{side}', (0.006, 0.47, 0.009), (side * 0.118, 0.215, L.CONSOLE_TOP_Z + 0.0045), material='metal_brushed', bevel=0.001)
         lib.tag(strip, f'console.side_trim.{"driver" if side < 0 else "passenger"}', 'trim', selectable=False)
 
 
@@ -95,9 +95,9 @@ def build_dial_and_switches():
 
 def build_cupholders_and_armrest():
     # cupholder recess: two holes in tandem cut into a plate; sliding cover modelled closed over the rear one
-    plate = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.11, 0.20, 0.03), (0.0, 0.0, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
+    plate = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.11, 0.19, 0.03), (0.0, 0.085, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.004, material='plastic_black')
     lib.tag(plate, 'console.cupholder_plate', 'console')
-    for k, y in enumerate((0.055, -0.03)):
+    for k, y in enumerate((0.135, 0.045)):
         cutter = lib.revolve(f'cup_cutter_{k}', [(0.0, -0.1), (0.04, -0.1), (0.04, 0.1), (0.0, 0.1)], segments=32, origin=(0, y, L.CONSOLE_TOP_Z), direction=(0, 0, 1))
         lib.add_boolean(plate, cutter)
         # cup well (dark cylinder below)
@@ -105,7 +105,7 @@ def build_cupholders_and_armrest():
         lib.tag(well, f'console.cupholder.{k}', 'console', selectable=False)
     # tambour cover slid partly open (slats)
     for k in range(5):
-        slat = lib.box(f'console.cup_cover_{k}', (0.105, 0.014, 0.004), (0.0, -0.075 - k * 0.015, L.CONSOLE_TOP_Z + 0.009), material='plastic_black_gloss', bevel=0.001)
+        slat = lib.box(f'console.cup_cover_{k}', (0.105, 0.014, 0.004), (0.0, 0.0 - k * 0.015, L.CONSOLE_TOP_Z + 0.009), material='plastic_black_gloss', bevel=0.001)
         lib.tag(slat, f'console.cup_cover.{k}', 'console', selectable=False)
     # armrest lid: padded leather pad with rounded edges and a stitched seam
     lid_c = (0.0, (L.ARMREST_Y0 + L.ARMREST_Y1) / 2, L.ARMREST_Z + 0.015)
@@ -114,9 +114,6 @@ def build_cupholders_and_armrest():
     # storage bin front wall under the lid (dark)
     bin_ = lib.box('console.armrest_bin', (0.23, L.ARMREST_Y1 - L.ARMREST_Y0 - 0.02, 0.03), (0.0, lid_c[1], L.ARMREST_Z - 0.02), material='plastic_black')
     lib.tag(bin_, 'console.armrest_bin', 'console', selectable=False)
-    # rear of the console: small tray and the two rear vents? (C7 has a rear storage tray)
-    tray = lib.extrude_profile('console.rear_tray', lib.rounded_rect2d(0.18, 0.08, 0.02), (0.0, L.ARMREST_Y0 - 0.07, L.CONSOLE_TOP_Z + 0.022), (1, 0, 0), (0, 1, 0), -0.03, material='rubber')
-    lib.tag(tray, 'console.rear_tray', 'console', selectable=False)
 
 
 def build(shifter='automatic'):

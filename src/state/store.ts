@@ -60,6 +60,7 @@ export interface AppState {
   setZone: (zone: ZoneId, patch: Partial<ProjectDoc['lighting']['zones'][ZoneId]>, opts?: { transient?: boolean }) => void;
   setMaster: (patch: Partial<LightingMaster>, opts?: { transient?: boolean }) => void;
   setStarlight: (patch: Partial<StarlightConfig>, opts?: { transient?: boolean }) => void;
+  setMatSparkle: (patch: Partial<StarlightConfig>, opts?: { transient?: boolean }) => void;
   setElectronics: (patch: Partial<ElectronicsConfig>) => void;
   setEnvironment: (env: EnvironmentId) => void;
   resetPartToFactory: (id: ComponentId) => void;
@@ -208,6 +209,7 @@ export const useStore = create<AppState>((set, get) => {
       if (d.lighting.master.sync && patch.color) for (const z of Object.keys(d.lighting.zones) as ZoneId[]) d.lighting.zones[z].color = patch.color;
     }, opts),
     setStarlight: (patch, opts) => get().updateProject((d) => { d.lighting.starlight = { ...d.lighting.starlight, ...patch }; }, opts),
+    setMatSparkle: (patch, opts) => get().updateProject((d) => { d.lighting.matSparkle = { ...d.lighting.matSparkle, ...patch }; }, opts),
     setElectronics: (patch) => get().updateProject((d) => { d.electronics = { ...d.electronics, ...patch }; }),
     setEnvironment: (env) => get().updateProject((d) => { d.environment = env; }, { history: false }),
 

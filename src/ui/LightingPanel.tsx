@@ -18,6 +18,36 @@ const STAR_PALETTES: { name: string; colors: string[] }[] = [
   { name: 'Teal', colors: ['#00e5ff', '#9ffcff'] }, { name: 'Multicolor', colors: ['#ffffff', '#9fc9ff', '#ffd8a8', '#ff9fd6'] },
 ];
 
+/** Floor mat sparkle: fibre-optic style points embedded in the mats (same engine as the headliner). */
+export function MatSparkleControls({ open = false }: { open?: boolean }) {
+  const project = useStore((s) => s.project);
+  const setMatSparkle = useStore((s) => s.setMatSparkle);
+  const commit = useStore((s) => s.commitTransient);
+  if (!project) return null;
+  const cfg = project.lighting.matSparkle;
+  return (
+    <Section title="Floor mat sparkle" defaultOpen={open} right={<Toggle label="" value={cfg.enabled} onChange={(v) => setMatSparkle({ enabled: v })} />}>
+      {!cfg.enabled && <p className="muted small">Switch on to embed twinkling points in both floor mats. The mat edge glow is in the zone list above.</p>}
+      <div className="field"><span className="field-label">Sparkle color presets</span>
+        <div className="material-chips">{STAR_PALETTES.map((p) => <button type="button" key={p.name} className={`chip-btn ${JSON.stringify(cfg.colors) === JSON.stringify(p.colors) ? 'sel' : ''}`} onClick={() => setMatSparkle({ enabled: true, colors: p.colors })}><span className="mini-swatch" style={{ display: 'inline-block', width: 12, height: 12, marginRight: 6, verticalAlign: -1, background: p.colors[0] }} />{p.name}</button>)}</div>
+      </div>
+      <div className="field"><span className="field-label">Custom sparkle colors</span>
+        <div className="star-colors">
+          {cfg.colors.map((c, i) => <ColorPicker key={i} value={c} onChange={(nc) => setMatSparkle({ colors: cfg.colors.map((x, j) => (j === i ? nc : x)) }, { transient: true })} onCommit={commit} compact />)}
+          <div className="row-actions">
+            {cfg.colors.length < 4 && <Button size="sm" icon="plus" onClick={() => setMatSparkle({ colors: [...cfg.colors, '#9fc9ff'] })}>Add color</Button>}
+            {cfg.colors.length > 1 && <Button size="sm" icon="close" onClick={() => setMatSparkle({ colors: cfg.colors.slice(0, -1) })}>Remove</Button>}
+          </div>
+        </div>
+      </div>
+      <Slider label="Number of points" value={cfg.count} min={40} max={600} step={10} onChange={(v) => setMatSparkle({ count: v }, { transient: true })} onCommit={commit} format={(v) => `${v}`} />
+      <Slider label="Brightness" value={cfg.brightness} min={0} max={1} onChange={(v) => setMatSparkle({ brightness: v }, { transient: true })} onCommit={commit} />
+      <Slider label="Twinkle intensity" value={cfg.twinkle} min={0} max={1} onChange={(v) => setMatSparkle({ twinkle: v }, { transient: true })} onCommit={commit} />
+      <Slider label="Twinkle speed" value={cfg.twinkleSpeed} min={0.1} max={3} onChange={(v) => setMatSparkle({ twinkleSpeed: v }, { transient: true })} onCommit={commit} />
+    </Section>
+  );
+}
+
 /** Starlight headliner controls (shared by the Lighting tab and the headliner inspector). */
 export function StarlightControls({ open = true }: { open?: boolean }) {
   const project = useStore((s) => s.project);
@@ -99,6 +129,7 @@ export function LightingPanel() {
         ))}
       </Section>
       <StarlightControls />
+      <MatSparkleControls />
       <Section title="Instrument & display themes" defaultOpen={false}>
         <Select<GaugeTheme> label="Gauge cluster theme" value={project.electronics.gaugeTheme} onChange={(v) => setElectronics({ gaugeTheme: v })} options={[{ value: 'tour', label: 'Tour (factory)' }, { value: 'sport', label: 'Sport (factory)' }, { value: 'track', label: 'Track (factory)' }, { value: 'concept_neon', label: 'Neon ring (concept)' }, { value: 'concept_minimal', label: 'Minimal (concept)' }]} />
         <ColorPicker label="Gauge accent / needle color" value={project.electronics.gaugeColor} onChange={(c) => setElectronics({ gaugeColor: c })} compact />

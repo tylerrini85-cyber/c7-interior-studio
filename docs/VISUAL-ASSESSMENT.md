@@ -87,6 +87,20 @@ knee bolster / glovebox split line on the passenger lower dash.
 | Shifter far too far from the screen | Shifter moved forward to 0.40 m (boot starts at the foot of the stack), lever raised so the knob reaches the climate rows like the photo |
 | Buttons in the wrong places | Laid out from the photo: media row 16 mm under the bezel (RADIO, MEDIA, home, round MENU, prev, next, BACK at 26 mm pitch), two 42 mm knobs at the panel sides centred between the media row and climate row A, climate row A of five (A/C, face, face+feet, rear defrost, SYNC) and row B of three under its middle (feet, feet+defrost, front defrost), the control panel running down to a CORVETTE badge plate left of centre with a small switch on the right; flat face extended down to 0.566 so nothing sits on the foot curve |
 
+## Reset pass (owner review: survey everything against the photos, fix root causes)
+Method: captured driver POV, passenger POV, overhead and rear views before touching geometry, listed the deltas against
+the photos, fixed them in the layout constants and builders rather than by patching parts, then re-captured every view.
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Driver view | Eye point too low and the instrument hood crest too high, so the hood blocked the dash; wheel sat low | Eye raised to 0.96 m, hood crest lowered to 0.885 m with a thin visor lip, wheel centre raised 4 cm; the dash top is now visible over the wheel |
+| Centre console | Body, plate and trims ran 0.5 m behind the seats to the bulkhead | Console body ends 0.50 m behind the hip point; plate 0.47 m long; cupholders and armrest moved forward; rear tray removed |
+| Passenger dash | Outer vent clipped by the dash end cap; a separate switch pad floated below it; the glovebox was a proud slab | Dash narrowed to the door surface (±0.70 m); the outer vent is one tall bezel with louvres above and the two seat switches below (IMG_4509); glovebox is a flush seam outline; door front raised and extended so the band end dies into the door sail |
+| Screen and controls | Screen too wide; buttons as blank blocks in the wrong places | True 8-inch screen (190 x 107 active) in a 218 x 126 bezel; control panel is a flat black panel carrying a label overlay with the real key layout (RADIO, MEDIA, home, MENU, previous, next, BACK; A/C, face, face+feet, rear defrost, SYNC; feet, feet+defrost, front defrost; AUTO and FAN by the knobs) and two chrome-rimmed knobs |
+| Floor mats | Flat rectangles | Shaped mats 12 mm thick lying on the carpet, embroidered CORVETTE at the heel end with the flags ahead of it; new "Floor mat edges" lighting zone (colour, brightness) and a "Floor mat sparkle" option (colours, count, twinkle) in the Lighting panel; the sparkle sampler now works on floor surfaces |
+
+Verified after the pass: driver, passenger, overhead, rear and door-junction captures; unit tests 16/16; browser walkthrough 20/20.
+
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.

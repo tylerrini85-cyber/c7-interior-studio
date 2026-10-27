@@ -33,9 +33,14 @@ def build_floor():
     lib.tag(obj, 'floor.carpet', 'floor')
     # floor mats (two)
     for side, cid in ((-1, 'floor.mats.driver'), (1, 'floor.mats.passenger')):
-        x = side * (L.SEAT_X + 0.02)
-        prof = lib.rounded_rect2d(0.40, 0.56, 0.05)
-        mat = lib.extrude_profile(cid, prof, (x, 0.42, 0.004), (1, 0, 0), (0, 1, 0), 0.008, material='carpet_black', uv_scale=3.0)
+        x = side * (L.SEAT_X + 0.01)
+        # shaped mat: wide at the heel, tapering toward the toe board, inboard edge following the tunnel
+        pts = [(-0.20, -0.14), (0.20, -0.14), (0.21, 0.10), (0.17, 0.30), (0.08, 0.40), (-0.08, 0.40), (-0.17, 0.30), (-0.21, 0.10)]
+        if side > 0:
+            pts = [(-px, py) for (px, py) in pts]
+        prof = lib.spline_through([Vector(p) for p in pts], n_per_seg=4, closed=True, tension=0.5)
+        mat = lib.extrude_profile(cid, [Vector((p.x, p.y)) for p in prof], (x, 0.36, 0.006), (1, 0, 0), (0, 1, 0), 0.012, material='carpet_black', uv_scale=3.0)
+        lib.add_bevel(mat, 0.004, 2)
         lib.tag(mat, cid, 'floor')
     return obj
 

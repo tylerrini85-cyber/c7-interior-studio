@@ -10,8 +10,8 @@ FLOOR_Z = 0.0
 SEAT_X = 0.37                  # driver seat centre at -SEAT_X, passenger at +SEAT_X
 HIP_Y = 0.0                    # seating reference point (H-point)
 HIP_Z = 0.26
-EYE = (-SEAT_X, -0.12, 0.92)   # driver eye point (reclined posture)
-PASSENGER_EYE = (SEAT_X, -0.12, 0.92)
+EYE = (-SEAT_X, -0.12, 0.96)   # driver eye point (reclined posture)
+PASSENGER_EYE = (SEAT_X, -0.12, 0.96)
 
 HEADLINER_Z = 1.10             # underside of headliner at cabin centre over the seats
 HEADLINER_SIDE_Z = 1.03        # at X = +-0.60
@@ -40,7 +40,7 @@ ROCKER_HALF_W = 0.70
 ROCKER_TOP_Z = 0.16
 ROCKER_W = 0.12
 
-DOOR_Y_FRONT = 0.72            # door panel meets dash end
+DOOR_Y_FRONT = 0.82            # door panel front edge runs on past the dash end so its open end is hidden
 DOOR_Y_REAR = -0.55
 
 TOEBOARD_Y0 = 0.78             # flat floor ends
@@ -53,7 +53,7 @@ TUNNEL_Z = 0.26
 # dashboard
 DASH_REAR_Y_CENTER = 0.58      # rear (occupant) edge of the dash top at the centre stack
 DASH_TOP_Z = 0.86              # general dash top level
-HOOD_TOP_Z = 0.915              # instrument hood crest
+HOOD_TOP_Z = 0.885              # instrument hood crest (below the eye line so the dash top is visible)
 HOOD_HALF_W = 0.24
 CLUSTER_CENTER = (-SEAT_X, 0.745, 0.775)
 CLUSTER_TILT = math.radians(18)
@@ -62,7 +62,7 @@ CLUSTER_H = 0.16
 KNEE_BOLSTER_Z = 0.50
 
 # steering
-WHEEL_CENTER = (-SEAT_X, 0.46, 0.645)
+WHEEL_CENTER = (-SEAT_X, 0.45, 0.685)
 WHEEL_TILT = math.radians(24)   # wheel plane tilted so the top is further from the driver
 WHEEL_RADIUS = 0.179            # 14.1 in diameter
 RIM_RADIUS = 0.0165
@@ -71,10 +71,10 @@ RIM_RADIUS = 0.0165
 CONSOLE_HALF_W = 0.155
 CONSOLE_TOP_Z = 0.56           # top at shifter area
 ARMREST_Z = 0.60
-ARMREST_Y0 = -0.46
-ARMREST_Y1 = -0.08
+ARMREST_Y0 = -0.40
+ARMREST_Y1 = -0.06
 SHIFTER_Y = 0.40
-DIAL_Y = 0.12
+DIAL_Y = 0.24
 SCREEN_CENTER = (0.0, 0.66, 0.74)
 SCREEN_W = 0.19
 SCREEN_H = 0.115

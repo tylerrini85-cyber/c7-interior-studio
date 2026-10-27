@@ -6,7 +6,7 @@ export const SCHEMA_VERSION = 1 as const;
 export type ComponentId = string;
 export type ZoneId =
   | 'dash' | 'console' | 'footwell.driver' | 'footwell.passenger' | 'door.driver' | 'door.passenger'
-  | 'handles' | 'cupholders' | 'seats' | 'storage';
+  | 'handles' | 'cupholders' | 'seats' | 'storage' | 'mats';
 
 export type MaterialKind =
   | 'leather' | 'leather_perforated' | 'leather_textured' | 'leather_gloss' | 'alcantara' | 'suede' | 'fabric' | 'woven'
@@ -105,7 +105,7 @@ export interface ProjectDoc {
   updatedAt: string;
   base: ProjectBase;
   parts: Record<ComponentId, PartConfig>;
-  lighting: { master: LightingMaster; zones: Record<ZoneId, ZoneConfig>; starlight: StarlightConfig };
+  lighting: { master: LightingMaster; zones: Record<ZoneId, ZoneConfig>; starlight: StarlightConfig; matSparkle: StarlightConfig };
   electronics: ElectronicsConfig;
   environment: EnvironmentId;
   camera: CameraPrefs;
@@ -114,12 +114,12 @@ export interface ProjectDoc {
   linkDoors: boolean;
 }
 
-export const ZONE_IDS: ZoneId[] = ['dash', 'console', 'footwell.driver', 'footwell.passenger', 'door.driver', 'door.passenger', 'handles', 'cupholders', 'seats', 'storage'];
+export const ZONE_IDS: ZoneId[] = ['dash', 'console', 'footwell.driver', 'footwell.passenger', 'door.driver', 'door.passenger', 'handles', 'cupholders', 'seats', 'storage', 'mats'];
 
 export const ZONE_LABELS: Record<ZoneId, string> = {
   dash: 'Dashboard edge', console: 'Center console', 'footwell.driver': 'Driver footwell', 'footwell.passenger': 'Passenger footwell',
   'door.driver': 'Driver door trim', 'door.passenger': 'Passenger door trim', handles: 'Door handles', cupholders: 'Cupholders',
-  seats: 'Seat bases', storage: 'Storage areas',
+  seats: 'Seat bases', storage: 'Storage areas', mats: 'Floor mat edges',
 };
 
 export function defaultLighting(): ProjectDoc['lighting'] {
@@ -129,6 +129,7 @@ export function defaultLighting(): ProjectDoc['lighting'] {
     master: { enabled: false, brightness: 0.7, saturation: 1, mode: 'solid', speed: 1, sync: true, color: '#ff2a2a' },
     zones,
     starlight: { enabled: false, count: 400, colors: ['#ffffff'], brightness: 0.8, twinkle: 0.5, twinkleSpeed: 1, shooting: false, pattern: 'random', seed: 7, size: 1 },
+    matSparkle: { enabled: false, count: 160, colors: ['#ffffff'], brightness: 0.8, twinkle: 0.7, twinkleSpeed: 1.2, shooting: false, pattern: 'random', seed: 11, size: 0.8 },
   };
 }
 
@@ -166,6 +167,7 @@ export function migrate(doc: unknown): ProjectDoc {
       master: { ...lighting.master, ...(d.lighting?.master ?? {}) },
       zones: { ...lighting.zones, ...(d.lighting?.zones ?? {}) },
       starlight: { ...lighting.starlight, ...(d.lighting?.starlight ?? {}) },
+      matSparkle: { ...lighting.matSparkle, ...(d.lighting?.matSparkle ?? {}) },
     },
     electronics: { ...defaultElectronics(), ...(d.electronics ?? {}) },
     environment: (d.environment as EnvironmentId) ?? 'showroom',
@@ -178,6 +180,7 @@ export function migrate(doc: unknown): ProjectDoc {
   // treated as untouched and follows the new default, so older projects pick up the corrected stock look.
   // Parts the owner changed are left exactly as saved. Components added since the project was saved get factory values.
   const fresh = factoryParts(out.base.factoryColor);
+  for (const id of ['floor.mats.driver', 'floor.mats.passenger']) { const m = out.parts[id]; if (m && !m.text) m.text = 'CORVETTE'; }
   for (const [id, cfg] of Object.entries(fresh)) {
     const stored = out.parts[id];
     if (!stored) { out.parts[id] = cfg; continue; }
