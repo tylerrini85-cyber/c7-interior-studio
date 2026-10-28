@@ -220,4 +220,6 @@ Second wheel pass (owner photo of a Stingray wheel straight on, measured against
 | Silver frame | Square wings with a level top edge | Each spoke is a slanted wedge: its top edge runs from the airbag's top corner down to the rim just above 3 / 9 o'clock with a slim border over the pod; its lower edge leaves the rim well below the pod, leaving a broad silver area under it, and sweeps into a 15 mm U |
 | Switch pods | Upright rounded squares | Wedges: top edge along the spoke's slanted edge, inner edge almost upright beside the airbag, bottom edge nearly level, rounded point toward the rim; a column of keys along the inner edge, a vertical rocker on the left pod and a round 4-way pad on the right |
 | Lower spoke | Wide | Narrower (66 mm at the U), matching the shorter airbag |
+| Wheel silver finish | Brushed aluminium | Satin silver paint (#8a8d92) by default, as on the car (older defaults migrated); flat faces shade evenly (auto smooth + hardened bevel normals), no streaks |
+| Bottom of the frame | The lower spoke's square top corners stuck out beside the U, and the airbag (and the U around it) came to a point | Lower spoke's top tucked up behind the U with curved, flaring sides; airbag bottom and the U are round |
 

@@ -69,7 +69,7 @@ def _plate(cid, pts2d, c, u, v, n, depth, back, material, bevel=0.003):
 # ---------------------------------------------------------------------------
 # measured from the owner photo (rim centreline = 0.161 m): 130 mm wide, 58 mm above to 90 mm below the centre
 AIRBAG_HALF = [(0.0, 0.058), (0.042, 0.0575), (0.059, 0.050), (0.0645, 0.034), (0.065, 0.010), (0.0645, -0.025),
-               (0.057, -0.052), (0.042, -0.070), (0.023, -0.083), (0.0, -0.090)]
+               (0.058, -0.051), (0.046, -0.069), (0.031, -0.0815), (0.015, -0.088), (0.0, -0.090)]
 AIRBAG_FACE = (0.0, -0.016)     # centre of the cover's flat face (and of the flags)
 
 
@@ -103,11 +103,11 @@ def _frame_outline(variant):
     # owner photo: each spoke is a slanted wedge. Its top edge runs from the airbag's top corner straight down and out
     # to the rim just above 3 / 9 o'clock (a slim border over the pod); its lower edge leaves the rim well below the
     # pod and sweeps into a slim (15 mm) U under the airbag, leaving a broad silver area under each pod.
-    outer = [(0.0, -0.106), (-0.034, -0.1005), (-0.061, -0.0915), (-0.093, -0.076), (-0.118, -0.064), rim_pt(-0.060),
+    outer = [(0.0, -0.1060), (-0.018, -0.1045), (-0.036, -0.0995), (-0.061, -0.0905), (-0.093, -0.0755), (-0.118, -0.0645), rim_pt(-0.060),
              rim_pt(-0.036), rim_pt(-0.012), rim_pt(0.002), (-0.142, 0.004), (-0.118, 0.0195), (-0.097, 0.035),
              (-0.080, 0.0475), (-0.064, 0.0570)]
-    inner = [(-0.0605, 0.051), (-0.066, 0.034), (-0.0665, 0.010), (-0.066, -0.025), (-0.0585, -0.053), (-0.043, -0.0715),
-             (-0.024, -0.0845), (0.0, -0.0915)]
+    inner = [(-0.0605, 0.051), (-0.066, 0.034), (-0.0665, 0.010), (-0.066, -0.025), (-0.0595, -0.052), (-0.0475, -0.0705),
+             (-0.032, -0.083), (-0.0155, -0.0895), (0.0, -0.0915)]
     left = outer + inner
     right = [(-x, y) for (x, y) in reversed(left)]
     pts = _ccw([Vector(p) for p in left[:-1] + right[:-1]])
@@ -131,6 +131,7 @@ def _pod(cid, side, c, u, v, n, front):
     right (owner photo / B21)."""
     prof = _pod_outline(side)
     pod = lib.extrude_profile(cid, prof, c + n * (front - 0.004), u, v, 0.0055, material='plastic_black_gloss', bevel=0.0012)
+    _flat_faces_round_edges(pod)
     lib.tag(pod, cid, 'steering', selectable=False)
     top = front + 0.0015
     s = side
@@ -150,6 +151,15 @@ def _pod(cid, side, c, u, v, n, front):
         lib.tag(key, f'{cid}.key{k}', 'steering', selectable=False)
 
 
+def _flat_faces_round_edges(obj):
+    """Keep big flat faces evenly shaded (no streaks from smoothing across the n-gon) while the bevels stay round."""
+    obj.data.use_auto_smooth = True
+    obj.data.auto_smooth_angle = math.radians(35)
+    for m in obj.modifiers:
+        if m.type == 'BEVEL':
+            m.harden_normals = True
+
+
 def build_spokes_and_hub(variant, c, u, v, n):
     thin = variant in ('d_shape', 'led_performance')
     frame_mat = 'carbon' if thin else 'metal_brushed'
@@ -158,10 +168,16 @@ def build_spokes_and_hub(variant, c, u, v, n):
     # ---- silver frame: one U-with-wings outline (the registry's spoke component)
     outline = _frame_outline(variant)
     frame = lib.extrude_profile('steering.spoke.left', outline, c + n * (FRAME_FRONT - 0.016), u, v, 0.016, material=frame_mat, bevel=0.0025, bevel_segments=3)
+    _flat_faces_round_edges(frame)
     lib.tag(frame, 'steering.spoke.left', 'steering')
     # ---- black lower spoke from the U down into the rim; the gaps beside it are the two lower openings
-    base = [Vector(p) for p in ((-0.033, -0.099), (0.033, -0.099), (0.047, bottom + 0.004), (-0.047, bottom + 0.004))]
-    lower = lib.extrude_profile('steering.spoke.base', _ccw(base), c + n * (FRAME_FRONT - 0.020), u, v, 0.017, material='leather_black', bevel=0.003, bevel_segments=3)
+    # its top tucks up behind the silver U (3 mm behind the frame face) so no corners show; the sides flare out in a
+    # smooth curve into the rim
+    half = [(0.0, -0.088), (0.026, -0.091), (0.033, -0.104), (0.036, -0.118), (0.042, -0.133), (0.052, -0.146), (0.066, bottom + 0.002), (0.0, bottom - 0.002)]
+    base = _ccw([Vector(p) for p in half] + [Vector((-x, y)) for x, y in reversed(half[1:-1])])
+    base = [Vector(p) for p in lib.spline_through(base, n_per_seg=4, closed=True, tension=0.45)]
+    lower = lib.extrude_profile('steering.spoke.base', base, c + n * (FRAME_FRONT - 0.020), u, v, 0.017, material='leather_black', bevel=0.003, bevel_segments=3)
+    _flat_faces_round_edges(lower)
     lib.tag(lower, 'steering.spoke.base', 'steering')
     # ---- switch pods in the spokes, paddles behind
     for side, cid in ((-1, 'steering.pod.left'), (1, 'steering.pod.right')):
