@@ -212,3 +212,12 @@ headrest slot, aluminium door handles). Surface-level sculpting and stitching de
 | Lower section | A stem with a chrome badge | A wide black lower spoke from the U to the rim (part of the lower rim colour), with an opening either side |
 | Rim | 33 mm thick | 36 mm thick |
 
+Second wheel pass (owner photo of a Stingray wheel straight on, measured against the rim):
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Airbag | Too long (down to 114 mm below the centre) and too wide | 130 mm wide, 58 mm above to 90 mm below the centre; flags 64 mm wide, 16 mm below the centre |
+| Silver frame | Square wings with a level top edge | Each spoke is a slanted wedge: its top edge runs from the airbag's top corner down to the rim just above 3 / 9 o'clock with a slim border over the pod; its lower edge leaves the rim well below the pod, leaving a broad silver area under it, and sweeps into a 15 mm U |
+| Switch pods | Upright rounded squares | Wedges: top edge along the spoke's slanted edge, inner edge almost upright beside the airbag, bottom edge nearly level, rounded point toward the rim; a column of keys along the inner edge, a vertical rocker on the left pod and a round 4-way pad on the right |
+| Lower spoke | Wide | Narrower (66 mm at the U), matching the shorter airbag |
+

@@ -194,15 +194,15 @@ function makeEmblemDecal(mesh: THREE.Mesh, where: 'hub' | 'headrest' | 'mat'): T
   const mat = new THREE.MeshStandardMaterial({ map: emblemTexture(), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.35, metalness: 0.4, alphaTest: 0.05 });
   let plane: THREE.Mesh;
   if (where === 'hub') {
-    // crossed flags straight on the airbag cover (owner photo / B21: about 58 mm wide, near the middle of the shield,
-    // whose flat face is centred 25 mm below the wheel centre). Wheel centre and tilt come from the Blender layout
+    // crossed flags straight on the airbag cover (owner photo / B21: about 64 mm wide, near the middle of the shield,
+    // whose flat face is centred 16 mm below the wheel centre). Wheel centre and tilt come from the Blender layout
     // (WHEEL_CENTER, WHEEL_TILT); the plane sits a hair in front of the cover's flat face so only the artwork shows.
-    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.058, 0.034), mat);
+    plane = new THREE.Mesh(new THREE.PlaneGeometry(0.064, 0.038), mat);
     const tilt = (24 * Math.PI) / 180;
     const up = new THREE.Vector3(0, Math.cos(tilt), -Math.sin(tilt));
     const nrm = new THREE.Vector3(0, Math.sin(tilt), Math.cos(tilt));
     const hubCenter = new THREE.Vector3(-0.37, 0.705, -0.45);   // = WHEEL_CENTER in tools/blender/layout.py
-    plane.position.copy(hubCenter).addScaledVector(up, -0.024).addScaledVector(nrm, 0.0386);
+    plane.position.copy(hubCenter).addScaledVector(up, -0.016).addScaledVector(nrm, 0.0386);
     plane.lookAt(plane.position.clone().add(nrm));
     void c;
   } else if (where === 'mat') {
