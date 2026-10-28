@@ -30,11 +30,18 @@ def _console_section(y):
     if y < -0.08:
         top = L.CONSOLE_TOP_Z + 0.02 * min(1.0, (-0.08 - y) / 0.08)
     base_z = 0.10
-    pts = [
-        (-hw - 0.06, base_z), (-hw - 0.02, base_z + 0.02), (-hw, 0.30), (-hw + 0.005, 0.46), (-hw + 0.02, top - 0.02), (-hw + 0.05, top),
+    # lower sides (from the top of the side down to the floor flare); beside the seat cushions they step in behind the
+    # cushions' inner bolsters (x ~0.10-0.13 below z 0.40) so the seats tuck under the console edge
+    w = L.seat_zone(y)
+    def lower(h):
+        full = [(h, 0.46), (h, 0.30), (h + 0.02, base_z + 0.02), (h + 0.06, base_z)]
+        tuck = [(h - 0.002, 0.45), (0.13, L.SEAT_SIDE_Z - 0.005), (0.09, 0.33), (0.09, base_z)]
+        return [(a[0] * (1 - w) + b[0] * w, a[1] * (1 - w) + b[1] * w) for a, b in zip(full, tuck)]
+    lp, ld = lower(hp), lower(hw)
+    pts = [(-x, z) for x, z in reversed(ld)] + [
+        (-hw + 0.02, top - 0.02), (-hw + 0.05, top),
         (-hw + 0.10, top + 0.003), (0.0, top + 0.004), (hp - 0.10, top + 0.003), (hp - 0.006, top), (hp - 0.002, top - 0.02),
-        (hp, 0.46), (hp, 0.30), (hp + 0.02, base_z + 0.02), (hp + 0.06, base_z), (0.0, base_z - 0.02),
-    ]
+    ] + lp + [(0.0, base_z - 0.02)]
     return [Vector((x, y, z)) for x, z in pts]
 
 
@@ -134,7 +141,14 @@ def _build_armrest():
     for k in range(n_y):
         y = y_front + (y_rear - y_front) * k / (n_y - 1)
         hd, hp = console_half_w(y)
-        xl, xr = -hd - 0.008, hp + 0.006
+        # sides 3-5 mm outside the console; behind the seam they widen to stand just outside the console bands (outer
+        # faces at |x| 0.215 / 0.161), which run on under the pad, so the bands disappear into the armrest instead of
+        # ending in the open (owner photo). Ahead of the seam they stay inside the bands, hidden.
+        ext = 1.0 - _ss(-0.08, -0.20, y)
+        wp = _ss(_arm_seam_y(hp), _arm_seam_y(hp) - 0.06, y)
+        wd = _ss(_arm_seam_y(-hd), _arm_seam_y(-hd) - 0.06, y)
+        xr = hp + 0.005 + max(0.0, 0.218 - hp - 0.005) * ext * wp
+        xl = -hd - 0.003 - max(0.0, 0.164 - hd - 0.003) * ext * wd
         z_top = 0.628 + 0.008 * (k / (n_y - 1))
         top = []
         for i in range(n_x):
@@ -148,7 +162,8 @@ def _build_armrest():
             if dz < r:
                 z -= (r - math.sqrt(max(0.0, r * r - (r - dz) ** 2))) * ramp
             top.append(Vector((x, y, z)))
-        bottom = [Vector((xr - 0.008, y, 0.49)), Vector((xl + 0.008, y, 0.49))]
+        # sides drop straight to a crisp lip 5 mm proud of the console side, then step in under the pad
+        bottom = [Vector((xr, y, 0.472)), Vector((xr - 0.024, y, 0.472)), Vector((xl + 0.024, y, 0.472)), Vector((xl, y, 0.472))]
         rings.append(top + bottom)
     # winding chosen so the top faces up (same test as dashboard._loft_needs_flip)
     up_ok = (rings[0][1] - rings[0][0]).cross(rings[1][0] - rings[0][0]).z > 0

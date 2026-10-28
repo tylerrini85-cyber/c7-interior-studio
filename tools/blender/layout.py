@@ -96,3 +96,18 @@ ARMREST_DOOR_Z = 0.58
 ARMREST_DOOR_PROTRUSION = 0.09
 DOOR_HANDLE_Z = 0.70
 SPEAKER_CENTER = (0.35, 0.26)   # (Y, Z)
+
+
+# beside the seat cushions the console's side walls stop just above the cushion's inner bolster (top ~0.38) and the
+# console's lower side steps in behind the cushion, so the seats tuck under the console edge instead of the walls
+# running through them
+SEAT_SIDE_Z = 0.405
+
+
+def seat_zone(y):
+    """1 alongside the seat cushions, 0 clear of them (eased over 4 cm at each end)."""
+    def ss(a, b, x):
+        t = max(0.0, min(1.0, (x - a) / (b - a)))
+        return t * t * (3 - 2 * t)
+    return ss(CUSHION_Y1 + 0.07, CUSHION_Y1 + 0.03, y) * ss(CUSHION_Y0 - 0.07, CUSHION_Y0 - 0.03, y)
+
