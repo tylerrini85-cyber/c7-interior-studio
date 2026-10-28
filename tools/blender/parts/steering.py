@@ -94,30 +94,72 @@ def _airbag_outline(grow=0.0):
     return pts
 
 
-def _frame_outline(variant):
-    """Left half of the silver frame (spoke + half of the U), as an outer edge from the bottom centre to the wing's top
-    inner corner and an inner edge (hugging the airbag) back down; mirrored into one closed U-with-wings outline."""
+FRAME_CENTER = Vector((0.0, -0.016))     # the frame and airbag outlines are both star-shaped about this point
+
+
+def _frame_outer(variant):
+    """Outer edge of the silver frame, closed and counter-clockwise (owner photo, measured against the rim): a slim
+    strip across the top of the airbag; each spoke a slanted wedge whose top edge runs from the airbag's top corner down
+    to the rim just above 3 / 9 o'clock and whose lower edge meets the rim only ~30 mm below the centre, a slim border
+    under the pod; from there the lower edge sweeps into a slim U under the airbag."""
     def rim_pt(y):
         x = math.sqrt(max(0.0, R_CENTER ** 2 - y * y))
         return (-(x + 0.004), y)
-    # owner photo: each spoke is a slanted wedge. Its top edge runs from the airbag's top corner straight down and out
-    # to the rim just above 3 / 9 o'clock (a slim border over the pod); its lower edge leaves the rim well below the
-    # pod and sweeps into a slim (15 mm) U under the airbag, leaving a broad silver area under each pod.
-    outer = [(0.0, -0.1060), (-0.018, -0.1045), (-0.036, -0.0995), (-0.061, -0.0905), (-0.093, -0.0755), (-0.118, -0.0645), rim_pt(-0.060),
-             rim_pt(-0.036), rim_pt(-0.012), rim_pt(0.002), (-0.142, 0.004), (-0.118, 0.0195), (-0.097, 0.035),
-             (-0.080, 0.0475), (-0.064, 0.0570)]
-    inner = [(-0.0605, 0.051), (-0.066, 0.034), (-0.0665, 0.010), (-0.066, -0.025), (-0.0595, -0.052), (-0.0475, -0.0705),
-             (-0.032, -0.083), (-0.0155, -0.0895), (0.0, -0.0915)]
-    left = outer + inner
-    right = [(-x, y) for (x, y) in reversed(left)]
-    pts = _ccw([Vector(p) for p in left[:-1] + right[:-1]])
-    # smooth it (round U bottom, soft wing corners) without losing the points that sit inside the rim
-    return [Vector(p) for p in lib.spline_through(pts, n_per_seg=4, closed=True, tension=0.45)]
+    left = [(0.0, 0.0685), (-0.025, 0.068), (-0.048, 0.0665), (-0.064, 0.0605), (-0.080, 0.0475), (-0.097, 0.035),
+            (-0.118, 0.0195), (-0.142, 0.004), rim_pt(0.002), rim_pt(-0.012), rim_pt(-0.030), (-0.115, -0.0305),
+            (-0.093, -0.0355), (-0.080, -0.0435), (-0.068, -0.058), (-0.052, -0.0805), (-0.030, -0.097), (0.0, -0.1035)]
+    right = [(-x, y) for (x, y) in reversed(left[1:-1])]
+    pts = _ccw([Vector(p) for p in left + right])
+    return [Vector(p) for p in lib.spline_through(pts, n_per_seg=5, closed=True, tension=0.45)]
+
+
+def _polar_resample(poly, centre, n):
+    """Points where n evenly spaced rays from `centre` leave the closed polygon (which must be star-shaped about it)."""
+    out = []
+    m = len(poly)
+    for k in range(n):
+        a = 2 * math.pi * k / n - math.pi / 2
+        d = Vector((math.cos(a), math.sin(a)))
+        best = None
+        for i in range(m):
+            p, q = poly[i] - centre, poly[(i + 1) % m] - centre
+            e = q - p
+            den = d.x * e.y - d.y * e.x
+            if abs(den) < 1e-12:
+                continue
+            t = (p.x * e.y - p.y * e.x) / den          # distance along the ray
+            w = (p.x * d.y - p.y * d.x) / den          # position along the edge
+            if t > 0 and -1e-9 <= w <= 1 + 1e-9 and (best is None or t > best):
+                best = t
+        out.append(centre + d * best)
+    return out
+
+
+def _frame_mesh(cid, variant, c, u, v, n, front, depth, material):
+    """The silver frame as one solid ring around the airbag: outer edge from _frame_outer, inner edge 1.5 mm outside the
+    airbag, sampled on the same rays so the faces between them are clean quads; rounded edges, flat faces."""
+    import bmesh
+    N = 192
+    outer = _polar_resample(_frame_outer(variant), FRAME_CENTER, N)
+    inner = _polar_resample(_airbag_outline(0.0015), FRAME_CENTER, N)
+    P = lambda q, dz: c + u * q.x + v * q.y + n * dz
+    rings = [[P(q, front) for q in outer], [P(q, front) for q in inner], [P(q, front - depth) for q in inner], [P(q, front - depth) for q in outer]]
+    rings.append(rings[0])
+    obj = lib.loft_object(cid, rings, close_u=True, material=material)
+    bm = bmesh.new()
+    bm.from_mesh(obj.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-7)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(obj.data)
+    bm.free()
+    lib.add_bevel(obj, 0.0025, 3)
+    _flat_faces_round_edges(obj)
+    return obj
 
 
 # left pod outline (owner photo): a wedge whose top edge follows the spoke's slanted top edge, inner edge standing
-# almost upright beside the airbag, bottom edge nearly level, and a rounded point toward the rim
-POD_L = [(-0.0945, -0.0195), (-0.1335, -0.0145), (-0.1395, -0.0055), (-0.0775, 0.0415)]
+# almost upright beside the airbag, bottom edge nearly level just above the silver's lower edge, rounded point toward the rim
+POD_L = [(-0.0950, -0.0265), (-0.1345, -0.0205), (-0.1405, -0.0085), (-0.0775, 0.0415)]   # bottom ~9 mm above the silver's edge
 POD_R_ROUND = 0.006
 
 
@@ -166,9 +208,7 @@ def build_spokes_and_hub(variant, c, u, v, n):
     bottom = rim_centerline(variant, -math.pi / 2).y
     FRAME_FRONT = 0.012          # frame face, toward the driver from the wheel plane
     # ---- silver frame: one U-with-wings outline (the registry's spoke component)
-    outline = _frame_outline(variant)
-    frame = lib.extrude_profile('steering.spoke.left', outline, c + n * (FRAME_FRONT - 0.016), u, v, 0.016, material=frame_mat, bevel=0.0025, bevel_segments=3)
-    _flat_faces_round_edges(frame)
+    frame = _frame_mesh('steering.spoke.left', variant, c, u, v, n, FRAME_FRONT, 0.016, frame_mat)
     lib.tag(frame, 'steering.spoke.left', 'steering')
     # ---- black lower spoke from the U down into the rim; the gaps beside it are the two lower openings
     # its top tucks up behind the silver U (3 mm behind the frame face) so no corners show; the sides flare out in a
