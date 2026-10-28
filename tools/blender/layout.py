@@ -65,7 +65,7 @@ KNEE_BOLSTER_Z = 0.50
 WHEEL_CENTER = (-SEAT_X, 0.45, 0.705)
 WHEEL_TILT = math.radians(24)   # wheel plane tilted so the top is further from the driver
 WHEEL_RADIUS = 0.179            # 14.1 in diameter
-RIM_RADIUS = 0.0165
+RIM_RADIUS = 0.0178
 
 # console
 CONSOLE_HALF_W = 0.155          # driver side

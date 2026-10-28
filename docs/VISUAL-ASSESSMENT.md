@@ -202,3 +202,13 @@ headrest slot, aluminium door handles). Surface-level sculpting and stitching de
 | Band and driver bolster ends | Stopped short at the armrest's old square front | Run on to y -0.04, under the armrest's rounded corner |
 | Console sides beside the seats | The passenger band's tall wall (and the driver bolster, and the console's lower sides) ran straight down through the seat cushions' inner bolsters, and the band ended as a stub in front of the armrest | Beside the cushions (layout.seat_zone) the walls stop at z 0.405, just above the bolster tops (0.38), and the console's lower sides step in behind the cushions, so the seats tuck under the console edge. The bands run on under the armrest with their lower edge rising inside it, and the armrest's sides widen just behind its seam to cover them, so the band flows into the armrest side as in the owner photo |
 
+## Steering wheel centre (owner photo / B21 / B04 / B17 / B37)
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Airbag | A small round dome | A large shield (146 mm wide, 170 mm tall): flat top with rounded corners, tapering to a soft point 114 mm below the wheel centre; the flags sit near its middle |
+| Silver frame | Two big flat brushed plates in a V, a dark default colour | One satin-silver piece: short spokes from the rim at 3 and 9 o'clock just big enough to frame the pods, their top edges running out from the airbag's top corners, joined by a slim (13 mm) U wrapping the lower half of the airbag; bright by default (old default migrated) |
+| Switch pods | Three slats each, so they read as air vents; the left pod picked up the spoke colour | Black gloss pods filling the spokes, edges following the airbag and the rim: cruise keys on the left, a round 4-way pad and keys on the right; named apart from the spokes so they stay black |
+| Lower section | A stem with a chrome badge | A wide black lower spoke from the U to the rim (part of the lower rim colour), with an opening either side |
+| Rim | 33 mm thick | 36 mm thick |
+

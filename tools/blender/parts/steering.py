@@ -59,51 +59,108 @@ def _plate(cid, pts2d, c, u, v, n, depth, back, material, bevel=0.003):
     return obj
 
 
+# ---------------------------------------------------------------------------
+# Wheel centre, measured from the owner photo and B21 / B04 / B17 / B37 (all in the wheel plane, metres from the
+# wheel centre, x toward 3 o'clock, y up):
+#   airbag  a big shield, flat-topped with rounded corners, tapering to a soft point well below the centre
+#   frame   one silver piece: short wide spokes from the rim at 3 and 9 o'clock carrying the switch pods, joined by a
+#           slim U that wraps the lower half of the airbag
+#   base    a wide black lower spoke from the U down to the rim, with an opening either side of it
+# ---------------------------------------------------------------------------
+AIRBAG_HALF = [(0.0, 0.056), (0.040, 0.054), (0.062, 0.046), (0.072, 0.028), (0.072, 0.000), (0.066, -0.040),
+               (0.052, -0.078), (0.031, -0.104), (0.0, -0.114)]
+
+
+def _closed_mirror(half):
+    """Closed outline from a right-hand half listed top to bottom (x >= 0), counter-clockwise."""
+    right = [Vector(p) for p in half]
+    left = [Vector((-p[0], p[1])) for p in reversed(half[1:-1])]
+    pts = list(reversed(right)) + list(reversed(left))
+    return _ccw(pts)
+
+
+def _ccw(pts):
+    area = sum(pts[i].x * pts[(i + 1) % len(pts)].y - pts[(i + 1) % len(pts)].x * pts[i].y for i in range(len(pts)))
+    return pts if area > 0 else list(reversed(pts))
+
+
+def _airbag_outline(grow=0.0):
+    pts = lib.spline_through(_closed_mirror(AIRBAG_HALF), n_per_seg=4, closed=True, tension=0.5)
+    if grow:
+        cen = Vector((0.0, -0.025))
+        pts = [cen + (p - cen) * (1 + grow / (p - cen).length) for p in pts]
+    return pts
+
+
+def _frame_outline(variant):
+    """Left half of the silver frame (spoke + half of the U), as an outer edge from the bottom centre to the wing's top
+    inner corner and an inner edge (hugging the airbag) back down; mirrored into one closed U-with-wings outline."""
+    def rim_pt(y):
+        x = math.sqrt(max(0.0, R_CENTER ** 2 - y * y))
+        return (-(x + 0.004), y)
+    # slim U (about 13 mm) under the airbag; wings just big enough to frame the pods with a slim silver border, their
+    # top edges running out from the airbag's top corners and rising slightly to the rim
+    outer = [(0.0, -0.128), (-0.027, -0.1245), (-0.051, -0.109), (-0.070, -0.083), (-0.081, -0.058), (-0.098, -0.042),
+             (-0.126, -0.036), rim_pt(-0.037), rim_pt(-0.010), rim_pt(0.022), rim_pt(0.051), (-0.126, 0.051),
+             (-0.098, 0.048), (-0.070, 0.047)]
+    inner = [(-0.0715, 0.034), (-0.0735, 0.010), (-0.0705, -0.025), (-0.0605, -0.062), (-0.043, -0.093), (-0.022, -0.110), (0.0, -0.1155)]
+    left = outer + inner
+    right = [(-x, y) for (x, y) in reversed(left)]
+    pts = _ccw([Vector(p) for p in left[:-1] + right[:-1]])
+    # smooth it (round U bottom, soft wing corners) without losing the points that sit inside the rim
+    return [Vector(p) for p in lib.spline_through(pts, n_per_seg=4, closed=True, tension=0.45)]
+
+
+def _pod(cid, side, c, u, v, n, front):
+    """Black switch pod set into a spoke, with individual keys (left: cruise; right: audio / phone with a 4-way pad)."""
+    pc = Vector((side * 0.1115, 0.006))
+    # inner edge along the airbag, outer edge along the rim (x > 0 here = toward the rim)
+    quad = [Vector((side * x, y)) for x, y in ((-0.024, -0.029), (0.024, -0.025), (0.027, 0.033), (-0.024, 0.029))]
+    quad = _ccw([pc + q for q in quad])
+    prof = [Vector(p) for p in lib.spline_through(quad, n_per_seg=5, closed=True, tension=0.35)]
+    pod = lib.extrude_profile(cid, prof, c + n * (front - 0.004), u, v, 0.0055, material='plastic_black_gloss', bevel=0.0012)
+    lib.tag(pod, cid, 'steering', selectable=False)
+    top = front + 0.0015
+    keys = []
+    if side < 0:
+        keys = [(-0.010, 0.017, 0.016, 0.010), (0.010, 0.018, 0.016, 0.010), (-0.010, 0.004, 0.016, 0.010), (0.010, 0.005, 0.016, 0.010), (-0.010, -0.009, 0.016, 0.010), (0.010, -0.008, 0.016, 0.010), (0.0, -0.021, 0.034, 0.007)]
+    else:
+        keys = [(0.013, 0.017, 0.014, 0.010), (0.013, 0.004, 0.014, 0.010), (0.013, -0.009, 0.014, 0.010), (0.0, -0.021, 0.034, 0.007)]
+        disc = lib.revolve(cid + '.dpad', [(0, 0), (0.0115, 0), (0.0115, 0.0018), (0.010, 0.0026), (0.0, 0.0026)], segments=28, material='plastic_black', origin=c + u * (pc.x - 0.008) + v * (pc.y + 0.006) + n * top, direction=n)
+        lib.tag(disc, cid + '.dpad', 'steering', selectable=False)
+    for k, (x, y, w, h) in enumerate(keys):
+        o = c + u * (pc.x + side * x) + v * (pc.y + y) + n * top
+        key = lib.extrude_profile(f'{cid}.key{k}', lib.rounded_rect2d(w, h, 0.0025), o, u, v, 0.0022, material='plastic_black', bevel=0.0006)
+        lib.tag(key, f'{cid}.key{k}', 'steering', selectable=False)
+
+
 def build_spokes_and_hub(variant, c, u, v, n):
     thin = variant in ('d_shape', 'led_performance')
     frame_mat = 'carbon' if thin else 'metal_brushed'
     bottom = rim_centerline(variant, -math.pi / 2).y
-    # ---- silver Y frame: left arm, right arm, lower stem (one visual piece, three meshes sharing the component)
-    # one silver V frame (B21 / B04 / B17): arms leave the rim at 9 and 3 o'clock, sweep down and in to hug the
-    # bottom of the airbag and converge into the lower spoke; split into three meshes for the registry
-    arm_l = [(0.0, 0.018), (-0.060, 0.018), (-0.105, 0.030), (-0.163, 0.046), (-0.163, -0.020), (-0.122, -0.040),
-             (-0.078, -0.068), (-0.042, -0.096), (-0.022, -0.110), (0.0, -0.110)]
-    arm_r = [(-x, y) for (x, y) in reversed(arm_l)]
-    stem = [(-0.022, -0.108), (0.022, -0.108), (0.017, bottom + 0.012), (-0.017, bottom + 0.012)]
-    for cid, pts in (('steering.spoke.left', arm_l), ('steering.spoke.right', arm_r), ('steering.spoke.lower', stem)):
-        pl = _plate(cid, pts, c, u, v, n, -0.018, 0.0, frame_mat)
-        lib.tag(pl, cid, 'steering')
-    # ---- black switch pods inset into the outer ends of the arms
-    for side, cid in ((-1, 'steering.spoke.left'), (1, 'steering.spoke.right')):
-        pc = c + u * (side * 0.112) + v * 0.004
-        pod = lib.extrude_profile(cid + '.pod', lib.rounded_rect2d(0.040, 0.046, 0.008), pc + n * 0.003, u, v, -0.006, material='plastic_black')
-        lib.tag(pod, cid + '.pod', 'steering', selectable=False)
-        for r in range(3):
-            b = lib.extrude_profile(f'{cid}.btn{r}', lib.rounded_rect2d(0.026, 0.012, 0.003), pc + v * (0.014 - 0.014 * r) + n * 0.0045, u, v, -0.0025, material='plastic_black_gloss')
-            lib.tag(b, f'{cid}.btn{r}', 'steering', selectable=False)
-        # paddle shifter behind the rim (A8): thin blade behind the arm, reachable from the rim
+    FRAME_FRONT = 0.012          # frame face, toward the driver from the wheel plane
+    # ---- silver frame: one U-with-wings outline (the registry's spoke component)
+    outline = _frame_outline(variant)
+    frame = lib.extrude_profile('steering.spoke.left', outline, c + n * (FRAME_FRONT - 0.016), u, v, 0.016, material=frame_mat, bevel=0.0025, bevel_segments=3)
+    lib.tag(frame, 'steering.spoke.left', 'steering')
+    # ---- black lower spoke from the U down into the rim; the gaps beside it are the two lower openings
+    base = [Vector(p) for p in ((-0.042, -0.118), (0.042, -0.118), (0.060, bottom + 0.004), (-0.060, bottom + 0.004))]
+    lower = lib.extrude_profile('steering.spoke.base', _ccw(base), c + n * (FRAME_FRONT - 0.020), u, v, 0.017, material='leather_black', bevel=0.003, bevel_segments=3)
+    lib.tag(lower, 'steering.spoke.base', 'steering')
+    # ---- switch pods in the spokes, paddles behind
+    for side, cid in ((-1, 'steering.pod.left'), (1, 'steering.pod.right')):
+        # (pod nodes are not named after the spokes, so they keep their own black finish)
+        _pod(cid, side, c, u, v, n, FRAME_FRONT)
         pad = lib.extrude_profile(cid + '.paddle', lib.rounded_rect2d(0.078, 0.044, 0.012), c + u * (side * 0.128) + v * 0.020 - n * 0.030, u, v, -0.004, material='metal_satin_dark', bevel=0.0015)
         lib.tag(pad, 'steering.paddle.left' if side < 0 else 'steering.paddle.right', 'steering', selectable=False)
-    # ---- lower insert (badge plate) on the stem, and the flat-bottom trim on the rim
-    ins = lib.extrude_profile('steering.spoke.lower.insert', lib.rounded_rect2d(0.030, 0.034, 0.005), c + v * (bottom + 0.045) - n * 0.0045, u, v, 0.002, material='plastic_black_gloss')
-    lib.tag(ins, 'steering.spoke.lower.insert', 'steering', selectable=False)
     if variant != 'factory':
         flat_trim = lib.extrude_profile('steering.rim.flat_trim', lib.rounded_rect2d(0.11, 0.016, 0.005), c + v * (bottom - 0.004) - n * (L.RIM_RADIUS - 0.004), u, v, -0.004, material=frame_mat)
         lib.tag(flat_trim, 'steering.rim.flat_trim', 'steering', selectable=False)
-    # ---- hub / airbag: shield outline, wide at the top, drawn to a soft point at the bottom
-    shield = []
-    for i in range(48):
-        t = i / 48
-        a = 2 * math.pi * t
-        # superellipse-ish shield: wider at top, pointed bottom
-        rx = 0.074 * (1.0 if math.sin(a) > 0 else 0.88)
-        ry = 0.054 if math.sin(a) > 0 else 0.072
-        x = rx * math.copysign(abs(math.cos(a)) ** 0.9, math.cos(a))
-        y = ry * math.copysign(abs(math.sin(a)) ** (1.0 if math.sin(a) > 0 else 1.25), math.sin(a))
-        shield.append(Vector((x, y)))
+    # ---- airbag: the shield, domed toward the driver, sitting in the frame
+    shield = _airbag_outline()
     rings = []
-    for scale, depth in ((0.90, 0.028), (1.0, 0.006), (1.0, -0.016), (0.97, -0.025), (0.88, -0.030), (0.60, -0.0335), (0.25, -0.035)):
-        rings.append(lib.place_profile(shield, c - n * depth, u, v, scale=(scale, scale)))
+    for grow, depth in ((-0.004, -0.004), (0.0, 0.004), (0.0, 0.016), (-0.003, 0.024), (-0.010, 0.030), (-0.030, 0.0355), (-0.060, 0.0375)):
+        rings.append([c + u * q.x + v * q.y + n * depth for q in _airbag_outline(grow)] if grow else [c + u * q.x + v * q.y + n * depth for q in shield])
     hub = lib.loft_object('steering.hub', rings, close_u=True, cap_start=True, cap_end=True, material='plastic_soft')
     lib.tag(hub, 'steering.hub', 'steering')
     # the crossed-flags emblem is a transparent decal the runtime places on the airbag cover (no carrier plate)
