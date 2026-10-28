@@ -184,3 +184,12 @@ Second follow-up on the bar (owner photo of the slot / B38):
 Verdict: the cockpit now matches the C7 photos in layout, proportion and the signature elements (Y-spoke wheel,
 hooded three-tunnel cluster, driver-angled stack with grab fin, long aluminium console plate, GT seats with
 headrest slot, aluminium door handles). Surface-level sculpting and stitching detail remain approximations.
+
+## Stack top (B58 / B21 / B36 / B56)
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Brow over the stack | Ran about 2 cm too low, straight across the vent | Runs along the top edge of the yawed stack face, just above the opening, then down into the passenger band |
+| Vent and pod | A brushed rectangle with a separate gloss pod, crammed against the top edge | One long opening cut into the stack: tall and round at the driver end, narrowing toward the passenger end under the brow. Louvres with a chrome slider fill the left part; the PASS AIR BAG lamp module and the hazard button sit in the narrow right part. The walls are lined, with a dark gloss lip (no bright bezel), and every point follows the curved stack face |
+| Screen surround | 126 mm tall, leaving no room under the opening | 118 mm tall (the 8-inch screen is unchanged), centred 3 mm lower |
+

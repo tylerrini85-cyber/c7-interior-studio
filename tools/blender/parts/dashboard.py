@@ -218,34 +218,16 @@ def build_center_stack():
     rings = [_stack_ring(z, y_front=(0.98 if z < 0.80 else 0.80)) for z in zs]
     body = lib.loft_object('console.stack', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.0)
     lib.tag(body, 'console.stack', 'console')
-    # ---- top strip: two slim centre vents with the hazard / passenger-airbag pod between (IMG_4506, 4493)
-    zt = 0.838
-    # one wide vent across the left of the stack top, PASS AIR BAG lamp and hazard in a pod on the right (B58 / B21)
-    vx, vw, vh = cx - 0.038, 0.190, 0.034
-    floor = _panel('dash.vent_center_floor', vw - 0.008, vh - 0.008, vx, zt, 0.001, 0.004, 'plastic_black', 'dashboard', selectable=False, r=0.004)
-    lib.tag(floor, 'dash.vents.center.floor', 'dashboard', selectable=False)
-    o, u, v, n = stack_frame(vx, zt)
-    for j in range(3):
-        vane = lib.extrude_profile(f'dash.vent_center_vane{j}', lib.rounded_rect2d(vw - 0.016, 0.0035, 0.0015), o + v * (0.009 - 0.009 * j) + n * 0.0015, u, v, 0.003, material='plastic_black_gloss')
-        lib.tag(vane, f'dash.vents.center.vane{j}', 'dashboard', selectable=False)
-    knob = lib.box('dash.vent_center_knob', (0.016, 0.005, 0.007), o + n * 0.0045 + u * 0.035, material='plastic_black_gloss')
-    lib.tag(knob, 'dash.vents.center.knob', 'dashboard', selectable=False)
-    ring = lib.extrude_profile('dash.vent_center', lib.rounded_rect2d(vw, vh, 0.006), o - n * 0.002, u, v, 0.0045, material='metal_brushed')
-    hole = lib.extrude_profile('dash.vent_center_hole', lib.rounded_rect2d(vw - 0.008, vh - 0.008, 0.004), o - n * 0.03, u, v, 0.06)
-    lib.add_boolean(ring, hole)
-    lib.tag(ring, 'dash.vents.center.left', 'dashboard')
-    px = cx + 0.112
-    pod = _panel('dash.hazard_pod', 0.070, 0.030, px, zt, 0.0025, 0.004, 'plastic_black_gloss', 'dashboard', selectable=False, r=0.005)
-    o, u, v, n = stack_frame(px, zt)
-    ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.030, 0.016, 0.002), o + n * 0.0025 - u * 0.014, u, v, 0.001, material='screen_off')
-    lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
-    hz = lib.extrude_profile('dash.hazard', [Vector((-0.007, -0.005)), Vector((0.007, -0.005)), Vector((0.0, 0.006))], o + n * 0.0025 + u * 0.020, u, v, 0.001, material='emblem')
-    lib.tag(hz, 'dash.hazard', 'dashboard', selectable=False)
+    # ---- top opening (B58 / B21 / B36 / B56): one long tapered opening under the brow, tall and round at the
+    # driver end and narrowing to the passenger end; louvres fill the left part, the PASS AIR BAG lamp module and the
+    # hazard button sit in the narrow right part. Its walls are lined, its edge has a thin bright rim, and every
+    # outline point is projected onto the (curved) stack face so nothing floats or sinks.
+    _stack_top_opening(cx)
     # ---- infotainment: gloss surround (wider on the left for the volume knob + SCREEN button), 8-inch screen
-    zs_scr = 0.752
-    bez = _panel('console.screen_bezel', 0.218, 0.126, cx + 0.028, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
+    zs_scr = 0.749
+    bez = _panel('console.screen_bezel', 0.218, 0.118, cx + 0.028, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
     scr = _panel('console.screen', 0.190, 0.107, cx + 0.028, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
-    _panel('console.screen_strip', 0.040, 0.126, cx - 0.105, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
+    _panel('console.screen_strip', 0.040, 0.118, cx - 0.105, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
     _knob('console.volume_knob', cx - 0.105, zs_scr + 0.028, 0.013, 0.012, proud=0.0015)
     _panel('console.screen_btn', 0.026, 0.014, cx - 0.105, zs_scr - 0.012, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     _panel('console.screen_btn2', 0.026, 0.014, cx - 0.105, zs_scr - 0.036, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
@@ -290,6 +272,104 @@ def build_center_stack():
     o, u, v, n = stack_frame(cx - 0.138, 0.700)
     sb = lib.revolve('dash.start_button', [(0, 0), (0.016, 0), (0.016, 0.006), (0.013, 0.008), (0, 0.008)], segments=28, material='metal_satin_dark', origin=o + n * 0.002, direction=n)
     lib.tag(sb, 'dash.start_button', 'dashboard', selectable=False)
+
+
+TOP_OPEN_Z = 0.831                      # frame height of the stack-top opening
+# outline (mm, along the face from the frame centre): flat bottom, top following the brow down toward the passenger
+# end, a round driver end and a tight passenger end
+TOP_OPEN = [(-118, -19), (124, -19), (124, -7), (8, 15), (-112, 20)]
+TOP_OPEN_R = [13, 4, 3, 30, 13]
+
+
+def _rounded_poly_r(corners, radii, n=6):
+    """_rounded_poly with a radius per corner."""
+    out = []
+    m = len(corners)
+    for i in range(m):
+        p, a, b = corners[i], corners[i - 1], corners[(i + 1) % m]
+        r = radii[i]
+        e1, e2 = (a - p).normalized(), (b - p).normalized()
+        th = math.acos(max(-1.0, min(1.0, e1.dot(e2))))
+        t = r / math.tan(th / 2)
+        cen = p + (e1 + e2).normalized() * (r / math.sin(th / 2))
+        t1, t2 = p + e1 * t, p + e2 * t
+        a1 = math.atan2(t1.y - cen.y, t1.x - cen.x)
+        a2 = math.atan2(t2.y - cen.y, t2.x - cen.x)
+        while a2 < a1:
+            a2 += 2 * math.pi
+        for k in range(n + 1):
+            ang = a1 + (a2 - a1) * k / n
+            out.append(Vector((cen.x + r * math.cos(ang), cen.y + r * math.sin(ang))))
+    return out
+
+
+def _top_outline(d_mm=0.0):
+    """Stack-top opening outline in metres, moved inward by d_mm (outward when negative)."""
+    pts = [Vector((u / 1000, v / 1000)) for u, v in TOP_OPEN]
+    if d_mm:
+        pts = _offset_poly(pts, d_mm / 1000)
+    return _rounded_poly_r(pts, [max(0.001, (r - d_mm) / 1000) for r in TOP_OPEN_R])
+
+
+def _stack_face_pt(o, u, v, p2, proud):
+    """Point on the stack face under the frame point o + u*p.x + v*p.y, `proud` metres in front of the face."""
+    q = o + u * p2.x + v * p2.y
+    return Vector((q.x, stack_y(q.x, q.z) - proud, q.z))
+
+
+def _stack_top_opening(cx):
+    o, u, v, n = stack_frame(cx, TOP_OPEN_Z)
+    hole = _top_outline()
+    cutter = lib.extrude_profile('dash.vent_center_cut', hole, o - n * 0.04, u, v, 0.07)
+    lib.add_boolean(bpy_obj('console.stack'), cutter)
+    # lining: walls 0.4 mm inside the cut, facing the opening, closed by a dark back 18 mm in
+    liner = _top_outline(0.4)
+    front = [_stack_face_pt(o, u, v, p, 0.0006) for p in liner]
+    back = [f + Vector((0, 0.018, 0)) for f in front]
+    walls = lib.loft_object('dash.vent_center_floor', [front, back], close_u=True, cap_end=True, material='plastic_black', flip=_loft_needs_flip([front, back], o - front[0]))
+    lib.tag(walls, 'dash.vents.center.floor', 'dashboard', selectable=False)
+    # thin dark gloss lip around the opening (no bright bezel on the car): 2 mm wide, 1 mm proud, conforming to the face
+    ro, ri = _top_outline(-2.0), _top_outline(0.6)
+    rings = [[_stack_face_pt(o, u, v, p, pr) for p in pts] for pts, pr in ((ro, 0.001), (ri, 0.001), (ri, -0.002), (ro, -0.002), (ro, 0.001))]
+    rim = lib.loft_object('dash.vent_center', rings, close_u=True, material='plastic_black_gloss', flip=_loft_needs_flip(rings, n))
+    lib.tag(rim, 'dash.vents.center.lip', 'dashboard', selectable=False)
+
+    def width_at(vv, x_max=1.0):
+        xs = []
+        for i in range(len(hole)):
+            a, b = hole[i], hole[(i + 1) % len(hole)]
+            if (a.y - vv) * (b.y - vv) <= 0 and a.y != b.y:
+                xs.append(a.x + (b.x - a.x) * (vv - a.y) / (b.y - a.y))
+        return (min(xs), min(max(xs), x_max)) if len(xs) >= 2 else (0.0, 0.0)
+
+    def panel(cid, x0, x1, v0, v1, depth, material, r=0.002):
+        """Flat part inside the opening spanning u x0..x1, v v0..v1 (m), its front `depth` behind the face."""
+        cu, cv = (x0 + x1) / 2, (v0 + v1) / 2
+        c = _stack_face_pt(o, u, v, Vector((cu, cv)), -depth)
+        obj = lib.extrude_profile(cid, lib.rounded_rect2d(x1 - x0, v1 - v0, r), c - n * 0.004, u, v, 0.004, material=material)
+        lib.tag(obj, cid, 'dashboard', selectable=False)
+        return c
+    # louvres across the driver part of the opening, tipped down toward the occupant, with a chrome slider tab
+    for j, vv in enumerate((0.0105, 0.0010, -0.0085)):
+        x0, x1 = width_at(vv, x_max=0.024)
+        c = _stack_face_pt(o, u, v, Vector(((x0 + x1) / 2, vv)), -0.006)
+        vane = lib.extrude_profile(f'dash.vent_center_vane{j}', lib.rounded_rect2d(x1 - x0 - 0.003, 0.0032, 0.0012), c, u, (v * 0.94 + n * 0.34).normalized(), 0.0016, material='plastic_black_gloss')
+        lib.tag(vane, f'dash.vents.center.vane{j}', 'dashboard', selectable=False)
+    tab = _stack_face_pt(o, u, v, Vector((-0.030, 0.0005)), -0.0035)
+    knob = lib.extrude_profile('dash.vent_center_knob', lib.rounded_rect2d(0.020, 0.006, 0.002), tab - n * 0.002, u, v, 0.004, material='chrome')
+    lib.tag(knob, 'dash.vents.center.knob', 'dashboard', selectable=False)
+    # PASS AIR BAG lamp module and the hazard button in the narrow passenger part
+    c = panel('dash.hazard_pod', 0.030, 0.086, -0.0155, 0.0060, 0.0015, 'plastic_black_gloss')
+    ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.028, 0.011, 0.0015), c + u * 0.004 + v * 0.001, u, v, 0.0006, material='screen_off')
+    lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
+    c = panel('dash.hazard_button', 0.090, 0.118, -0.0155, -0.0030, 0.0010, 'plastic_black_gloss')
+    hz = lib.extrude_profile('dash.hazard', [Vector((-0.0055, -0.0035)), Vector((0.0055, -0.0035)), Vector((0.0, 0.0045))], c, u, v, 0.0007, material='emblem')
+    lib.tag(hz, 'dash.hazard', 'dashboard', selectable=False)
+
+
+def bpy_obj(name):
+    import bpy
+    return bpy.data.objects[name]
 
 
 def _surface_point(x, z):
@@ -757,11 +837,9 @@ def build_welt():
         rear = [p for p in prof if 0.55 < p.x < 0.70]
         pt = max(rear, key=lambda p: p.y) if rear else prof[5]
         path.append(Vector((x, pt.x - 0.002, pt.y - 0.003)))
-    for x in (-0.11, -0.06, 0.0, 0.06, 0.11):
-        prof = lib.spline_through(profile_at(x), n_per_seg=3)
-        top = [p for p in prof if p.y > 0.845 and p.x < 0.72]
-        pt = min(top, key=lambda p: p.x) if top else prof[4]
-        path.append(Vector((x, pt.x + 0.004, pt.y - 0.003)))
+    # across the stack it runs along the top edge of the (yawed) stack face, just above the top opening (B58 / B21)
+    for x in (-0.115, -0.06, 0.0, 0.06, 0.115):
+        path.append(Vector((x, stack_y(x, 0.852) - 0.001, 0.862)))
     band_top = _band_path(1)[6]
     path.append(band_top)
     path = lib.spline_through(path, n_per_seg=3, tension=0.5)
