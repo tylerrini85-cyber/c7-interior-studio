@@ -507,11 +507,11 @@ def _band_path(side=1):
             u = k / 9
             ctrl.append(p0 * (1 - u) ** 3 + p1 * 3 * u * (1 - u) ** 2 + p2 * 3 * u * u * (1 - u) + p3 * u ** 3)
         ctrl.append(p3)
-        for y in (p3.y - 0.10, 0.12, 0.04, -0.012):
+        for y in (p3.y - 0.10, 0.12, 0.03, -0.04):
             ctrl.append(Vector((CON_X, y, CON_Z)))
     else:
         # runs forward under the stack to the dash lower so no end face shows beside the footwell
-        ctrl = [Vector((-CON_X_DRV, y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.012)]
+        ctrl = [Vector((-CON_X_DRV, y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.04)]
     path = lib.spline_through(ctrl, n_per_seg=6, tension=0.5)
     length = sum((path[i + 1] - path[i]).length for i in range(len(path) - 1))
     return lib.resample_open(path, max(12, int(length / 0.006)))

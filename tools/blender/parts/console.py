@@ -8,10 +8,23 @@ import layout as L
 SHIFTER_VARIANTS = ['automatic', 'manual', 'short_throw']
 
 
+def _ss(a, b, x):
+    t = max(0.0, min(1.0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+
+
+def console_half_w(y):
+    """(driver, passenger) half widths of the console at station y. Full width at the shifter and the armrest's front;
+    behind that it narrows evenly between the seat backs, whose lower bolsters come in to about x 0.15 at y -0.15 and
+    0.095 at y -0.35 (it keeps 5-10 mm clear of them, like the armrest between the bolsters in B60 / B38)."""
+    t = _ss(0.0, -0.32, y)          # one long, even taper from the armrest's front (no waist)
+    return L.CONSOLE_HALF_W + (0.088 - L.CONSOLE_HALF_W) * t, L.CONSOLE_HALF_W_PASS + (0.088 - L.CONSOLE_HALF_W_PASS) * t
+
+
 def _console_section(y):
     """Closed ring (X-Z) of the console body at station y. The passenger side stays flat right out under the grab
     band (its inner face is at about CONSOLE_HALF_W_PASS - 0.01) so no trench shows beside it."""
-    hw, hp = L.CONSOLE_HALF_W, L.CONSOLE_HALF_W_PASS
+    hw, hp = console_half_w(y)
     # top height varies: 0.56 at the shifter area rising to 0.585 under the armrest
     top = L.CONSOLE_TOP_Z + 0.025 * lib.__dict__.get('smooth', lambda a, b, x: max(0, min(1, (x - a) / (b - a))))(0.0, -0.12, y) if False else L.CONSOLE_TOP_Z
     if y < -0.08:
@@ -26,7 +39,7 @@ def _console_section(y):
 
 
 def build_body():
-    ys = [0.60, 0.55, 0.50, 0.46, 0.42, 0.36, 0.28, 0.20, 0.12, 0.04, -0.04, -0.10, -0.2, -0.3, -0.38, -0.44, -0.48, -0.50]
+    ys = [0.60, 0.55, 0.50, 0.46, 0.42, 0.36, 0.28, 0.20, 0.12, 0.04, -0.04, -0.07, -0.10, -0.13, -0.16, -0.19, -0.22, -0.25, -0.28, -0.32, -0.38, -0.44, -0.48, -0.50]
     rings = [_console_section(y) for y in ys]
     body = lib.loft_object('console.main', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=1.5)
     lib.add_subsurf(body, 1)
@@ -93,15 +106,55 @@ def build_cupholders_and_armrest():
     # long closed storage / cupholder lid on the passenger half, from beside the shifter back to the armrest
     lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.110, 0.330, 0.016), (0.068, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
     lib.tag(lid, 'console.cupholder_plate', 'console')
-    # armrest lid: padded leather pad with rounded edges and a stitched seam
-    # wider on the passenger side so the grab band runs straight into its corner (B38)
-    x0, x1 = -0.17, L.CONSOLE_HALF_W_PASS + 0.015
-    lid_c = ((x0 + x1) / 2, (L.ARMREST_Y0 + L.ARMREST_Y1) / 2, L.ARMREST_Z + 0.015)
-    lid = lib.box('console.armrest', (x1 - x0, L.ARMREST_Y1 - L.ARMREST_Y0, 0.048), lid_c, material='leather_black', bevel=0.020, bevel_segments=6)
-    lib.tag(lid, 'console.armrest', 'console')
-    # storage bin front wall under the lid (dark)
-    bin_ = lib.box('console.armrest_bin', (x1 - x0 - 0.04, L.ARMREST_Y1 - L.ARMREST_Y0 - 0.02, 0.03), (lid_c[0], lid_c[1], L.ARMREST_Z - 0.02), material='plastic_black')
-    lib.tag(bin_, 'console.armrest_bin', 'console', selectable=False)
+    _build_armrest()
+
+
+# armrest (owner photo / B60 / B38): a padded rise out of the console top rather than a slab on it. Its front seam
+# slants from just behind the silver plate on the driver side back to behind the storage lid on the passenger side,
+# then turns down the passenger edge in a large radius; ahead of the seam the pad sits just under the console top.
+ARM_SEAM_D = (-0.155, 0.115)     # seam at the driver edge (x, y)
+ARM_SEAM_P = (0.120, 0.025)      # seam where it starts to turn down the passenger side
+ARM_CORNER_R = 0.075
+
+
+def _arm_seam_y(x):
+    (x0, y0), (x1, y1) = ARM_SEAM_D, ARM_SEAM_P
+    y = y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+    if x > x1:
+        d = min(x - x1, ARM_CORNER_R)
+        y -= ARM_CORNER_R - math.sqrt(ARM_CORNER_R ** 2 - d * d)
+    return y
+
+
+def _build_armrest():
+    z_low, r = L.CONSOLE_TOP_Z - 0.004, 0.016
+    y_front, y_rear = ARM_SEAM_D[1] + 0.004, L.ARMREST_Y0
+    rings = []
+    n_y, n_x = 46, 26
+    for k in range(n_y):
+        y = y_front + (y_rear - y_front) * k / (n_y - 1)
+        hd, hp = console_half_w(y)
+        xl, xr = -hd - 0.008, hp + 0.006
+        z_top = 0.628 + 0.008 * (k / (n_y - 1))
+        top = []
+        for i in range(n_x):
+            s = 0.5 - 0.5 * math.cos(math.pi * i / (n_x - 1))     # denser toward the edges
+            x = xl + (xr - xl) * s
+            # rounded nose: rises steeply from the seam and rolls over into the flat top within ~40 mm (owner photo)
+            dn = max(0.0, min(1.0, (_arm_seam_y(x) - y) / 0.042))
+            ramp = math.sqrt(max(0.0, 1.0 - (1.0 - dn) ** 2)) ** 1.3
+            z = z_low + (z_top + 0.005 * (1 - (2 * s - 1) ** 2) - z_low) * ramp
+            dz = min(x - xl, xr - x)                              # roll over the side edges
+            if dz < r:
+                z -= (r - math.sqrt(max(0.0, r * r - (r - dz) ** 2))) * ramp
+            top.append(Vector((x, y, z)))
+        bottom = [Vector((xr - 0.008, y, 0.49)), Vector((xl + 0.008, y, 0.49))]
+        rings.append(top + bottom)
+    # winding chosen so the top faces up (same test as dashboard._loft_needs_flip)
+    up_ok = (rings[0][1] - rings[0][0]).cross(rings[1][0] - rings[0][0]).z > 0
+    arm = lib.loft_object('console.armrest', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=3.0, flip=not up_ok)
+    lib.add_subsurf(arm, 1)
+    lib.tag(arm, 'console.armrest', 'console')
 
 
 def build(shifter='automatic'):

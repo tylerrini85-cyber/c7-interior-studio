@@ -193,3 +193,11 @@ headrest slot, aluminium door handles). Surface-level sculpting and stitching de
 | Vent and pod | A brushed rectangle with a separate gloss pod, crammed against the top edge | One long opening cut into the stack: tall and round at the driver end, narrowing toward the passenger end under the brow. Louvres with a chrome slider fill the left part; the PASS AIR BAG lamp module and the hazard button sit in the narrow right part. The walls are lined, with a dark gloss lip (no bright bezel), and every point follows the curved stack face |
 | Screen surround | 126 mm tall, leaving no room under the opening | 118 mm tall (the 8-inch screen is unchanged), centred 3 mm lower |
 
+## Console to armrest (owner photo / B60 / B38)
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Armrest front | A square-ended slab sitting on the console, with a shadow gap under its front | A padded rise out of the console top: the front seam slants from just behind the silver plate on the driver side to behind the storage lid on the passenger side, then turns down the passenger edge in a large radius; the front is a rounded nose and the sides run down into the console sides |
+| Armrest and seats | The armrest and the back of the console ran into the seat backs' lower bolsters | The console narrows evenly from the armrest's front (0.155 / 0.195 m half widths) to 0.088 m at the rear, keeping 5-10 mm clear of the bolsters (B60 shows the bolsters wrapping the armrest) |
+| Band and driver bolster ends | Stopped short at the armrest's old square front | Run on to y -0.04, under the armrest's rounded corner |
+
