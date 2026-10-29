@@ -224,3 +224,10 @@ Second wheel pass (owner photo of a Stingray wheel straight on, measured against
 | Bottom of the frame | The lower spoke's square top corners stuck out beside the U, and the airbag (and the U around it) came to a point | Lower spoke's top tucked up behind the U with curved, flaring sides; airbag bottom and the U are round |
 | Frame around the airbag | Stopped at the airbag's sides; a broad silver area under each pod | One solid ring around the airbag (outer and inner edges sampled on the same rays from the airbag's centre): a slim strip across the top above the flags, spokes whose lower edges meet the rim only ~30 mm below the centre, and pods reaching to ~9 mm above the silver's lower edge |
 
+Seat clearance (owner screenshot): the passenger seat-back bolster's front tip (x ~0.139 at y -0.15, z 0.50-0.55) ran
+into the armrest's widened front corner, and the console's lower tuck bulged into both seat backs at y -0.25. The console
+now narrows faster just behind the armrest front (layout.console_half_w: 0.130 m half width by y -0.14, 0.088 m by
+-0.32), the bands curve in with that edge and end by y -0.11, the armrest only widens over them while they run under it,
+and the tuck never stands outside the side. `tools/blender/check_clearance.py` tests every seat vertex against the
+console parts and every console vertex against the seats; it reports none either way.
+

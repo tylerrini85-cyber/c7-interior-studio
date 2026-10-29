@@ -13,12 +13,7 @@ def _ss(a, b, x):
     return t * t * (3 - 2 * t)
 
 
-def console_half_w(y):
-    """(driver, passenger) half widths of the console at station y. Full width at the shifter and the armrest's front;
-    behind that it narrows evenly between the seat backs, whose lower bolsters come in to about x 0.15 at y -0.15 and
-    0.095 at y -0.35 (it keeps 5-10 mm clear of them, like the armrest between the bolsters in B60 / B38)."""
-    t = _ss(0.0, -0.32, y)          # one long, even taper from the armrest's front (no waist)
-    return L.CONSOLE_HALF_W + (0.088 - L.CONSOLE_HALF_W) * t, L.CONSOLE_HALF_W_PASS + (0.088 - L.CONSOLE_HALF_W_PASS) * t
+console_half_w = L.console_half_w
 
 
 def _console_section(y):
@@ -35,7 +30,7 @@ def _console_section(y):
     w = L.seat_zone(y)
     def lower(h):
         full = [(h, 0.46), (h, 0.30), (h + 0.02, base_z + 0.02), (h + 0.06, base_z)]
-        tuck = [(h - 0.002, 0.45), (0.13, L.SEAT_SIDE_Z - 0.005), (0.09, 0.33), (0.09, base_z)]
+        tuck = [(h - 0.002, 0.45), (min(0.13, h - 0.006), L.SEAT_SIDE_Z - 0.005), (min(0.09, h - 0.012), 0.33), (min(0.09, h - 0.012), base_z)]
         return [(a[0] * (1 - w) + b[0] * w, a[1] * (1 - w) + b[1] * w) for a, b in zip(full, tuck)]
     lp, ld = lower(hp), lower(hw)
     pts = [(-x, z) for x, z in reversed(ld)] + [
@@ -141,14 +136,16 @@ def _build_armrest():
     for k in range(n_y):
         y = y_front + (y_rear - y_front) * k / (n_y - 1)
         hd, hp = console_half_w(y)
-        # sides 3-5 mm outside the console; behind the seam they widen to stand just outside the console bands (outer
-        # faces at |x| 0.215 / 0.161), which run on under the pad, so the bands disappear into the armrest instead of
-        # ending in the open (owner photo). Ahead of the seam they stay inside the bands, hidden.
-        ext = 1.0 - _ss(-0.08, -0.20, y)
+        # sides 3-5 mm outside the console; behind the seam they widen to stand just outside the console bands, which
+        # run on under the pad, so the bands disappear into the armrest instead of ending in the open (owner photo).
+        # Ahead of the seam they stay inside the bands, hidden.
+        # the bands follow the console edge (outer faces at hp + 0.020 / hd + 0.006) and end by y -0.11; the sides only
+        # widen over them while they run under the pad, so nothing stands out where the seat-back bolsters come in
+        ext = 1.0 - _ss(-0.08, -0.125, y)
         wp = _ss(_arm_seam_y(hp), _arm_seam_y(hp) - 0.06, y)
         wd = _ss(_arm_seam_y(-hd), _arm_seam_y(-hd) - 0.06, y)
-        xr = hp + 0.005 + max(0.0, 0.218 - hp - 0.005) * ext * wp
-        xl = -hd - 0.003 - max(0.0, 0.164 - hd - 0.003) * ext * wd
+        xr = hp + 0.005 + 0.018 * ext * wp
+        xl = -hd - 0.003 - 0.006 * ext * wd
         z_top = 0.628 + 0.008 * (k / (n_y - 1))
         top = []
         for i in range(n_x):

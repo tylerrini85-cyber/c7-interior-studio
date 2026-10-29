@@ -111,3 +111,18 @@ def seat_zone(y):
         return t * t * (3 - 2 * t)
     return ss(CUSHION_Y1 + 0.07, CUSHION_Y1 + 0.03, y) * ss(CUSHION_Y0 - 0.07, CUSHION_Y0 - 0.03, y)
 
+
+def console_half_w(y):
+    """(driver, passenger) half widths of the console at station y. Full width at the shifter and the armrest's front;
+    behind that it narrows between the seat backs, keeping 5-10 mm clear of their lower bolsters, whose front tips come
+    in to about x 0.139 at y -0.15 and 0.10 by y -0.30 (the bolsters wrap the armrest in B60 / B38). Shared by the
+    console body, the armrest and the console bands, which all follow this edge."""
+    def ss(a, b, x):
+        t = max(0.0, min(1.0, (x - a) / (b - a)))
+        return t * t * (3 - 2 * t)
+    t1, t2 = ss(-0.02, -0.14, y), ss(-0.14, -0.32, y)
+    mid, rear = 0.130, 0.088
+    hd = CONSOLE_HALF_W + (mid - CONSOLE_HALF_W) * t1 + (rear - mid) * t2
+    hp = CONSOLE_HALF_W_PASS + (mid - CONSOLE_HALF_W_PASS) * t1 + (rear - mid) * t2
+    return hd, hp
+

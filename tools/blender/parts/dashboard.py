@@ -509,11 +509,12 @@ def _band_path(side=1):
             u = k / 9
             ctrl.append(p0 * (1 - u) ** 3 + p1 * 3 * u * (1 - u) ** 2 + p2 * 3 * u * u * (1 - u) + p3 * u ** 3)
         ctrl.append(p3)
-        for y in (p3.y - 0.10, 0.12, 0.03, -0.06, -0.12):
-            ctrl.append(Vector((CON_X, y, CON_Z)))
+        # along the console edge, curving in with it where it narrows between the seat backs (layout.console_half_w)
+        for y in (p3.y - 0.10, 0.12, 0.03, -0.03, -0.07, -0.11):
+            ctrl.append(Vector((CON_X + L.console_half_w(y)[1] - L.CONSOLE_HALF_W_PASS, y, CON_Z)))
     else:
         # runs forward under the stack to the dash lower so no end face shows beside the footwell
-        ctrl = [Vector((-CON_X_DRV, y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.02, -0.12)]
+        ctrl = [Vector((-(CON_X_DRV + L.console_half_w(y)[0] - L.CONSOLE_HALF_W), y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.03, -0.07, -0.11)]
     path = lib.spline_through(ctrl, n_per_seg=6, tension=0.5)
     length = sum((path[i + 1] - path[i]).length for i in range(len(path) - 1))
     return lib.resample_open(path, max(12, int(length / 0.006)))
@@ -540,7 +541,7 @@ def _band_rings(path, side=1):
         a = b.cross(t).normalized() if side > 0 else t.cross(b).normalized()
         g = _sm(0.0, 0.09, along[i] - along[i3]) if (side > 0 and i >= i3) else (0.0 if side > 0 else 1.0)
         # toward its end under the armrest the wall's bottom rises inside the armrest (above its lip) so no stub shows
-        e = _sm(0.0, -0.10, c.y)
+        e = _sm(-0.02, -0.09, c.y)
         bottom = _wall_bottom(c.x + side * BAND_CON[1], c.y) * (1 - e) + 0.50 * e
         ha_con = (CON_Z + CON_TOP - bottom) / 2 if g > 0 else BAND_CON[0]
         ha = BAND_UP[0] * (1 - g) + ha_con * g
