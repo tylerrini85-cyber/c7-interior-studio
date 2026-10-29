@@ -36,7 +36,7 @@ def _console_section(y):
     lp, ld = lower(hp), lower(hw)
     pts = [(-x, z) for x, z in reversed(ld)] + [
         (-hw + 0.02, top - 0.02), (-hw + 0.05, top),
-        (-hw + 0.10, top + 0.003), (0.0, top + 0.004), (hp - 0.10, top + 0.003), (hp - 0.006, top), (hp - 0.002, top - 0.02),
+        (-0.35 * hw, top + 0.003), (0.0, top + 0.004), (0.35 * hp, top + 0.003), (hp - 0.006, top), (hp - 0.002, top - 0.02),
     ] + lp + [(0.0, base_z - 0.02)]
     return [Vector((x, y, z)) for x, z in pts]
 
@@ -48,10 +48,10 @@ def build_body():
     lib.add_subsurf(body, 1)
     lib.tag(body, 'console.main', 'console')
     # brushed plate on the driver half: carries the shifter, the drive-mode dial and the EPB (B37 / B44 / B38)
-    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.122, 0.340, 0.018), (-0.052, 0.300, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
+    plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.092, 0.340, 0.018), (-0.044, 0.300, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
     lib.tag(plate, 'console.trim', 'console')
     # small switch square at the front of the passenger half, beside the shifter
-    sq = lib.extrude_profile('console.small_switches', lib.rounded_rect2d(0.050, 0.042, 0.006), (0.090, 0.420, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    sq = lib.extrude_profile('console.small_switches', lib.rounded_rect2d(0.040, 0.042, 0.006), (0.056, 0.420, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
     lib.tag(sq, 'console.small_switches', 'console', selectable=False)
 
 
@@ -96,19 +96,19 @@ def build_shifter(variant='automatic'):
 
 def build_dial_and_switches():
     # drive-mode selector dial and the EPB switch behind the shifter, side by side on the brushed plate (B37 / B44)
-    c = Vector((-0.080, L.DIAL_Y, L.CONSOLE_TOP_Z + 0.010))
-    dial = lib.revolve('console.drive_mode_dial', [(0.0, 0.0), (0.026, 0.0), (0.028, 0.014), (0.025, 0.020), (0.011, 0.022), (0.0, 0.022)], segments=36, material='metal_satin_dark', origin=c, direction=(0, 0, 1))
+    c = Vector((-0.060, L.DIAL_Y, L.CONSOLE_TOP_Z + 0.010))
+    dial = lib.revolve('console.drive_mode_dial', [(0.0, 0.0), (0.019, 0.0), (0.021, 0.014), (0.018, 0.020), (0.009, 0.022), (0.0, 0.022)], segments=36, material='metal_satin_dark', origin=c, direction=(0, 0, 1))
     lib.tag(dial, 'console.drive_mode_dial', 'console')
-    base = lib.revolve('console.drive_mode_base', [(0.0, 0.0), (0.034, 0.0), (0.036, 0.004), (0.0, 0.004)], segments=36, material='plastic_black', origin=c - Vector((0, 0, 0.003)), direction=(0, 0, 1))
+    base = lib.revolve('console.drive_mode_base', [(0.0, 0.0), (0.025, 0.0), (0.026, 0.004), (0.0, 0.004)], segments=36, material='plastic_black', origin=c - Vector((0, 0, 0.003)), direction=(0, 0, 1))
     lib.tag(base, 'console.drive_mode_base', 'console', selectable=False)
-    epb = lib.extrude_profile('console.epb', lib.rounded_rect2d(0.026, 0.040, 0.005), (-0.025, L.DIAL_Y, L.CONSOLE_TOP_Z + 0.010), (1, 0, 0), (0, 1, 0), 0.007, material='plastic_black', bevel=0.002)
+    epb = lib.extrude_profile('console.epb', lib.rounded_rect2d(0.022, 0.036, 0.005), (-0.018, L.DIAL_Y, L.CONSOLE_TOP_Z + 0.010), (1, 0, 0), (0, 1, 0), 0.007, material='plastic_black', bevel=0.002)
     lib.tag(epb, 'console.epb', 'console', selectable=False)
 
 
 def build_cupholders_and_armrest():
     # long closed storage / cupholder lid on the passenger half, from beside the shifter back to the armrest
     # wide enough that its passenger edge sits right beside the console band (owner photos: no strip of bare top between)
-    lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.163, 0.330, 0.016), (0.0965, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.084, 0.330, 0.016), (0.050, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
     lib.tag(lid, 'console.cupholder_plate', 'console')
     _build_armrest()
 
@@ -116,9 +116,9 @@ def build_cupholders_and_armrest():
 # armrest (owner photo / B60 / B38): a padded rise out of the console top rather than a slab on it. Its front seam
 # slants from just behind the silver plate on the driver side back to behind the storage lid on the passenger side,
 # then turns down the passenger edge in a large radius; ahead of the seam the pad sits just under the console top.
-ARM_SEAM_D = (-0.155, 0.115)     # seam at the driver edge (x, y)
-ARM_SEAM_P = (0.120, 0.025)      # seam where it starts to turn down the passenger side
-ARM_CORNER_R = 0.075
+ARM_SEAM_D = (-0.105, 0.115)     # seam at the driver edge (x, y)
+ARM_SEAM_P = (0.070, 0.035)      # seam where it starts to turn down the passenger side
+ARM_CORNER_R = 0.050
 
 
 def _arm_seam_y(x):
@@ -146,8 +146,8 @@ def _build_armrest():
         ext = 1.0 - _ss(-0.08, -0.125, y)
         wp = _ss(_arm_seam_y(hp), _arm_seam_y(hp) - 0.06, y)
         wd = _ss(_arm_seam_y(-hd), _arm_seam_y(-hd) - 0.06, y)
-        xr = hp + 0.005 + 0.018 * ext * wp
-        xl = -hd - 0.003 - 0.006 * ext * wd
+        xr = hp + 0.005 + 0.012 * ext * wp
+        xl = -hd - 0.003 - 0.014 * ext * wd
         z_top = 0.628 + 0.008 * (k / (n_y - 1))
         top = []
         for i in range(n_x):

@@ -60,3 +60,27 @@ for o in solids:
 for (s_, c), r in sorted(res2.items()):
     print(f'REV {s_:28s} in {c:40s} n={r[0]:5d} y[{r[1]:.3f},{r[2]:.3f}] z[{r[3]:.3f},{r[4]:.3f}] |x|[{r[5]:.3f},{r[6]:.3f}]')
 print('DONE2', len(res2))
+# plan view: along the seat cushions, how far the console parts reach outboard versus where the cushion's top starts
+print('PLAN  y      console|x|max   cushion-top|x|min (z>0.33)   overlap')
+cons = {}
+for o in solids:
+    vs, fs = world_mesh(o)
+    for p in vs:
+        if -0.26 <= p.y <= 0.26:
+            k = round(p.y * 20) / 20
+            cons[k] = max(cons.get(k, 0.0), abs(p.x))
+seat = {}
+for o in bpy.data.objects:
+    if o.type == 'MESH' and o.name.startswith('seats.') and '.base.' in o.name:
+        vs, fs = world_mesh(o)
+        for p in vs:
+            if -0.26 <= p.y <= 0.26 and p.z > 0.33:
+                k = round(p.y * 20) / 20
+                seat[k] = min(seat.get(k, 9.0), abs(p.x))
+worst = 0.0
+for k in sorted(cons):
+    if k in seat:
+        ov = cons[k] - seat[k]
+        worst = max(worst, ov)
+        print(f'PLAN {k:+.2f}   {cons[k]:.3f}          {seat[k]:.3f}                     {ov * 1000:+.0f} mm')
+print(f'PLAN worst overlap {worst * 1000:.0f} mm')

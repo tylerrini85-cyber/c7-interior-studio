@@ -11,7 +11,7 @@ T_HOOD = [(1.08, 0.82), (0.96, 0.85), (0.84, 0.875), (0.72, 0.885), (0.63, 0.885
 T_STACK = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.68, 0.862), (0.66, 0.856), (0.655, 0.838), (0.65, 0.77), (0.645, 0.71), (0.64, 0.65), (0.63, 0.61), (0.60, 0.57), (0.55, 0.51)]
 T_PASS = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.64, 0.86), (0.615, 0.835), (0.61, 0.79), (0.625, 0.73), (0.64, 0.68), (0.66, 0.60), (0.69, 0.52), (0.74, 0.45), (0.82, 0.41)]
 
-STACK_X0, STACK_X1 = -0.165, 0.19
+STACK_X0, STACK_X1 = -0.135, 0.14
 
 
 def smoothstep(e0, e1, x):
@@ -141,11 +141,11 @@ def build_column():
 # ---------------------------------------------------------------------------
 # centre stack: one solid, rearward-leaning body from the dash top down into the console (IMG_4499/4495/4506)
 # ---------------------------------------------------------------------------
-STACK_CX = 0.01
+STACK_CX = 0.0
 # (z, y) of the occupant-facing stack surface at the stack centreline, bottom (waterfall into the console) to top
 # waterfall at the foot, then one straight plane (slope 0.69) from z 0.60 up to the dash lip (IMG: flat angled stack face)
 STACK_FACE = [(0.545, 0.46), (0.552, 0.51), (0.558, 0.55), (0.566, 0.578), (0.60, 0.585), (0.64, 0.594), (0.70, 0.606), (0.76, 0.618), (0.81, 0.628), (0.845, 0.636), (0.852, 0.648)]  # ~80 deg face, waterfall only at the foot
-STACK_HALF_W = [(0.545, 0.152), (0.60, 0.156), (0.68, 0.161), (0.76, 0.165), (0.862, 0.168)]
+STACK_HALF_W = [(0.545, 0.108), (0.60, 0.112), (0.68, 0.118), (0.76, 0.123), (0.862, 0.127)]   # narrow enough for the seats
 
 
 def _interp(table, z):
@@ -225,18 +225,17 @@ def build_center_stack():
     _stack_top_opening(cx)
     # ---- infotainment: gloss surround (wider on the left for the volume knob + SCREEN button), 8-inch screen
     zs_scr = 0.749
-    bez = _panel('console.screen_bezel', 0.218, 0.118, cx + 0.028, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
-    scr = _panel('console.screen', 0.190, 0.107, cx + 0.028, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
-    _panel('console.screen_strip', 0.040, 0.118, cx - 0.105, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
-    _knob('console.volume_knob', cx - 0.105, zs_scr + 0.028, 0.013, 0.012, proud=0.0015)
-    _panel('console.screen_btn', 0.026, 0.014, cx - 0.105, zs_scr - 0.012, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
-    _panel('console.screen_btn2', 0.026, 0.014, cx - 0.105, zs_scr - 0.036, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    bez = _panel('console.screen_bezel', 0.180, 0.118, cx + 0.020, zs_scr, 0.0012, 0.012, 'plastic_black_gloss', 'console', bevel=0.001, r=0.006)
+    scr = _panel('console.screen', 0.158, 0.092, cx + 0.020, zs_scr, 0.0022, 0.001, 'screen_off', 'electronics', r=0.003)
+    _panel('console.screen_strip', 0.034, 0.118, cx - 0.094, zs_scr, 0.0012, 0.012, 'plastic_black', 'console', selectable=False, r=0.005)
+    _knob('console.volume_knob', cx - 0.094, zs_scr + 0.030, 0.012, 0.012, proud=0.0015)
+    _panel('console.screen_btn', 0.024, 0.013, cx - 0.094, zs_scr - 0.008, 0.003, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- control block under the screen, laid out from the reference photo:
     #   media row tight under the bezel: RADIO MEDIA home (MENU) prev next BACK, two large knobs at the panel sides
     #   spanning the media row and the first climate row; climate row A: A/C face face+feet rear-defrost SYNC;
     #   climate row B under the middle three: feet feet+defrost front-defrost; badge panel below.
     zc = 0.628
-    _panel('console.hvac', 0.310, 0.122, cx, zc, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
+    _panel('console.hvac', 0.232, 0.122, cx, zc, 0.0012, 0.006, 'plastic_black', 'console', r=0.006)
     # Everything below is placed in the panel's own frame (along-face mm from the panel centre), which is exactly how
     # the runtime label texture (controlPanelTexture) maps onto the panel, so caps and labels line up.
     po, pu, pv, pn = stack_frame(cx, zc)
@@ -245,40 +244,41 @@ def build_center_stack():
 
     def at(x_mm, z_mm, proud):
         return po + pu * (x_mm / 1000) + pv * ((z_mm - 628) / 1000) + pn * proud
-    for k, x_mm in enumerate((-128, 128)):
+    for k, x_mm in enumerate((-97, 97)):
         c0 = at(x_mm, 650, 0.0015)
-        kn = lib.revolve(f'console.hvac_knob_{k}', [(0, 0), (0.021, 0), (0.021, 0.012), (0.019, 0.016), (0.0, 0.016)], segments=36, material='chrome', origin=c0, direction=pn)
+        kn = lib.revolve(f'console.hvac_knob_{k}', [(0, 0), (0.0165, 0), (0.0165, 0.012), (0.0148, 0.016), (0.0, 0.016)], segments=36, material='chrome', origin=c0, direction=pn)
         lib.tag(kn, f'console.hvac_knob.{"left" if k == 0 else "right"}', 'trim', selectable=False)
-        cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.0165, 0), (0.0165, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=c0 + pn * 0.016, direction=pn)
+        cap = lib.revolve(f'console.hvac_knob_cap_{k}', [(0, 0), (0.0128, 0), (0.0128, 0.001), (0.0, 0.001)], segments=36, material='plastic_black', origin=c0 + pn * 0.016, direction=pn)
         lib.tag(cap, f'console.hvac_knob_cap.{k}', 'console', selectable=False)
     # raised key caps (B58 / B21): media row RADIO MEDIA home (MENU) prev next BACK; two climate rows of six
-    keys = [(-78 + 26 * i, 666, 22, 13) for i in range(7) if i != 3]
-    keys += [((-79 + 26 * i) if i < 3 else (27 + 26 * (i - 3)), z, 22, 14) for z in (636, 613) for i in range(6)]
+    keys = [(-58.5 + 19.5 * i, 666, 17, 13) for i in range(7) if i != 3]
+    keys += [((-59.5 + 19.5 * i) if i < 3 else (20.5 + 19.5 * (i - 3)), z, 17, 14) for z in (636, 613) for i in range(6)]
     for j, (x_mm, z_mm, w_mm, h_mm) in enumerate(keys):
         kc = lib.extrude_profile(f'console.key_{j}', lib.rounded_rect2d(w_mm / 1000, h_mm / 1000, 0.0025), at(x_mm, z_mm, PANEL_FRONT), pu, pv, CAP, material='plastic_black_gloss', bevel=0.0008, bevel_segments=2)
         lib.tag(kc, f'console.key.{j}', 'console', selectable=False)
-    menu = lib.revolve('console.key_menu', [(0, 0), (0.012, 0), (0.012, CAP - 0.0006), (0.0112, CAP), (0.0, CAP)], segments=36, material='plastic_black_gloss', origin=at(0, 666, PANEL_FRONT), direction=pn)
+    menu = lib.revolve('console.key_menu', [(0, 0), (0.0095, 0), (0.0095, CAP - 0.0006), (0.0088, CAP), (0.0, CAP)], segments=36, material='plastic_black_gloss', origin=at(0, 666, PANEL_FRONT), direction=pn)
     lib.tag(menu, 'console.key.menu', 'console', selectable=False)
     # chrome Y between the climate halves: arms rise toward the media row, stem drops below the second row
-    ypath = [at(-11, 650, PANEL_FRONT + 0.0016), at(0, 625, PANEL_FRONT + 0.0016), at(11, 650, PANEL_FRONT + 0.0016)]
+    ypath = [at(-8.5, 650, PANEL_FRONT + 0.0016), at(0, 625, PANEL_FRONT + 0.0016), at(8.5, 650, PANEL_FRONT + 0.0016)]
     y1 = lib.sweep_tube('console.climate_y_arms', ypath, 0.0017, n=10, cap=True, material='chrome', up_hint=pn)
     lib.tag(y1, 'console.climate_y.arms', 'trim', selectable=False)
     y2 = lib.sweep_tube('console.climate_y_stem', [at(0, 625, PANEL_FRONT + 0.0016), at(0, 600, PANEL_FRONT + 0.0016)], 0.0017, n=10, cap=True, material='chrome', up_hint=pn)
     lib.tag(y2, 'console.climate_y.stem', 'trim', selectable=False)
     # CORVETTE badge plate left of centre and a small switch on the right, at the foot of the control panel
-    _panel('console.badge_strip', 0.075, 0.011, cx - 0.045, 0.584, 0.0035, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.002)
-    _panel('console.foot_switch', 0.030, 0.016, cx + 0.085, 0.584, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
+    _panel('console.badge_strip', 0.062, 0.011, cx - 0.038, 0.584, 0.0035, 0.004, 'metal_brushed', 'trim', selectable=False, r=0.002)
+    _panel('console.foot_switch', 0.026, 0.016, cx + 0.070, 0.584, 0.004, 0.002, 'plastic_black_gloss', 'console', selectable=False, r=0.003)
     # ---- engine start button on the driver edge of the stack beside the screen (IMG_4495)
-    o, u, v, n = stack_frame(cx - 0.138, 0.700)
-    sb = lib.revolve('dash.start_button', [(0, 0), (0.016, 0), (0.016, 0.006), (0.013, 0.008), (0, 0.008)], segments=28, material='metal_satin_dark', origin=o + n * 0.002, direction=n)
+    # (in the bottom of the button column left of the screen, under the SCREEN key)
+    o, u, v, n = stack_frame(cx - 0.094, zs_scr - 0.036)
+    sb = lib.revolve('dash.start_button', [(0, 0), (0.0125, 0), (0.0125, 0.005), (0.010, 0.007), (0, 0.007)], segments=28, material='metal_satin_dark', origin=o + n * 0.002, direction=n)
     lib.tag(sb, 'dash.start_button', 'dashboard', selectable=False)
 
 
 TOP_OPEN_Z = 0.831                      # frame height of the stack-top opening
 # outline (mm, along the face from the frame centre): flat bottom, top following the brow down toward the passenger
 # end, a round driver end and a tight passenger end
-TOP_OPEN = [(-118, -19), (124, -19), (124, -7), (8, 15), (-112, 20)]
-TOP_OPEN_R = [13, 4, 3, 30, 13]
+TOP_OPEN = [(-94, -19), (99, -19), (99, -7), (6, 15), (-90, 20)]
+TOP_OPEN_R = [13, 4, 3, 24, 13]
 
 
 def _rounded_poly_r(corners, radii, n=6):
@@ -351,18 +351,18 @@ def _stack_top_opening(cx):
         return c
     # louvres across the driver part of the opening, tipped down toward the occupant, with a chrome slider tab
     for j, vv in enumerate((0.0105, 0.0010, -0.0085)):
-        x0, x1 = width_at(vv, x_max=0.024)
+        x0, x1 = width_at(vv, x_max=0.019)
         c = _stack_face_pt(o, u, v, Vector(((x0 + x1) / 2, vv)), -0.006)
         vane = lib.extrude_profile(f'dash.vent_center_vane{j}', lib.rounded_rect2d(x1 - x0 - 0.003, 0.0032, 0.0012), c, u, (v * 0.94 + n * 0.34).normalized(), 0.0016, material='plastic_black_gloss')
         lib.tag(vane, f'dash.vents.center.vane{j}', 'dashboard', selectable=False)
-    tab = _stack_face_pt(o, u, v, Vector((-0.030, 0.0005)), -0.0035)
+    tab = _stack_face_pt(o, u, v, Vector((-0.024, 0.0005)), -0.0035)
     knob = lib.extrude_profile('dash.vent_center_knob', lib.rounded_rect2d(0.020, 0.006, 0.002), tab - n * 0.002, u, v, 0.004, material='chrome')
     lib.tag(knob, 'dash.vents.center.knob', 'dashboard', selectable=False)
     # PASS AIR BAG lamp module and the hazard button in the narrow passenger part
-    c = panel('dash.hazard_pod', 0.030, 0.086, -0.0155, 0.0060, 0.0015, 'plastic_black_gloss')
-    ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.028, 0.011, 0.0015), c + u * 0.004 + v * 0.001, u, v, 0.0006, material='screen_off')
+    c = panel('dash.hazard_pod', 0.024, 0.069, -0.0155, 0.0060, 0.0015, 'plastic_black_gloss')
+    ab = lib.extrude_profile('dash.airbag_lamp', lib.rounded_rect2d(0.024, 0.011, 0.0015), c + u * 0.003 + v * 0.001, u, v, 0.0006, material='screen_off')
     lib.tag(ab, 'dash.airbag_lamp', 'electronics', selectable=False)
-    c = panel('dash.hazard_button', 0.090, 0.118, -0.0155, -0.0030, 0.0010, 'plastic_black_gloss')
+    c = panel('dash.hazard_button', 0.073, 0.095, -0.0155, -0.0030, 0.0010, 'plastic_black_gloss')
     hz = lib.extrude_profile('dash.hazard', [Vector((-0.0055, -0.0035)), Vector((0.0055, -0.0035)), Vector((0.0, 0.0045))], c, u, v, 0.0007, material='emblem')
     lib.tag(hz, 'dash.hazard', 'dashboard', selectable=False)
 
@@ -427,7 +427,7 @@ def build_outer_vents():
 # cockpit wrap, which carries on in the same line along the console's passenger edge into the armrest; the fin runs
 # down into the console top, and its passenger-facing back is leather (the colour seen through the slot).
 # ---------------------------------------------------------------------------
-WING_DIR = Vector((0.45, -1.0, 0.0)).normalized()    # away from the stack edge: mostly toward the occupants, partly outboard
+WING_DIR = Vector((0.20, -1.0, 0.0)).normalized()    # away from the stack edge: almost straight toward the occupants
 
 
 def _stack_edge(z):
@@ -438,7 +438,7 @@ def _stack_edge(z):
 def _wing_width(z):
     """Brushed face width measured from the stack edge to the roll: ~22 mm at the top, ~58 mm at the slot."""
     t = max(0.0, min(1.0, (0.850 - z) / 0.230))
-    return 0.028 + 0.040 * (t * t * (3 - 2 * t))
+    return 0.028 + 0.032 * (t * t * (3 - 2 * t))
 
 
 
@@ -449,10 +449,10 @@ def _wing_width(z):
 # the console carries the same bolster. All sections come from _band_ring so there are no seams or lumps.
 # ---------------------------------------------------------------------------
 BAND_UP = (0.023, 0.013)     # upright: half width along WING_DIR, half thickness toward the cabin
-BAND_CON = (0.2115, 0.015)   # console: nominal half height of the padded side wall (its bottom follows the carpet), half width
+BAND_CON = (0.2115, 0.012)   # console: nominal half height of the padded side wall (its bottom follows the carpet), half width
                              # (about the upright's thickness, so the band reads as one even strip from above)
 CON_TOP = 0.025              # console side wall rises this far above the band's centre line
-CON_X_DRV, CON_Z = 0.146, 0.558  # driver console bolster centre line (|x|) and the bolsters' centre height
+CON_X_DRV, CON_Z = L.CONSOLE_HALF_W + 0.002, 0.558  # driver console bolster centre line (|x|) and the bolsters' centre height
 BEND_Z0, BEND_Z1 = 0.612, 0.552
 
 
@@ -488,7 +488,7 @@ def _band_centre_upright(z, ha):
 
 
 # passenger band x on the console: the same as at the stack's foot, so the band runs on in one line (B38 / owner photo)
-CON_X = _band_centre_upright(BEND_Z0, BAND_UP[0]).x
+CON_X = L.CONSOLE_HALF_W_PASS + 0.002     # band centre on the console: inner face 10 mm inside the console's edge
 
 
 def _band_path(side=1):
@@ -511,10 +511,10 @@ def _band_path(side=1):
         ctrl.append(p3)
         # along the console edge, curving in with it where it narrows between the seat backs (layout.console_half_w)
         for y in (p3.y - 0.10, 0.12, 0.03, -0.03, -0.07, -0.11):
-            ctrl.append(Vector((CON_X + L.console_half_w(y)[1] - L.CONSOLE_HALF_W_PASS, y, CON_Z)))
+            ctrl.append(Vector((L.console_half_w(y)[1] + 0.002, y, CON_Z)))
     else:
         # runs forward under the stack to the dash lower so no end face shows beside the footwell
-        ctrl = [Vector((-(CON_X_DRV + L.console_half_w(y)[0] - L.CONSOLE_HALF_W), y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.03, -0.07, -0.11)]
+        ctrl = [Vector((-(L.console_half_w(y)[0] + 0.002), y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.03, -0.07, -0.11)]
     path = lib.spline_through(ctrl, n_per_seg=6, tension=0.5)
     length = sum((path[i + 1] - path[i]).length for i in range(len(path) - 1))
     return lib.resample_open(path, max(12, int(length / 0.006)))
@@ -665,7 +665,7 @@ def build_trim_band():
 # into it: a rounded trapezoid near the stack and a taller rounded square at the door end with the two seat
 # switches inside the bottom of its bezel.
 # ---------------------------------------------------------------------------
-PAD_X0, PAD_X1 = 0.178, 0.692
+PAD_X0, PAD_X1 = 0.150, 0.692
 PAD_ZT, PAD_ZB = 0.836, 0.660        # crease at the dash top / underside of the shelf
 
 
@@ -844,7 +844,7 @@ def build_welt():
         pt = max(rear, key=lambda p: p.y) if rear else prof[5]
         path.append(Vector((x, pt.x - 0.002, pt.y - 0.003)))
     # across the stack it runs along the top edge of the (yawed) stack face, just above the top opening (B58 / B21)
-    for x in (-0.115, -0.06, 0.0, 0.06, 0.115):
+    for x in (-0.095, -0.05, 0.0, 0.05, 0.095):
         path.append(Vector((x, stack_y(x, 0.852) - 0.001, 0.862)))
     band_top = _band_path(1)[6]
     path.append(band_top)

@@ -543,7 +543,8 @@ let panelTex: THREE.Texture | null = null;
  *  at stack height 0.628; the knob openings are left clear at x = +-128 mm. */
 export function controlPanelTexture(): THREE.Texture {
   if (panelTex) return panelTex;
-  const w = 1240, h = 488, ppm = 4;
+  // 232 mm x 122 mm panel at 4 px/mm (the decal stretches the canvas over the panel's face)
+  const w = 928, h = 488, ppm = 4;
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const ctx = c.getContext('2d')!;
   ctx.clearRect(0, 0, w, h);
@@ -556,7 +557,7 @@ export function controlPanelTexture(): THREE.Texture {
     ctx.strokeStyle = 'rgba(80,80,86,0.9)'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = '#e6e8ea'; ctx.strokeStyle = '#e6e8ea';
     if (glyph) { glyph(x, y - (label ? 7 : 0)); }
-    if (label) { ctx.font = `${glyph ? 'bold 15px' : 'bold 19px'} "Segoe UI", Roboto, Helvetica, Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, x, y + (glyph ? 18 : 0)); }
+    if (label) { ctx.font = `${glyph ? 'bold 13px' : 'bold 15px'} "Segoe UI", Roboto, Helvetica, Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(label, x, y + (glyph ? 18 : 0)); }
   };
   const person = (cx: number, cy: number, arrows: 'face' | 'both' | 'feet') => {
     ctx.lineWidth = 3; ctx.lineCap = 'round';
@@ -577,36 +578,36 @@ export function controlPanelTexture(): THREE.Texture {
     ctx.beginPath(); ctx.moveTo(cx - 6 * dir, cy - 8); ctx.lineTo(cx + 6 * dir, cy); ctx.lineTo(cx - 6 * dir, cy + 8); ctx.closePath(); ctx.fill();
     if (bar) ctx.fillRect(cx + 7 * dir - 1, cy - 8, 2, 16);
   };
-  // media row (z 666 mm): RADIO MEDIA home MENU prev next BACK at 26 mm pitch from -78 mm
+  // media row (z 666 mm): RADIO MEDIA home MENU prev next BACK at 19.5 mm pitch from -58.5 mm
   const zm = 666;
-  const mx = (i: number) => X(-78 + 26 * i);  // RADIO MEDIA home (MENU) prev next BACK
-  key(mx(0), Y(zm), 22, 13, 'RADIO');
-  key(mx(1), Y(zm), 22, 13, 'MEDIA');
-  key(mx(2), Y(zm), 22, 13, '', (cx, cy) => { ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - 12, cy + 2); ctx.lineTo(cx, cy - 9); ctx.lineTo(cx + 12, cy + 2); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx - 8, cy + 10); ctx.lineTo(cx + 8, cy + 10); ctx.lineTo(cx + 8, cy); ctx.stroke(); });
+  const mx = (i: number) => X(-58.5 + 19.5 * i);  // RADIO MEDIA home (MENU) prev next BACK
+  key(mx(0), Y(zm), 17, 13, 'RADIO');
+  key(mx(1), Y(zm), 17, 13, 'MEDIA');
+  key(mx(2), Y(zm), 17, 13, '', (cx, cy) => { ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx - 12, cy + 2); ctx.lineTo(cx, cy - 9); ctx.lineTo(cx + 12, cy + 2); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx - 8, cy + 10); ctx.lineTo(cx + 8, cy + 10); ctx.lineTo(cx + 8, cy); ctx.stroke(); });
   // round MENU in the middle
-  { const cx = mx(3), cy = Y(zm); ctx.beginPath(); ctx.arc(cx, cy, 12 * ppm, 0, Math.PI * 2); ctx.fillStyle = 'rgba(24,24,27,0.97)'; ctx.fill(); ctx.strokeStyle = 'rgba(120,120,128,0.9)'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#e6e8ea'; ctx.font = 'bold 15px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('MENU', cx, cy); }
-  key(mx(4), Y(zm), 22, 13, '', (cx, cy) => { tri(cx - 4, cy + 7, -1, true); tri(cx + 8, cy + 7, -1, false); });
-  key(mx(5), Y(zm), 22, 13, '', (cx, cy) => { tri(cx - 8, cy + 7, 1, false); tri(cx + 4, cy + 7, 1, true); });
-  key(mx(6), Y(zm), 22, 13, 'BACK');
+  { const cx = mx(3), cy = Y(zm); ctx.beginPath(); ctx.arc(cx, cy, 9.5 * ppm, 0, Math.PI * 2); ctx.fillStyle = 'rgba(24,24,27,0.97)'; ctx.fill(); ctx.strokeStyle = 'rgba(120,120,128,0.9)'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = '#e6e8ea'; ctx.font = 'bold 12px "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('MENU', cx, cy); }
+  key(mx(4), Y(zm), 17, 13, '', (cx, cy) => { tri(cx - 4, cy + 7, -1, true); tri(cx + 8, cy + 7, -1, false); });
+  key(mx(5), Y(zm), 17, 13, '', (cx, cy) => { tri(cx - 8, cy + 7, 1, false); tri(cx + 4, cy + 7, 1, true); });
+  key(mx(6), Y(zm), 17, 13, 'BACK');
   // climate block (B58 / B21): two rows of six split down the middle by a chrome Y
   //   row A (z 636): AUTO  A/C  face   |  face+feet  front-defrost  SYNC
   //   row B (z 613): seat  feet  feet+defrost  |  rear-defrost  recirc  seat
-  const cx = (i: number) => X(i < 3 ? -79 + 26 * i : 27 + 26 * (i - 3));
+  const cx = (i: number) => X(i < 3 ? -59.5 + 19.5 * i : 20.5 + 19.5 * (i - 3));
   const seat = (cx0: number, cy0: number) => { ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(cx0 - 9, cy0 - 12); ctx.lineTo(cx0 - 6, cy0 + 6); ctx.lineTo(cx0 + 10, cy0 + 6); ctx.stroke(); for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(cx0 - 2 + k * 5, cy0 - 2); ctx.quadraticCurveTo(cx0 + 1 + k * 5, cy0 - 8, cx0 - 2 + k * 5, cy0 - 14); ctx.stroke(); } };
   const recirc = (cx0: number, cy0: number) => { ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx0 - 16, cy0 + 8); ctx.lineTo(cx0 + 14, cy0 + 8); ctx.stroke(); ctx.beginPath(); ctx.arc(cx0, cy0 - 1, 9, Math.PI * 0.1, Math.PI * 1.25, true); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx0 - 11, cy0 - 1); ctx.lineTo(cx0 - 6, cy0 + 4); ctx.lineTo(cx0 - 2, cy0 - 2); ctx.stroke(); };
   const za = 636, zb = 613;
-  key(cx(0), Y(za), 22, 14, 'AUTO');
-  key(cx(1), Y(za), 22, 14, 'A/C');
-  key(cx(2), Y(za), 22, 14, '', (x0, y0) => person(x0, y0 + 7, 'face'));
-  key(cx(3), Y(za), 22, 14, '', (x0, y0) => person(x0, y0 + 7, 'both'));
-  key(cx(4), Y(za), 22, 14, '', (x0, y0) => defrost(x0, y0 + 7, false));
-  key(cx(5), Y(za), 22, 14, 'SYNC');
-  key(cx(0), Y(zb), 22, 14, '', (x0, y0) => seat(x0, y0 + 7));
-  key(cx(1), Y(zb), 22, 14, '', (x0, y0) => person(x0, y0 + 7, 'feet'));
-  key(cx(2), Y(zb), 22, 14, '', (x0, y0) => { person(x0 - 6, y0 + 7, 'feet'); defrost(x0 + 12, y0 + 7, false); });
-  key(cx(3), Y(zb), 22, 14, '', (x0, y0) => defrost(x0, y0 + 7, true));
-  key(cx(4), Y(zb), 22, 14, '', (x0, y0) => recirc(x0, y0 + 7));
-  key(cx(5), Y(zb), 22, 14, '', (x0, y0) => seat(x0, y0 + 7));
+  key(cx(0), Y(za), 17, 14, 'AUTO');
+  key(cx(1), Y(za), 17, 14, 'A/C');
+  key(cx(2), Y(za), 17, 14, '', (x0, y0) => person(x0, y0 + 7, 'face'));
+  key(cx(3), Y(za), 17, 14, '', (x0, y0) => person(x0, y0 + 7, 'both'));
+  key(cx(4), Y(za), 17, 14, '', (x0, y0) => defrost(x0, y0 + 7, false));
+  key(cx(5), Y(za), 17, 14, 'SYNC');
+  key(cx(0), Y(zb), 17, 14, '', (x0, y0) => seat(x0, y0 + 7));
+  key(cx(1), Y(zb), 17, 14, '', (x0, y0) => person(x0, y0 + 7, 'feet'));
+  key(cx(2), Y(zb), 17, 14, '', (x0, y0) => { person(x0 - 6, y0 + 7, 'feet'); defrost(x0 + 12, y0 + 7, false); });
+  key(cx(3), Y(zb), 17, 14, '', (x0, y0) => defrost(x0, y0 + 7, true));
+  key(cx(4), Y(zb), 17, 14, '', (x0, y0) => recirc(x0, y0 + 7));
+  key(cx(5), Y(zb), 17, 14, '', (x0, y0) => seat(x0, y0 + 7));
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; t.needsUpdate = true;  // default flipY: upright on a PlaneGeometry
   panelTex = t;
   return t;

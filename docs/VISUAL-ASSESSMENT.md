@@ -237,3 +237,21 @@ passenger edge sits beside the band; beside the cushions the band stops at z 0.4
 console side below it slopes in and down to the cushion's inner edge; the armrest's side lip rolls under instead of
 standing out square. check_clearance.py still reports no overlaps.
 
+## Narrower centre (owner screenshot: the band still sat over the passenger cushion)
+
+The whole centre was narrowed so the bands stand beside the cushions' inner bolsters, checked with a new top-down test
+in `check_clearance.py` (PLAN lines: along the cushion, the console parts' outermost |x| against where the cushion's
+top starts). It now reports a 3-6 mm gap at every station (worst overlap 0 mm) as well as no volume overlaps.
+
+| Area | Before | Now |
+|------|--------|-----|
+| Console body | 31 cm (driver 0.155 / passenger 0.195 half widths) | 20.6 cm (0.103 each side), tapering to 0.088 between the seat backs |
+| Bands | 30 mm wide, outer face at x 0.215 | 24 mm wide, outer face at x 0.117 |
+| Centre stack | 30-34 cm wide, offset 1 cm to the passenger side | 22-25 cm wide, centred |
+| Screen | 190 x 107 mm in a 218 mm surround | 158 x 92 mm in a 180 mm surround |
+| Button column | separate start button off the stack edge | volume knob, SCREEN key and start button stacked in one 34 mm column |
+| Climate panel | 310 mm, keys 22 mm at 26 mm pitch, knobs at +-128 mm | 232 mm, keys 17 mm at 19.5 mm pitch, knobs at +-97 mm (label texture rescaled to match) |
+| Stack-top opening | 242 mm | 193 mm, with the lamp and hazard scaled to it |
+| Fin | angled 45 degrees outboard | almost straight back toward the occupants, so the band comes off the stack nearly in line with the console |
+| Console top | silver plate 122 mm, storage lid 163 mm | 92 mm and 84 mm (lid edge beside the band); dial and EPB scaled to the plate |
+

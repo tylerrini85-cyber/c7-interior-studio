@@ -68,14 +68,17 @@ WHEEL_RADIUS = 0.179            # 14.1 in diameter
 RIM_RADIUS = 0.0178
 
 # console
-CONSOLE_HALF_W = 0.155          # driver side
-CONSOLE_HALF_W_PASS = 0.195     # passenger side: runs out under the grab band, in line with it from the stack (B38)
+# the whole centre (stack, console, armrest) is narrow enough that its bands stand beside the seat cushions' inner
+# bolsters, not over them (cushion top starts at |x| ~0.120-0.125); 20.6 cm across the console body, bands outside
+# reaching |x| 0.117 (checked by tools/blender/check_clearance.py, PLAN lines)
+CONSOLE_HALF_W = 0.103          # driver side
+CONSOLE_HALF_W_PASS = 0.103     # passenger side
 CONSOLE_TOP_Z = 0.56           # top at shifter area
 ARMREST_Z = 0.60
 ARMREST_Y0 = -0.40
 ARMREST_Y1 = 0.02
 SHIFTER_Y = 0.40
-SHIFTER_X = -0.050             # shifter sits on the driver half of the console (B37 / B44)
+SHIFTER_X = -0.045             # shifter sits on the driver half of the console (B37 / B44)
 DIAL_Y = 0.24
 SCREEN_CENTER = (0.0, 0.66, 0.74)
 SCREEN_W = 0.19
@@ -122,7 +125,7 @@ def console_half_w(y):
         t = max(0.0, min(1.0, (x - a) / (b - a)))
         return t * t * (3 - 2 * t)
     t1, t2 = ss(-0.02, -0.14, y), ss(-0.14, -0.32, y)
-    mid, rear = 0.130, 0.088
+    mid, rear = 0.100, 0.088
     hd = CONSOLE_HALF_W + (mid - CONSOLE_HALF_W) * t1 + (rear - mid) * t2
     hp = CONSOLE_HALF_W_PASS + (mid - CONSOLE_HALF_W_PASS) * t1 + (rear - mid) * t2
     return hd, hp
