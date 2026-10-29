@@ -105,15 +105,16 @@ SPEAKER_CENTER = (0.35, 0.26)   # (Y, Z)
 # console's lower side steps in behind the cushion, so the seats tuck under the console edge instead of the walls
 # running through them
 SEAT_SIDE_Z = 0.405      # console's lower side, tucked in under the cushion bolster's edge
-SEAT_BAND_Z = 0.48       # bottom of the console bands beside the cushions: a rim, not a wall hanging over the seat
+SEAT_BAND_Z = 0.43       # bottom of the console bands beside the cushions: a rim just above the cushion, not a wall over it
 
 
 def seat_zone(y):
-    """1 alongside the seat cushions, 0 clear of them (eased over 4 cm at each end)."""
+    """1 alongside the seat cushions, 0 clear of them. At the front it eases in over 14 cm, so the bands' lower edge
+    sweeps up from the floor in one long curve following the cushion's front rather than stepping."""
     def ss(a, b, x):
         t = max(0.0, min(1.0, (x - a) / (b - a)))
         return t * t * (3 - 2 * t)
-    return ss(CUSHION_Y1 + 0.07, CUSHION_Y1 + 0.03, y) * ss(CUSHION_Y0 - 0.07, CUSHION_Y0 - 0.03, y)
+    return ss(CUSHION_Y1 + 0.16, CUSHION_Y1 + 0.02, y) * ss(CUSHION_Y0 - 0.07, CUSHION_Y0 - 0.03, y)
 
 
 def console_half_w(y):
@@ -125,7 +126,7 @@ def console_half_w(y):
         t = max(0.0, min(1.0, (x - a) / (b - a)))
         return t * t * (3 - 2 * t)
     t1, t2 = ss(-0.02, -0.14, y), ss(-0.14, -0.32, y)
-    mid, rear = 0.100, 0.088
+    mid, rear = 0.098, 0.077
     hd = CONSOLE_HALF_W + (mid - CONSOLE_HALF_W) * t1 + (rear - mid) * t2
     hp = CONSOLE_HALF_W_PASS + (mid - CONSOLE_HALF_W_PASS) * t1 + (rear - mid) * t2
     return hd, hp

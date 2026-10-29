@@ -473,7 +473,8 @@ def _floor_z(x, y):
 def _wall_bottom(x_out, y):
     """Bottom of a console side wall whose outer face is at x_out: just into the carpet so no floor shows through, but
     beside the seat cushions it stops just above the cushion's bolster (layout.seat_zone)."""
-    w = L.seat_zone(y)
+    # (behind the cushions the bands stay at rim height: the seat backs come in there)
+    w = L.seat_zone(y) if y > 0.0 else 1.0
     return (_floor_z(x_out, y) - 0.008) * (1 - w) + L.SEAT_BAND_Z * w
 
 
@@ -510,11 +511,11 @@ def _band_path(side=1):
             ctrl.append(p0 * (1 - u) ** 3 + p1 * 3 * u * (1 - u) ** 2 + p2 * 3 * u * u * (1 - u) + p3 * u ** 3)
         ctrl.append(p3)
         # along the console edge, curving in with it where it narrows between the seat backs (layout.console_half_w)
-        for y in (p3.y - 0.10, 0.12, 0.03, -0.03, -0.07, -0.11):
+        for y in (p3.y - 0.10, 0.12, 0.03, -0.06, -0.14, -0.22, -0.30, -0.38, -0.44, -0.497):
             ctrl.append(Vector((L.console_half_w(y)[1] + 0.002, y, CON_Z)))
     else:
         # runs forward under the stack to the dash lower so no end face shows beside the footwell
-        ctrl = [Vector((-(L.console_half_w(y)[0] + 0.002), y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.03, -0.07, -0.11)]
+        ctrl = [Vector((-(L.console_half_w(y)[0] + 0.002), y, CON_Z)) for y in (0.900, 0.75, 0.60, 0.46, 0.34, 0.22, 0.10, -0.06, -0.14, -0.22, -0.30, -0.38, -0.44, -0.497)]
     path = lib.spline_through(ctrl, n_per_seg=6, tension=0.5)
     length = sum((path[i + 1] - path[i]).length for i in range(len(path) - 1))
     return lib.resample_open(path, max(12, int(length / 0.006)))
@@ -540,9 +541,8 @@ def _band_rings(path, side=1):
             b = -b          # keep the flatter face toward the cabin centre on the driver side too
         a = b.cross(t).normalized() if side > 0 else t.cross(b).normalized()
         g = _sm(0.0, 0.09, along[i] - along[i3]) if (side > 0 and i >= i3) else (0.0 if side > 0 else 1.0)
-        # toward its end under the armrest the wall's bottom rises inside the armrest (above its lip) so no stub shows
-        e = _sm(-0.02, -0.09, c.y)
-        bottom = _wall_bottom(c.x + side * BAND_CON[1], c.y) * (1 - e) + 0.50 * e
+        # constant height under the armrest, whose sides come down over it there (console._build_armrest)
+        bottom = _wall_bottom(c.x + side * BAND_CON[1], c.y)
         ha_con = (CON_Z + CON_TOP - bottom) / 2 if g > 0 else BAND_CON[0]
         ha = BAND_UP[0] * (1 - g) + ha_con * g
         hb = BAND_UP[1] * (1 - g) + BAND_CON[1] * g

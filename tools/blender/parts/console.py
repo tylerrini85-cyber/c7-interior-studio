@@ -138,16 +138,10 @@ def _build_armrest():
     for k in range(n_y):
         y = y_front + (y_rear - y_front) * k / (n_y - 1)
         hd, hp = console_half_w(y)
-        # sides 3-5 mm outside the console; behind the seam they widen to stand just outside the console bands, which
-        # run on under the pad, so the bands disappear into the armrest instead of ending in the open (owner photo).
-        # Ahead of the seam they stay inside the bands, hidden.
-        # the bands follow the console edge (outer faces at hp + 0.020 / hd + 0.006) and end by y -0.11; the sides only
-        # widen over them while they run under the pad, so nothing stands out where the seat-back bolsters come in
-        ext = 1.0 - _ss(-0.08, -0.125, y)
-        wp = _ss(_arm_seam_y(hp), _arm_seam_y(hp) - 0.06, y)
-        wd = _ss(_arm_seam_y(-hd), _arm_seam_y(-hd) - 0.06, y)
-        xr = hp + 0.005 + 0.012 * ext * wp
-        xl = -hd - 0.003 - 0.014 * ext * wd
+        # the bands run the full length of the console beside the pad (their tops at z 0.583): the pad's sides stand on
+        # them, just inside their outer faces, so the band is one strip and the pad rises out of it
+        xr = hp + 0.005
+        xl = -hd - 0.005
         z_top = 0.628 + 0.008 * (k / (n_y - 1))
         top = []
         for i in range(n_x):
@@ -161,8 +155,10 @@ def _build_armrest():
             if dz < r:
                 z -= (r - math.sqrt(max(0.0, r * r - (r - dz) ** 2))) * ramp
             top.append(Vector((x, y, z)))
-        # sides come down to just under the band's top, then roll in under the pad (no ledge sticking out over the seat)
-        bottom = [Vector((xr, y, 0.505)), Vector((xr - 0.030, y, 0.488)), Vector((xl + 0.030, y, 0.488)), Vector((xl, y, 0.505))]
+        # sides come down to just under the band's top, then roll in under the pad (no ledge over the seat); where they
+        # cover a band they come down past its lower edge so its end disappears inside the armrest
+        zr = zl = 0.545
+        bottom = [Vector((xr, y, zr)), Vector((xr - 0.030, y, zr - 0.017)), Vector((xl + 0.030, y, zl - 0.017)), Vector((xl, y, zl))]
         rings.append(top + bottom)
     # winding chosen so the top faces up (same test as dashboard._loft_needs_flip)
     up_ok = (rings[0][1] - rings[0][0]).cross(rings[1][0] - rings[0][0]).z > 0
