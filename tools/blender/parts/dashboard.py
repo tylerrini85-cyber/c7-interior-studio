@@ -6,10 +6,12 @@ import lib
 import layout as L
 
 # profile templates: 13 control points (y, z) from cowl to under-dash bottom edge
-T_DRIVER_OUTER = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.64, 0.86), (0.60, 0.83), (0.60, 0.78), (0.63, 0.72), (0.66, 0.66), (0.69, 0.60), (0.72, 0.54), (0.76, 0.46), (0.82, 0.41)]
-T_HOOD = [(1.08, 0.82), (0.96, 0.85), (0.84, 0.875), (0.72, 0.885), (0.63, 0.885), (0.59, 0.87), (0.60, 0.845), (0.73, 0.84), (0.82, 0.76), (0.80, 0.66), (0.72, 0.56), (0.75, 0.46), (0.82, 0.41)]
-T_STACK = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.68, 0.862), (0.66, 0.856), (0.655, 0.838), (0.65, 0.77), (0.645, 0.71), (0.64, 0.65), (0.63, 0.61), (0.60, 0.57), (0.55, 0.51)]
-T_PASS = [(1.08, 0.82), (0.96, 0.845), (0.84, 0.86), (0.72, 0.865), (0.64, 0.86), (0.615, 0.835), (0.61, 0.79), (0.625, 0.73), (0.64, 0.68), (0.66, 0.60), (0.69, 0.52), (0.74, 0.45), (0.82, 0.41)]
+# The instrument hood is a distinct rounded hump (crest 0.887) over a dash top that sits ~5 cm lower either side of it
+# (B37 / B60 / B13): the passenger and door-side tops crest at ~0.84 and roll down at the rear edge into the face.
+T_DRIVER_OUTER = [(1.08, 0.82), (0.96, 0.828), (0.84, 0.836), (0.74, 0.840), (0.660, 0.838), (0.628, 0.826), (0.618, 0.795), (0.63, 0.72), (0.66, 0.66), (0.69, 0.60), (0.72, 0.54), (0.76, 0.46), (0.82, 0.41)]
+T_HOOD = [(1.08, 0.82), (0.96, 0.855), (0.84, 0.881), (0.72, 0.893), (0.64, 0.893), (0.605, 0.880), (0.605, 0.856), (0.73, 0.84), (0.82, 0.76), (0.80, 0.66), (0.72, 0.56), (0.75, 0.46), (0.82, 0.41)]
+T_STACK = [(1.08, 0.82), (0.96, 0.835), (0.84, 0.848), (0.72, 0.856), (0.68, 0.858), (0.66, 0.856), (0.655, 0.838), (0.65, 0.77), (0.645, 0.71), (0.64, 0.65), (0.63, 0.61), (0.60, 0.57), (0.55, 0.51)]
+T_PASS = [(1.08, 0.82), (0.96, 0.826), (0.84, 0.832), (0.74, 0.836), (0.672, 0.836), (0.640, 0.826), (0.628, 0.795), (0.625, 0.73), (0.64, 0.68), (0.66, 0.60), (0.69, 0.52), (0.74, 0.45), (0.82, 0.41)]
 
 STACK_X0, STACK_X1 = -0.135, 0.14
 
@@ -24,7 +26,10 @@ def bump(x, c, hw):
 
 
 def profile_at(x):
-    w_hood = 1.0 - smoothstep(0.16, 0.27, abs(x - L.CLUSTER_CENTER[0]))
+    # the hood's rear edge (the brow) is an arch over the cluster (B13 / B21): level for ~10 cm either side of the
+    # middle, then sweeping down on a cosine to the door side and to the stack top
+    d = abs(x - L.CLUSTER_CENTER[0])
+    w_hood = 1.0 if d < 0.10 else (0.5 + 0.5 * math.cos(math.pi * min(1.0, (d - 0.10) / 0.18)))
     w_stack = smoothstep(STACK_X0 - 0.03, STACK_X0 + 0.02, x) * (1 - smoothstep(STACK_X1 - 0.02, STACK_X1 + 0.03, x))
     w_pass = smoothstep(STACK_X1, STACK_X1 + 0.12, x)
     w_driver = 1.0 - min(1.0, w_hood + w_stack + w_pass)
@@ -681,7 +686,7 @@ def build_trim_band():
 # switches inside the bottom of its bezel.
 # ---------------------------------------------------------------------------
 PAD_X0, PAD_X1 = 0.138, 0.692
-PAD_ZT = 0.836                       # crease where the black dash top ends
+PAD_ZT = 0.826                       # crease where the black dash top rolls down into the face
 # lower edge of the pad (B37 / B66 / B60): just under the inner vent beside the band, then one long sweep down toward
 # the door, so the pad is tallest at the door end where it runs into the door's upper trim
 PAD_BOTTOM = [(0.13, 0.738), (0.19, 0.712), (0.25, 0.697), (0.33, 0.690), (0.45, 0.672), (0.55, 0.645), (0.62, 0.624), (0.70, 0.604)]
@@ -697,13 +702,25 @@ def _pad_bottom(x):
 
 
 def _lerp_table(table, x):
+    """Smooth curve through (x, value) stations: cubic Hermite with Catmull-Rom slopes, so the curve keeps its slope
+    through every station (no flat spot, hence no waviness, at each one)."""
     if x <= table[0][0]:
         return table[0][1]
-    for (x0, v0), (x1, v1) in zip(table, table[1:]):
+    if x >= table[-1][0]:
+        return table[-1][1]
+    n = len(table)
+
+    def slope(i):
+        a, b = table[max(0, i - 1)], table[min(n - 1, i + 1)]
+        return (b[1] - a[1]) / (b[0] - a[0])
+    for i in range(n - 1):
+        (x0, v0), (x1, v1) = table[i], table[i + 1]
         if x <= x1:
-            t = (x - x0) / (x1 - x0)
-            t = t * t * (3 - 2 * t)                 # smooth between stations
-            return v0 + (v1 - v0) * t
+            h = x1 - x0
+            t = (x - x0) / h
+            m0, m1 = slope(i) * h, slope(i + 1) * h
+            t2, t3 = t * t, t * t * t
+            return (2 * t3 - 3 * t2 + 1) * v0 + (t3 - 2 * t2 + t) * m0 + (-2 * t3 + 3 * t2) * v1 + (t3 - t2) * m1
     return table[-1][1]
 
 
@@ -730,7 +747,7 @@ def _panel_section(x, zt, zb, e):
     front += [(yb + 0.0015, zb + 0.015), (yb + 0.006, zb + 0.008), (yb + 0.015, zb + 0.0035), (yb + 0.028, zb + 0.001)]
     pts = []
     for y, z in front:
-        s_ = _surface_point(x, z) - 0.004
+        s_ = _surface_point(x, z) + 0.002          # where e -> 0 the panel sinks just behind the dash surface
         pts.append(Vector((x, s_ + (y - s_) * e, z)))
     zb2 = zb + (1 - e) * 0.03
     pts.append(Vector((x, _surface_point(x, zb2) + 0.004, zb2)))
@@ -863,7 +880,7 @@ def build_passenger_pad():
 # the brow; tallest at the door, its lower edge rising in a curve to a rounded end beside the cluster. A tall vent is
 # recessed into it (its cluster-side edge leaning in at the top) and the headlamp switch sits below it.
 DRV_X0, DRV_X1 = -0.662, -0.540     # outboard of ~-0.60 the door's front edge covers the dash end
-DRV_TOP = 0.826
+DRV_TOP = 0.818
 DRV_BOTTOM = [(-0.665, 0.628), (-0.63, 0.642), (-0.60, 0.660), (-0.57, 0.690), (-0.54, 0.734)]
 
 
@@ -872,7 +889,8 @@ def build_driver_pad():
     rings = []
     for k in range(n):
         x = DRV_X0 + (DRV_X1 - DRV_X0) * k / (n - 1)
-        zt = DRV_TOP - 0.030 * smoothstep(-0.582, -0.540, x)
+        # top follows the brow down toward the door, just under it (no black gap between them)
+        zt = min(DRV_TOP + 0.020, _crest_z(x) - 0.012) - 0.030 * smoothstep(-0.582, -0.540, x)
         e = smoothstep(DRV_X0, DRV_X0 + 0.022, x) * (1.0 - smoothstep(-0.558, -0.540, x))
         rings.append(_panel_section(x, zt, _lerp_table(DRV_BOTTOM, x), e))
     pad = lib.loft_object('dash.trim.driver', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=2.0, flip=_loft_needs_flip(rings, (0, -0.6, 0.8)))
@@ -881,18 +899,25 @@ def build_driver_pad():
     cut = _pad_vent('dash.vents.driver', -0.600, 0.752, vent, 0.012, 0.024, -0.024, 'dash.vents.driver.ring')
     lib.add_boolean(pad, cut)
     lib.tag(pad, 'dash.trim.driver', 'trim')
+    # headlamp rotary and two buttons in the panel under the vent (B13)
+    c, u, v, n = _pad_frame(-0.612, 0.690)
+    plate = lib.extrude_profile('dash.switch_panel', lib.rounded_rect2d(0.062, 0.024, 0.005), c - n * 0.002, u, v, 0.0045, material='plastic_black_gloss', bevel=0.001)
+    lib.tag(plate, 'dash.switch_panel', 'dashboard')
+    kn = lib.revolve('dash.headlamp_switch', [(0, 0), (0.0105, 0), (0.0105, 0.008), (0.009, 0.010), (0, 0.010)], segments=24, material='metal_satin_dark', origin=c - u * 0.017 + n * 0.0025, direction=n)
+    lib.tag(kn, 'dash.headlamp_switch', 'dashboard', selectable=False)
+    for k in range(2):
+        b_ = lib.extrude_profile(f'dash.drv_btn_{k}', lib.rounded_rect2d(0.014, 0.012, 0.0025), c + u * (0.006 + 0.018 * k) + n * 0.0025, u, v, 0.0025, material='plastic_black', bevel=0.0006)
+        lib.tag(b_, f'dash.drv_btn.{k}', 'dashboard', selectable=False)
+
+
+def _crest_z(x):
+    """Height of the dash's rear crest (the brow line) at x."""
+    return max(p.y for p in lib.spline_through(profile_at(x), n_per_seg=6)[12:44])
 
 
 def build_glovebox_and_switches():
     # (the C7 has no glovebox in the dash: storage is behind the screen and in the console)
-    # driver lower switch panel (headlamp rotary + two buttons)
-    base = Vector((-0.615, 0.675, 0.56))
-    nrm = Vector((0, -1, 0.25)).normalized()
-    u = Vector((1, 0, 0)); v = nrm.cross(u).normalized() * -1
-    panel = lib.extrude_profile('dash.switch_panel', lib.rounded_rect2d(0.10, 0.06, 0.008), base, u, v, 0.006, material='plastic_black')
-    lib.tag(panel, 'dash.switch_panel', 'dashboard')
-    kn = lib.revolve('dash.headlamp_switch', [(0, 0), (0.016, 0), (0.016, 0.012), (0.013, 0.014), (0, 0.014)], segments=24, material='plastic_black_gloss', origin=base - nrm * 0.007 + u * -0.02, direction=-nrm)
-    lib.tag(kn, 'dash.headlamp_switch', 'dashboard', selectable=False)
+    # (the headlamp switch is in the driver-side panel: build_driver_pad)
     # defroster grille strip along the cowl and the centre speaker grille
     strip = lib.extrude_profile('dash.defroster', lib.rounded_rect2d(1.25, 0.035, 0.01), (0, 1.015, 0.833), (1, 0, 0), (0, 1, 0.07), -0.006, material='plastic_black')
     lib.tag(strip, 'dash.defroster', 'dashboard', selectable=False)

@@ -271,3 +271,13 @@ bolsters; check_clearance.py reports no overlaps and a 0 mm worst plan overlap.
 | Surface ripples | Faint vertical ripples on everything placed on the dash face (the surface lookup snapped to sample points) | The lookup interpolates between samples on a finer, cached profile |
 | Driver end | A small box vent stuck on a flat strip by the door, mostly hidden by the door's front edge | A sculpted panel wrapping the outer side of the instrument hood from the door to the cluster (tallest at the door, lower edge rising to a rounded end beside the cluster), with a recessed vent wider than tall and a sloping top edge, visible just outside the wheel rim as in B13 |
 
+Second dashboard pass (owner: "the dash is terrible"; compared in-app against B13 / B37 at matched framing, and with
+colour-per-object renders of the dashboard alone):
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Overall massing | One flat, boxy shelf: the hood over the gauges only 2 cm above the rest of the dash top | Dash top either side of the hood lowered to ~0.84 with a rolled rear edge; the hood crest raised to 0.893, so it reads as its own hump |
+| Brow over the gauges | A straight horizontal line across a rectangular box | An arch: level for 10 cm either side of the cluster's middle, then sweeping down on a cosine toward the door and toward the stack top (B13) |
+| Passenger pad lip | Wavy: its lower-edge curve eased to a stop at every control station | Cubic curve with continuous slope through the stations: one clean sweep |
+| Driver-side panel | A square block with a flat top and a gap under the brow; flickered against the dash where it eased in | Its top follows the brow down toward the door; eased ends sink just behind the dash surface; the headlamp rotary and two buttons sit in it under the vent (B13) instead of on the lower dash |
+
