@@ -161,8 +161,8 @@ def _build_armrest():
             if dz < r:
                 z -= (r - math.sqrt(max(0.0, r * r - (r - dz) ** 2))) * ramp
             top.append(Vector((x, y, z)))
-        # sides drop straight to a crisp lip 5 mm proud of the console side, then step in under the pad
-        bottom = [Vector((xr, y, 0.472)), Vector((xr - 0.024, y, 0.472)), Vector((xl + 0.024, y, 0.472)), Vector((xl, y, 0.472))]
+        # sides come down to just under the band's top, then roll in under the pad (no ledge sticking out over the seat)
+        bottom = [Vector((xr, y, 0.505)), Vector((xr - 0.030, y, 0.488)), Vector((xl + 0.030, y, 0.488)), Vector((xl, y, 0.505))]
         rings.append(top + bottom)
     # winding chosen so the top faces up (same test as dashboard._loft_needs_flip)
     up_ok = (rings[0][1] - rings[0][0]).cross(rings[1][0] - rings[0][0]).z > 0

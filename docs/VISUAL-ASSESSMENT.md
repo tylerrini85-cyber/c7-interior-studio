@@ -231,3 +231,9 @@ now narrows faster just behind the armrest front (layout.console_half_w: 0.130 m
 and the tuck never stands outside the side. `tools/blender/check_clearance.py` tests every seat vertex against the
 console parts and every console vertex against the seats; it reports none either way.
 
+Passenger console follow-up (owner screenshot): the storage lid stopped ~6 cm short of the band (bare console top
+between them) and the band's wall hung down over the seat cushion like a ledge. The lid is now 163 mm wide and its
+passenger edge sits beside the band; beside the cushions the band stops at z 0.48 (layout.SEAT_BAND_Z) as a rim and the
+console side below it slopes in and down to the cushion's inner edge; the armrest's side lip rolls under instead of
+standing out square. check_clearance.py still reports no overlaps.
+
