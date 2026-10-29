@@ -255,3 +255,10 @@ top starts). It now reports a 3-6 mm gap at every station (worst overlap 0 mm) a
 | Fin | angled 45 degrees outboard | almost straight back toward the occupants, so the band comes off the stack nearly in line with the console |
 | Console top | silver plate 122 mm, storage lid 163 mm | 92 mm and 84 mm (lid edge beside the band); dial and EPB scaled to the plate |
 
+Band ends beside the armrest (owner screenshot, carbon band / red armrest): the band dropped from the floor to rim
+height over only 4 cm at the seat front (a notch) and ended under the armrest, its end showing below the armrest as a
+hook. Now the band's lower edge sweeps up over 14 cm along the cushion's front, stays at rim height (0.43) beside the
+cushion and the seat back, and runs the full length of the console to its rear end; the armrest sits between the two
+bands, its sides standing on their tops. The console's rear tapers to 0.077 half width so the bands clear the seat-back
+bolsters; check_clearance.py reports no overlaps and a 0 mm worst plan overlap.
+
