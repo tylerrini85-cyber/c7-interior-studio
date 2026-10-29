@@ -374,9 +374,26 @@ def bpy_obj(name):
 
 def _surface_point(x, z):
     """(y) of the dash surface at lateral x for height z on the rear (occupant) face."""
-    prof = lib.spline_through(profile_at(x), n_per_seg=3)
-    cand = min([p for p in prof if p.x < 0.75], key=lambda p: abs(p.y - z))
-    return cand.x
+    prof = _surface_prof(round(x, 5))
+    idx = [i for i, p in enumerate(prof) if p.x < 0.75]
+    i = min(idx, key=lambda k: abs(prof[k].y - z))
+    # interpolate along the segment next to the nearest sample that brackets z (no stepping between samples)
+    for a, b in ((i - 1, i), (i, i + 1)):
+        if 0 <= a and b < len(prof):
+            pa, pb = prof[a], prof[b]
+            if (pa.y - z) * (pb.y - z) <= 0 and abs(pb.y - pa.y) > 1e-9:
+                t = (z - pa.y) / (pb.y - pa.y)
+                return pa.x + (pb.x - pa.x) * t
+    return prof[i].x
+
+
+_PROF_CACHE = {}
+
+
+def _surface_prof(x):
+    if x not in _PROF_CACHE:
+        _PROF_CACHE[x] = lib.spline_through(profile_at(x), n_per_seg=6)
+    return _PROF_CACHE[x]
 
 
 def _dash_face_frame(x, z):
@@ -416,8 +433,8 @@ def _vent(cid, x, z, w=0.068, h=0.110, base_proud=0.004, ring_component=None, lo
 
 
 def build_outer_vents():
-    _vent('dash.vents.driver', -0.652, 0.735)
-    # the passenger vents are recessed into the passenger pad (build_passenger_pad)
+    # all outer vents are recessed into the sculpted side panels (build_passenger_pad / build_driver_pad)
+    pass
 
 
 # ---------------------------------------------------------------------------
@@ -631,9 +648,7 @@ def _loft_needs_flip(rings, outward):
 def build_trim_band():
     """Mid-dash panels that carry the vents. On the car they are part of the leather dash face: almost flush, no bright
     edges, bounded below by a stitched seam that sweeps up toward the door (IMG_4509 / IMG_4499 / IMG_4491)."""
-    specs = (
-        (-0.70, -0.605, 'dash.trim.driver', lambda s: 0.665, lambda s: 0.795),
-    )
+    specs = ()
     for (x0, x1, cid, z_lo_s, z_hi_s) in specs:
         n = 24
         xs = [x0 + (x1 - x0) * i / (n - 1) for i in range(n)]
@@ -665,33 +680,62 @@ def build_trim_band():
 # into it: a rounded trapezoid near the stack and a taller rounded square at the door end with the two seat
 # switches inside the bottom of its bezel.
 # ---------------------------------------------------------------------------
-PAD_X0, PAD_X1 = 0.150, 0.692
-PAD_ZT, PAD_ZB = 0.836, 0.660        # crease at the dash top / underside of the shelf
+PAD_X0, PAD_X1 = 0.138, 0.692
+PAD_ZT = 0.836                       # crease where the black dash top ends
+# lower edge of the pad (B37 / B66 / B60): just under the inner vent beside the band, then one long sweep down toward
+# the door, so the pad is tallest at the door end where it runs into the door's upper trim
+PAD_BOTTOM = [(0.13, 0.738), (0.19, 0.712), (0.25, 0.697), (0.33, 0.690), (0.45, 0.672), (0.55, 0.645), (0.62, 0.624), (0.70, 0.604)]
+
+
+def _pad_top(x):
+    """Crease height: the black dash top dips down to meet the band beside the stack, rounding the pad's inner end."""
+    return PAD_ZT - 0.024 * (1.0 - smoothstep(0.13, 0.25, x))
+
+
+def _pad_bottom(x):
+    return _lerp_table(PAD_BOTTOM, x)
+
+
+def _lerp_table(table, x):
+    if x <= table[0][0]:
+        return table[0][1]
+    for (x0, v0), (x1, v1) in zip(table, table[1:]):
+        if x <= x1:
+            t = (x - x0) / (x1 - x0)
+            t = t * t * (3 - 2 * t)                 # smooth between stations
+            return v0 + (v1 - v0) * t
+    return table[-1][1]
 
 
 def _pad_front(x, z):
-    """y of the pad's occupant-facing surface at (x, z) (the face only, between the top roll and the bottom roll)."""
+    """y of the pad's occupant-facing surface at (x, z): leaning out toward the occupant lower down, then upright."""
     ys = _surface_point(x, PAD_ZT)
-    return ys - 0.014 - (0.815 - z) * 0.20
+    return ys - 0.014 - 0.20 * min(0.815 - z, 0.11)
 
 
 def _pad_section(x):
-    """Closed (y, z) section of the pad at x, starting at the crease and running down the face, under the shelf and
-    back up just inside the dash surface. Toward the door end it eases back into the dash."""
-    e = 1.0 - smoothstep(PAD_X1 - 0.030, PAD_X1, x)
-    ys = _surface_point(x, PAD_ZT)
-    yb = _pad_front(x, 0.682)
-    front = [(ys, PAD_ZT), (ys - 0.006, 0.832), (ys - 0.011, 0.826)]
-    front += [(_pad_front(x, z), z) for z in (0.815, 0.795, 0.775, 0.755, 0.735, 0.715, 0.70, 0.69, 0.682)]
-    front += [(yb + 0.0015, 0.675), (yb + 0.006, 0.668), (yb + 0.015, 0.6635), (yb + 0.028, 0.661)]
+    """Closed (y, z) section of the passenger pad at x (eases back into the dash at the door end)."""
+    return _panel_section(x, _pad_top(x), _pad_bottom(x), 1.0 - smoothstep(PAD_X1 - 0.030, PAD_X1, x))
+
+
+def _panel_section(x, zt, zb, e):
+    """Closed (y, z) section of a sculpted dash panel at x: from the crease zt down the face to a thick rounded lip at
+    zb, under the lip to the dash face, and back up just inside the dash surface. e < 1 eases it back into the dash.
+    Every section has the same point count so the loft stays clean while the panel's height changes along it."""
+    ys = _surface_point(x, zt)
+    z_lip = zb + 0.022
+    yb = _pad_front(x, z_lip)
+    front = [(ys, zt), (ys - 0.006, zt - 0.004), (ys - 0.011, zt - 0.010)]
+    front += [(_pad_front(x, z), z) for z in [(zt - 0.021) + (z_lip - (zt - 0.021)) * k / 8 for k in range(9)]]
+    front += [(yb + 0.0015, zb + 0.015), (yb + 0.006, zb + 0.008), (yb + 0.015, zb + 0.0035), (yb + 0.028, zb + 0.001)]
     pts = []
     for y, z in front:
-        s = _surface_point(x, z) - 0.004
-        pts.append(Vector((x, s + (y - s) * e, z)))
-    # underside forward to the dash face, then back up inside the dash surface
-    zb = PAD_ZB + (1 - e) * 0.03
-    pts.append(Vector((x, _surface_point(x, zb) + 0.004, zb)))
-    for z in (0.685, 0.72, 0.76, 0.80, 0.825):
+        s_ = _surface_point(x, z) - 0.004
+        pts.append(Vector((x, s_ + (y - s_) * e, z)))
+    zb2 = zb + (1 - e) * 0.03
+    pts.append(Vector((x, _surface_point(x, zb2) + 0.004, zb2)))
+    for k in range(5):
+        z = zb + 0.025 + (zt - 0.011 - zb - 0.025) * k / 4
         pts.append(Vector((x, _surface_point(x, z) + 0.004, z)))
     return pts
 
@@ -804,14 +848,39 @@ def build_passenger_pad():
     pad = lib.loft_object('dash.trim.passenger', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=2.0, flip=_loft_needs_flip(rings, (0, -0.6, 0.8)))
     # inner vent: a rounded trapezoid whose stack-side edge leans toward the door at the top (B37 / B66 / B58)
     V = lambda pts: [Vector(p) for p in pts]
-    inner = V([(-0.050, -0.030), (0.046, -0.030), (0.046, 0.030), (-0.030, 0.030)])
-    cut1 = _pad_vent('dash.vents.passenger_inner', 0.305, 0.770, inner, 0.012, 0.024, -0.024, 'dash.vents.passenger_inner.ring')
+    # tall: wide at the bottom, its stack-side edge leaning in toward the door at the top (B37)
+    inner = V([(-0.040, -0.036), (0.036, -0.036), (0.036, 0.036), (-0.016, 0.036)])
+    cut1 = _pad_vent('dash.vents.passenger_inner', 0.292, 0.752, inner, 0.015, 0.026, -0.026, 'dash.vents.passenger_inner.ring')
     # outer vent: taller rounded square at the door end; louvres in the top, the two seat switches below (B66 / B37)
-    outer = V([(-0.039, -0.052), (0.039, -0.052), (0.039, 0.052), (-0.039, 0.052)])
-    cut2 = _pad_vent('dash.vents.passenger', 0.604, 0.752, outer, 0.013, 0.044, -0.010, 'dash.vents.passenger.ring', switches=2)
+    outer = V([(-0.046, -0.052), (0.046, -0.052), (0.046, 0.052), (-0.046, 0.052)])
+    cut2 = _pad_vent('dash.vents.passenger', 0.598, 0.748, outer, 0.015, 0.044, -0.008, 'dash.vents.passenger.ring', switches=2)
     lib.add_boolean(pad, cut1)
     lib.add_boolean(pad, cut2)
     lib.tag(pad, 'dash.trim.passenger', 'trim')
+
+
+# driver side panel (B13 / B66 / B37): wraps the outer side of the instrument hood from the door to the cluster, under
+# the brow; tallest at the door, its lower edge rising in a curve to a rounded end beside the cluster. A tall vent is
+# recessed into it (its cluster-side edge leaning in at the top) and the headlamp switch sits below it.
+DRV_X0, DRV_X1 = -0.662, -0.540     # outboard of ~-0.60 the door's front edge covers the dash end
+DRV_TOP = 0.826
+DRV_BOTTOM = [(-0.665, 0.628), (-0.63, 0.642), (-0.60, 0.660), (-0.57, 0.690), (-0.54, 0.734)]
+
+
+def build_driver_pad():
+    n = 30
+    rings = []
+    for k in range(n):
+        x = DRV_X0 + (DRV_X1 - DRV_X0) * k / (n - 1)
+        zt = DRV_TOP - 0.030 * smoothstep(-0.582, -0.540, x)
+        e = smoothstep(DRV_X0, DRV_X0 + 0.022, x) * (1.0 - smoothstep(-0.558, -0.540, x))
+        rings.append(_panel_section(x, zt, _lerp_table(DRV_BOTTOM, x), e))
+    pad = lib.loft_object('dash.trim.driver', rings, close_u=True, cap_start=True, cap_end=True, material='leather_black', uv_scale=2.0, flip=_loft_needs_flip(rings, (0, -0.6, 0.8)))
+    # wider than tall, its top edge sloping down toward the cluster (B13)
+    vent = [Vector(p) for p in ((-0.031, -0.032), (0.029, -0.032), (0.029, 0.026), (-0.031, 0.038))]
+    cut = _pad_vent('dash.vents.driver', -0.600, 0.752, vent, 0.012, 0.024, -0.024, 'dash.vents.driver.ring')
+    lib.add_boolean(pad, cut)
+    lib.tag(pad, 'dash.trim.driver', 'trim')
 
 
 def build_glovebox_and_switches():
@@ -865,4 +934,5 @@ def build():
     build_grab_handle()
     build_trim_band()
     build_passenger_pad()
+    build_driver_pad()
     build_glovebox_and_switches()

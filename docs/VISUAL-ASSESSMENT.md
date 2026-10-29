@@ -262,3 +262,12 @@ cushion and the seat back, and runs the full length of the console to its rear e
 bands, its sides standing on their tops. The console's rear tapers to 0.077 half width so the bands clear the seat-back
 bolsters; check_clearance.py reports no overlaps and a 0 mm worst plan overlap.
 
+## Dashboard pass (B37 / B66 / B60 / B13)
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Passenger pad shape | A slab of even height (17 cm) with square ends | One sculpted wing: its lower edge sits just under the inner vent beside the band and sweeps down toward the door (pad 10 cm tall at the band, 23 cm at the door); at the band both edges curve in to a rounded end (the black dash top dips to meet the band); thick rounded lower lip |
+| Passenger vents | Inner vent narrow and high, outer vent small | Inner: a rounded D-trapezoid (76 x 72 mm) low beside the band; outer: a 92 x 104 mm rounded rectangle near the door, louvres over the seat switches |
+| Surface ripples | Faint vertical ripples on everything placed on the dash face (the surface lookup snapped to sample points) | The lookup interpolates between samples on a finer, cached profile |
+| Driver end | A small box vent stuck on a flat strip by the door, mostly hidden by the door's front edge | A sculpted panel wrapping the outer side of the instrument hood from the door to the cluster (tallest at the door, lower edge rising to a rounded end beside the cluster), with a recessed vent wider than tall and a sloping top edge, visible just outside the wheel rim as in B13 |
+
