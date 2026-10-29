@@ -29,8 +29,9 @@ def _console_section(y):
     # cushions' inner bolsters (x ~0.10-0.13 below z 0.40) so the seats tuck under the console edge
     w = L.seat_zone(y)
     def lower(h):
-        full = [(h, 0.46), (h, 0.30), (h + 0.02, base_z + 0.02), (h + 0.06, base_z)]
-        tuck = [(h - 0.002, 0.45), (min(0.13, h - 0.006), L.SEAT_SIDE_Z - 0.005), (min(0.09, h - 0.012), 0.33), (min(0.09, h - 0.012), base_z)]
+        full = [(h, 0.46), (h, 0.38), (h, 0.30), (h + 0.02, base_z + 0.02), (h + 0.06, base_z)]
+        # under the band's rim the side slopes in and down to the cushion's inner edge (no ledge over the seat)
+        tuck = [(h - 0.003, 0.49), (min(0.15, h - 0.010), 0.44), (min(0.12, h - 0.020), L.SEAT_SIDE_Z - 0.005), (min(0.088, h - 0.030), 0.32), (min(0.088, h - 0.030), base_z)]
         return [(a[0] * (1 - w) + b[0] * w, a[1] * (1 - w) + b[1] * w) for a, b in zip(full, tuck)]
     lp, ld = lower(hp), lower(hw)
     pts = [(-x, z) for x, z in reversed(ld)] + [
@@ -50,7 +51,7 @@ def build_body():
     plate = lib.extrude_profile('console.trim', lib.rounded_rect2d(0.122, 0.340, 0.018), (-0.052, 0.300, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='metal_brushed', bevel=0.002)
     lib.tag(plate, 'console.trim', 'console')
     # small switch square at the front of the passenger half, beside the shifter
-    sq = lib.extrude_profile('console.small_switches', lib.rounded_rect2d(0.050, 0.042, 0.006), (0.068, 0.420, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    sq = lib.extrude_profile('console.small_switches', lib.rounded_rect2d(0.050, 0.042, 0.006), (0.090, 0.420, L.CONSOLE_TOP_Z + 0.004), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
     lib.tag(sq, 'console.small_switches', 'console', selectable=False)
 
 
@@ -106,7 +107,8 @@ def build_dial_and_switches():
 
 def build_cupholders_and_armrest():
     # long closed storage / cupholder lid on the passenger half, from beside the shifter back to the armrest
-    lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.110, 0.330, 0.016), (0.068, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
+    # wide enough that its passenger edge sits right beside the console band (owner photos: no strip of bare top between)
+    lid = lib.extrude_profile('console.cupholder_plate', lib.rounded_rect2d(0.163, 0.330, 0.016), (0.0965, 0.205, L.CONSOLE_TOP_Z + 0.002), (1, 0, 0), (0, 1, 0), 0.006, material='plastic_black_gloss', bevel=0.002)
     lib.tag(lid, 'console.cupholder_plate', 'console')
     _build_armrest()
 

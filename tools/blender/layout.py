@@ -101,7 +101,8 @@ SPEAKER_CENTER = (0.35, 0.26)   # (Y, Z)
 # beside the seat cushions the console's side walls stop just above the cushion's inner bolster (top ~0.38) and the
 # console's lower side steps in behind the cushion, so the seats tuck under the console edge instead of the walls
 # running through them
-SEAT_SIDE_Z = 0.405
+SEAT_SIDE_Z = 0.405      # console's lower side, tucked in under the cushion bolster's edge
+SEAT_BAND_Z = 0.48       # bottom of the console bands beside the cushions: a rim, not a wall hanging over the seat
 
 
 def seat_zone(y):

@@ -474,7 +474,7 @@ def _wall_bottom(x_out, y):
     """Bottom of a console side wall whose outer face is at x_out: just into the carpet so no floor shows through, but
     beside the seat cushions it stops just above the cushion's bolster (layout.seat_zone)."""
     w = L.seat_zone(y)
-    return (_floor_z(x_out, y) - 0.008) * (1 - w) + L.SEAT_SIDE_Z * w
+    return (_floor_z(x_out, y) - 0.008) * (1 - w) + L.SEAT_BAND_Z * w
 
 
 def _sm(a, b, x):
