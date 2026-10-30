@@ -936,15 +936,15 @@ def build_welt():
         prof = lib.spline_through(profile_at(x), n_per_seg=3)
         rear = [p for p in prof if 0.55 < p.x < 0.70]
         pt = max(rear, key=lambda p: p.y) if rear else prof[5]
-        path.append(Vector((x, pt.x - 0.002, pt.y - 0.003)))
+        path.append(Vector((x, pt.x + 0.001, pt.y - 0.007)))      # mostly sunk into the edge: a rolled seam
     # across the stack it runs along the top edge of the (yawed) stack face, just above the top opening (B58 / B21)
     for x in (-0.095, -0.05, 0.0, 0.05, 0.095):
-        path.append(Vector((x, stack_y(x, 0.852) - 0.001, 0.862)))
+        path.append(Vector((x, stack_y(x, 0.852) + 0.001, 0.856)))
     band_top = _band_path(1)[6]
     path.append(band_top)
     path = lib.spline_through(path, n_per_seg=3, tension=0.5)
     path = lib.resample_open(path, int(sum((path[i + 1] - path[i]).length for i in range(len(path) - 1)) / 0.006))
-    prof = lib.rounded_rect2d(0.022, 0.014, 0.0065, n_corner=5)
+    prof = lib.rounded_rect2d(0.012, 0.009, 0.0042, n_corner=5)   # slim piping, not a tube
     welt = lib.sweep_profile('dash.welt', path, prof, material='leather_black', up_hint=Vector((0, 0, 1)), uv_scale=6.0)
     lib.tag(welt, 'dash.welt', 'dashboard')
 

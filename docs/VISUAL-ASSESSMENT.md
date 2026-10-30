@@ -280,4 +280,5 @@ colour-per-object renders of the dashboard alone):
 | Brow over the gauges | A straight horizontal line across a rectangular box | An arch: level for 10 cm either side of the cluster's middle, then sweeping down on a cosine toward the door and toward the stack top (B13) |
 | Passenger pad lip | Wavy: its lower-edge curve eased to a stop at every control station | Cubic curve with continuous slope through the stations: one clean sweep |
 | Driver-side panel | A square block with a flat top and a gap under the brow; flickered against the dash where it eased in | Its top follows the brow down toward the door; eased ends sink just behind the dash surface; the headlamp rotary and two buttons sit in it under the vent (B13) instead of on the lower dash |
+| Brow piping | A 22 x 14 mm tube sitting on top of the dash edge, standing out as a separate part | 12 x 9 mm piping sunk into the edge (its centre 7 mm below the crest), so only a rolled seam shows; across the stack top it sits flush at 0.856 |
 
