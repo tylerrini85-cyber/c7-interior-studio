@@ -685,16 +685,18 @@ def build_trim_band():
 # into it: a rounded trapezoid near the stack and a taller rounded square at the door end with the two seat
 # switches inside the bottom of its bezel.
 # ---------------------------------------------------------------------------
-PAD_X0, PAD_X1 = 0.138, 0.692
+PAD_X0, PAD_X1 = 0.118, 0.692          # inner end tucks in behind the grab band
 PAD_ZT = 0.826                       # crease where the black dash top rolls down into the face
 # lower edge of the pad (B37 / B66 / B60): just under the inner vent beside the band, then one long sweep down toward
 # the door, so the pad is tallest at the door end where it runs into the door's upper trim
-PAD_BOTTOM = [(0.13, 0.738), (0.19, 0.712), (0.25, 0.697), (0.33, 0.690), (0.45, 0.672), (0.55, 0.645), (0.62, 0.624), (0.70, 0.604)]
+# lower edge (owner photo, straight-on passenger dash): about level with the bottom of the screen all the way across,
+# easing down only slightly toward the door; it curves up into the band at the inner end
+PAD_BOTTOM = [(0.11, 0.735), (0.15, 0.706), (0.20, 0.694), (0.30, 0.688), (0.45, 0.684), (0.60, 0.678), (0.70, 0.672)]
 
 
 def _pad_top(x):
     """Crease height: the black dash top dips down to meet the band beside the stack, rounding the pad's inner end."""
-    return PAD_ZT - 0.024 * (1.0 - smoothstep(0.13, 0.25, x))
+    return PAD_ZT - 0.008 * (1.0 - smoothstep(0.12, 0.20, x))
 
 
 def _pad_bottom(x):
@@ -727,7 +729,10 @@ def _lerp_table(table, x):
 def _pad_front(x, z):
     """y of the pad's occupant-facing surface at (x, z): leaning out toward the occupant lower down, then upright."""
     ys = _surface_point(x, PAD_ZT)
-    return ys - 0.014 - 0.20 * min(0.815 - z, 0.11)
+    # inner end sweeps back toward the occupant to meet the grab band, so the band and the pad read as one surface
+    # with no slot of stack side between them (owner photo)
+    sweep = 0.085 * (1.0 - smoothstep(0.125, 0.235, x))
+    return ys - 0.014 - 0.20 * min(0.815 - z, 0.11) - sweep
 
 
 def _pad_section(x):
@@ -866,11 +871,12 @@ def build_passenger_pad():
     # inner vent: a rounded trapezoid whose stack-side edge leans toward the door at the top (B37 / B66 / B58)
     V = lambda pts: [Vector(p) for p in pts]
     # tall: wide at the bottom, its stack-side edge leaning in toward the door at the top (B37)
-    inner = V([(-0.040, -0.036), (0.036, -0.036), (0.036, 0.036), (-0.016, 0.036)])
-    cut1 = _pad_vent('dash.vents.passenger_inner', 0.292, 0.752, inner, 0.015, 0.026, -0.026, 'dash.vents.passenger_inner.ring')
+    inner = V([(-0.040, -0.037), (0.034, -0.037), (0.034, 0.037), (-0.018, 0.037)])
+    cut1 = _pad_vent('dash.vents.passenger_inner', 0.250, 0.758, inner, 0.015, 0.027, -0.027, 'dash.vents.passenger_inner.ring')
     # outer vent: taller rounded square at the door end; louvres in the top, the two seat switches below (B66 / B37)
-    outer = V([(-0.046, -0.052), (0.046, -0.052), (0.046, 0.052), (-0.046, 0.052)])
-    cut2 = _pad_vent('dash.vents.passenger', 0.598, 0.748, outer, 0.015, 0.044, -0.008, 'dash.vents.passenger.ring', switches=2)
+    # sits higher than the inner vent; its top edge rises slightly toward the door (owner photo)
+    outer = V([(-0.046, -0.054), (0.046, -0.054), (0.046, 0.058), (-0.046, 0.050)])
+    cut2 = _pad_vent('dash.vents.passenger', 0.598, 0.770, outer, 0.015, 0.046, -0.008, 'dash.vents.passenger.ring', switches=2)
     lib.add_boolean(pad, cut1)
     lib.add_boolean(pad, cut2)
     lib.tag(pad, 'dash.trim.passenger', 'trim')

@@ -293,3 +293,8 @@ colour-per-object renders of the dashboard alone):
 | Halo (rear hoop) | A round tube | A broad flat band (110 mm along the car) arching from the beltline behind each door up and across under the rear of the roof panel |
 | Visors and map lights | Flat boards angled down toward the windshield; a box hanging from the roof | Visors stowed flat against the headliner following its curve; a slim map-light module flush with the headliner |
 
+Passenger dash from the owner's straight-on photo: the pad's lower edge now runs about level with the bottom of the screen
+all the way to the door (it used to drop 13 cm toward the door); its inner end sweeps back toward the occupant to meet the
+grab band, so there is no slot of stack side between the band and the pad; the inner vent sits close to the band
+(x 0.25, z 0.758) and the outer vent sits higher (z 0.770) with its top edge rising toward the door.
+
