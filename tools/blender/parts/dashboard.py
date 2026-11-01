@@ -6,12 +6,13 @@ import lib
 import layout as L
 
 # profile templates: 13 control points (y, z) from cowl to under-dash bottom edge
-# The instrument hood is a distinct rounded hump (crest 0.887) over a dash top that sits ~5 cm lower either side of it
-# (B37 / B60 / B13): the passenger and door-side tops crest at ~0.84 and roll down at the rear edge into the face.
-T_DRIVER_OUTER = [(1.08, 0.82), (0.96, 0.828), (0.84, 0.836), (0.74, 0.840), (0.660, 0.838), (0.628, 0.826), (0.618, 0.795), (0.63, 0.72), (0.66, 0.66), (0.69, 0.60), (0.72, 0.54), (0.76, 0.46), (0.82, 0.41)]
+# The instrument hood is a distinct rounded hump (crest 0.893). Either side of it the dash top (owner photo, straight-on
+# passenger dash / B37 / B60) is a deep rounded surface: it rolls up from the face in a large radius, crests at ~0.865
+# about 18 cm forward of the face, then falls away to the windshield base.
+T_DRIVER_OUTER = [(1.08, 0.82), (0.97, 0.843), (0.86, 0.858), (0.76, 0.86), (0.685, 0.851), (0.642, 0.83), (0.62, 0.8), (0.63, 0.72), (0.66, 0.66), (0.69, 0.6), (0.72, 0.54), (0.76, 0.46), (0.82, 0.41)]
 T_HOOD = [(1.08, 0.82), (0.96, 0.855), (0.84, 0.881), (0.72, 0.893), (0.64, 0.893), (0.605, 0.880), (0.605, 0.856), (0.73, 0.84), (0.82, 0.76), (0.80, 0.66), (0.72, 0.56), (0.75, 0.46), (0.82, 0.41)]
-T_STACK = [(1.08, 0.82), (0.96, 0.835), (0.84, 0.848), (0.72, 0.856), (0.68, 0.858), (0.66, 0.856), (0.655, 0.838), (0.65, 0.77), (0.645, 0.71), (0.64, 0.65), (0.63, 0.61), (0.60, 0.57), (0.55, 0.51)]
-T_PASS = [(1.08, 0.82), (0.96, 0.826), (0.84, 0.832), (0.74, 0.836), (0.672, 0.836), (0.640, 0.826), (0.628, 0.795), (0.625, 0.73), (0.64, 0.68), (0.66, 0.60), (0.69, 0.52), (0.74, 0.45), (0.82, 0.41)]
+T_STACK = [(1.08, 0.82), (0.97, 0.846), (0.86, 0.862), (0.76, 0.866), (0.69, 0.862), (0.665, 0.854), (0.655, 0.838), (0.65, 0.77), (0.645, 0.71), (0.64, 0.65), (0.63, 0.61), (0.6, 0.57), (0.55, 0.51)]
+T_PASS = [(1.08, 0.82), (0.97, 0.847), (0.86, 0.864), (0.76, 0.866), (0.69, 0.856), (0.65, 0.832), (0.63, 0.8), (0.625, 0.73), (0.64, 0.68), (0.66, 0.6), (0.69, 0.52), (0.74, 0.45), (0.82, 0.41)]
 
 STACK_X0, STACK_X1 = -0.135, 0.14
 
@@ -925,10 +926,26 @@ def build_glovebox_and_switches():
     # (the C7 has no glovebox in the dash: storage is behind the screen and in the console)
     # (the headlamp switch is in the driver-side panel: build_driver_pad)
     # defroster grille strip along the cowl and the centre speaker grille
-    strip = lib.extrude_profile('dash.defroster', lib.rounded_rect2d(1.25, 0.035, 0.01), (0, 1.015, 0.833), (1, 0, 0), (0, 1, 0.07), -0.006, material='plastic_black')
+    # both lie on the dash top (following its slope there), just proud of it
+    o, slope = _top_point(0.0, 1.015)
+    strip = lib.extrude_profile('dash.defroster', lib.rounded_rect2d(1.25, 0.035, 0.01), o + Vector((0, 0, 0.0015)), (1, 0, 0), slope, -0.004, material='plastic_black')
     lib.tag(strip, 'dash.defroster', 'dashboard', selectable=False)
-    spk = lib.extrude_profile('dash.center_speaker', lib.rounded_rect2d(0.16, 0.07, 0.03), (0, 0.90, 0.866), (1, 0, 0), (0, 1, 0.0), -0.003, material='plastic_black')
+    o, slope = _top_point(0.0, 0.905)
+    spk = lib.extrude_profile('dash.center_speaker', lib.rounded_rect2d(0.15, 0.060, 0.028), o + Vector((0, 0, 0.0015)), (1, 0, 0), slope, -0.003, material='plastic_black')
     lib.tag(spk, 'dash.center_speaker', 'dashboard', selectable=False)
+
+
+def _top_point(x, y):
+    """Point on the dash top at (x, y) and the direction up the slope there (forward along the surface)."""
+    prof = [p for p in lib.spline_through(profile_at(x), n_per_seg=8)[:40]]
+    best = min(range(len(prof) - 1), key=lambda i: abs((prof[i].x + prof[i + 1].x) / 2 - y))
+    a, b = prof[best], prof[best + 1]
+    t = 0.0 if abs(b.x - a.x) < 1e-9 else max(0.0, min(1.0, (y - a.x) / (b.x - a.x)))
+    p = a.lerp(b, t)
+    d = Vector((0, b.x - a.x, b.y - a.y)).normalized()
+    if d.y < 0:
+        d = -d
+    return Vector((x, p.x, p.y)), d
 
 
 def build_welt():

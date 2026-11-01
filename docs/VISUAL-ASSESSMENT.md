@@ -298,3 +298,8 @@ all the way to the door (it used to drop 13 cm toward the door); its inner end s
 grab band, so there is no slot of stack side between the band and the pad; the inner vent sits close to the band
 (x 0.25, z 0.758) and the outer vent sits higher (z 0.770) with its top edge rising toward the door.
 
+Dash top (owner photo): either side of the instrument hood the top was a flat shelf at ~0.836. It now rolls up from the
+face in a large radius to a crest of ~0.865 about 18 cm forward of the face, then falls to the windshield base; the hood
+(0.893) still stands above it. The centre speaker grille (which floated 2 cm above the old surface) and the defroster
+strip are placed on the surface and follow its slope (_top_point).
+
