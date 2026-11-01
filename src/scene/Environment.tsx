@@ -49,7 +49,7 @@ function buildEnvScene(spec: EnvSpec, env: EnvironmentId): THREE.Scene {
 const FILL_LIGHTS: { pos: [number, number, number]; i: number; d: number; color?: string }[] = [
   { pos: [-0.37, 0.42, -0.55], i: 0.5, d: 1.4 },   // driver footwell, under the dash
   { pos: [0.37, 0.42, -0.55], i: 0.5, d: 1.4 },    // passenger footwell
-  { pos: [0.0, 0.95, -0.15], i: 0.30, d: 1.8 },     // over the console
+  { pos: [0.0, 0.80, -0.15], i: 0.26, d: 1.6 },     // over the console (kept well below the headliner: no hot spot on the roof)
   { pos: [-0.37, 0.70, 0.15], i: 0.18, d: 1.2 },    // driver seat area
   { pos: [0.37, 0.70, 0.15], i: 0.18, d: 1.2 },     // passenger seat area
   { pos: [0.0, 0.85, 0.65], i: 0.22, d: 1.5 },      // rear cabin

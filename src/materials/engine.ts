@@ -63,7 +63,7 @@ export function buildMaterial(cfg: PartConfig, opts: { uvScale?: number; stitchA
   mat.color.copy(col);
   mat.roughness = p.roughness; mat.metalness = p.metalness;
   mat.clearcoat = p.clearcoat ?? 0; mat.clearcoatRoughness = p.clearcoatRoughness ?? 0.2;
-  mat.sheen = p.sheen ?? 0; mat.sheenRoughness = p.sheenRoughness ?? 0.8; mat.sheenColor.copy(col).lerp(new THREE.Color('#ffffff'), 0.5);
+  mat.sheen = p.sheen ?? 0; mat.sheenRoughness = p.sheenRoughness ?? 0.8; mat.sheenColor.copy(col).multiplyScalar(1.8);  // nap sheen in the material's own colour (a white sheen washed dark suede out to cream)
   mat.envMapIntensity = p.envMapIntensity ?? 1;
   if (cfg.finish) { const f = finishAdjust[cfg.finish]; mat.roughness = THREE.MathUtils.clamp(mat.roughness + f.r, 0.02, 1); mat.clearcoat = THREE.MathUtils.clamp(mat.clearcoat + f.cc, 0, 1); }
   const repeat = p.repeat * (opts.uvScale ?? 1);

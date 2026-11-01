@@ -282,3 +282,14 @@ colour-per-object renders of the dashboard alone):
 | Driver-side panel | A square block with a flat top and a gap under the brow; flickered against the dash where it eased in | Its top follows the brow down toward the door; eased ends sink just behind the dash surface; the headlamp rotary and two buttons sit in it under the vent (B13) instead of on the lower dash |
 | Brow piping | A 22 x 14 mm tube sitting on top of the dash edge, standing out as a separate part | 12 x 9 mm piping sunk into the edge (its centre 7 mm below the crest), so only a rolled seam shows; across the stack top it sits flush at 0.856 |
 
+## Roof, headliner and pillars
+
+| Area | What was wrong | Change made |
+|------|----------------|-------------|
+| Colour | The dark suede headliner rendered nearly white: the fabric sheen was tinted halfway to white, and a fill light sat 15 cm under the roof | Sheen now takes the material's own colour; the console fill light moved down to 0.80 so it no longer paints a hot spot on the headliner |
+| Headliner | Separate slabs (header, side rails, rear strip, removable panel) with overlaps and a loose seam frame | One continuous curved surface cut into those parts, meeting edge to edge; the removable panel sits 2 mm up behind a narrow dark groove; the side rails roll down at the outer edge to meet the side glass |
+| Windshield header | A straight square bar across the top of the glass | A padded strip that follows the glass's bowed top edge and bridges to the headliner with no gap, rounding over the A-pillar tops at its ends |
+| A-pillars | Round tubes | Broad, slightly domed padded trim from the windshield edge outward, running from the dash corner up into the header |
+| Halo (rear hoop) | A round tube | A broad flat band (110 mm along the car) arching from the beltline behind each door up and across under the rear of the roof panel |
+| Visors and map lights | Flat boards angled down toward the windshield; a box hanging from the roof | Visors stowed flat against the headliner following its curve; a slim map-light module flush with the headliner |
+
